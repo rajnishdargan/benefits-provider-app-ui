@@ -174,7 +174,7 @@ export const submitForm = async (payload: PrefillData) => {
     console.log(error);
   }
 };
-export const getSchema = async () => {
+export const getSchema = async (id: string) => {
   const payload = {
     context: {
       domain: "onest:financial-support",
@@ -182,10 +182,10 @@ export const getSchema = async () => {
       timestamp: "2023-08-02T07:21:58.448Z",
       ttl: "PT10M",
       version: "1.1.0",
-      bap_id: "dev-uba-bap.tekdinext.com",
-      bap_uri: "https://dev-uba-bap.tekdinext.com/",
-      bpp_id: "dev-uba-bpp.tekdinext.com",
-      bpp_uri: "https://dev-uba-bpp.tekdinext.com/",
+      bap_id: import.meta.env.VITE_BAP_ID,
+      bap_uri: import.meta.env.VITE_BAP_URI,
+      bpp_id: import.meta.env.VITE_BPP_ID,
+      bpp_uri: import.meta.env.VITE_BPP_URI,
       transaction_id: generateUUID(),
       message_id: generateUUID(),
     },
@@ -193,11 +193,11 @@ export const getSchema = async () => {
       order: {
         items: [
           {
-            id: "PB-BTR-2024-11-26-000564",
+            id: id,
           },
         ],
         provider: {
-          id: "PB-BTR-2024-11-26-000564",
+          id: id,
         },
       },
     },

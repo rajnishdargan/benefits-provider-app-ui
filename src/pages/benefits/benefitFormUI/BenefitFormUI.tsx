@@ -7,7 +7,7 @@ import { JSONSchema7 } from "json-schema";
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import CommonButton from "../../../components/common/buttons/SubmitButton";
-import { submitForm } from "../../../services/benefits";
+import { getSchema, submitForm } from "../../../services/benefits";
 import { preMatricScholarshipSC } from "./BenefitSchema";
 import {
   convertApplicationFormFields,
@@ -27,27 +27,58 @@ const SubmitButton: React.FC<SubmitButtonProps> = (props) => {
 };
 
 const BenefitFormUI: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  // const { id } = useParams<{ id: string }>();
   const [formSchema, setFormSchema] = useState<any>(null);
   const [formData, setFormData] = useState<any>({});
-  const [userDocs, setUserDocs] = useState<any>(null);
   const formRef = useRef<any>(null);
-
   const [docSchema, setDocSchema] = useState<any>(null);
   const [extraErrors, setExtraErrors] = useState<any>(null);
-  const [applicationSchema, setApplicationSchema] = useState<any>(null);
-
+  const [id, setId] = useState<string | null>(null);
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       window.postMessage({ type: "FORM_SUBMIT", data: formData }, "*");
 
-      if (event.origin !== `${import.meta.env.VITE_DIGIT_BASE_URL}/uba-ui`) {
+      if (event.origin !== `${import.meta.env.VITE_BENEFICIERY_IFRAME_URL}`) {
         return;
       }
+      const { id, prefillData } = event.data;
 
-      const receivedData = event.data;
-      setFormData(receivedData);
-      const applicationSchemaData = preMatricScholarshipSC.en.applicationForm;
+      const receivedData = prefillData;
+
+      if (id) {
+        setId(id);
+      }
+      if (prefillData) {
+        setFormData(receivedData);
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    console.log("Received message event:", event);
+    return () => {
+      window.removeEventListener("message", handleMessage);
+    };
+  }, []);
+  useEffect(() => {
+    const getBenefitData = async () => {
+      if (id) {
+        const result = await getSchema(id);
+
+        const resultItem =
+          result?.responses[0]?.message?.order?.items[0]?.tags[10]?.list[0]
+            ?.value;
+        const cleanedSchema = resultItem?.replace(/\\/g, "");
+
+        const benefit = JSON.parse(cleanedSchema) || {};
+        getApplicationSchemaData(formData, benefit);
+      }
+    };
+    getBenefitData();
+  }, [id]);
+
+  const getApplicationSchemaData = async (receivedData: any, benefit: any) => {
+    if (benefit) {
+      const applicationSchemaData = benefit?.en?.applicationForm;
       const applicationFormSchema = convertApplicationFormFields(
         applicationSchemaData
       );
@@ -61,51 +92,44 @@ const BenefitFormUI: React.FC = () => {
           };
         }
       });
-      setApplicationSchema({ ...applicationFormSchema, properties: prop });
+      getEligibilitySchemaData(formData, benefit, {
+        ...applicationFormSchema,
+        properties: prop,
+      });
+    }
+  };
+  const getEligibilitySchemaData = (
+    formData: any,
+    benefit: any,
+    applicationFormSchema: any
+  ) => {
+    const eligSchemaStatic = benefit.en.eligibility;
+    const docSchemaStatic = benefit.en.documents;
 
-      setUserDocs(event?.data?.docs);
+    const docSchemaArr = [...eligSchemaStatic, ...docSchemaStatic];
+
+    const docSchemaData = convertDocumentFields(docSchemaArr, formData?.docs);
+    setDocSchema(docSchemaData);
+    const properties = {
+      ...(applicationFormSchema?.properties || {}),
+      ...(docSchemaData?.properties || {}),
     };
-
-    window.addEventListener("message", handleMessage);
-
-    return () => {
-      window.removeEventListener("message", handleMessage);
-    };
-  }, []);
-  useEffect(() => {
-    const fetchSchema = async () => {
-      if (id) {
-        const eligSchemaStatic = preMatricScholarshipSC.en.eligibility;
-        const docSchemaStatic = preMatricScholarshipSC.en.documents;
-
-        const docSchemaArr = [...eligSchemaStatic, ...docSchemaStatic];
-
-        const docSchemaData = convertDocumentFields(docSchemaArr, userDocs);
-        setDocSchema(docSchemaData);
-        const properties = {
-          ...(applicationSchema?.properties || {}),
-          ...(docSchemaData?.properties || {}),
-        };
-        // const properties = applicationFormSchema.properties;
-        const required = Object.keys(properties).filter((key) => {
-          const isRequired = properties[key].required;
-          if (isRequired !== undefined) {
-            delete properties[key].required;
-          }
-
-          return isRequired;
-        });
-        const allSchema = {
-          ...applicationSchema,
-          required,
-          properties,
-        };
-
-        setFormSchema(allSchema);
+    const required = Object.keys(properties).filter((key) => {
+      const isRequired = properties[key].required;
+      if (isRequired !== undefined) {
+        delete properties[key].required;
       }
+
+      return isRequired;
+    });
+    const allSchema = {
+      ...applicationFormSchema,
+      required,
+      properties,
     };
-    fetchSchema();
-  }, [id, userDocs, applicationSchema]);
+
+    setFormSchema(allSchema);
+  };
 
   const handleChange = ({ formData }: any) => {
     setFormData(formData);
