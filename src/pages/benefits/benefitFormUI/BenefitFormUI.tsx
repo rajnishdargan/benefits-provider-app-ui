@@ -27,40 +27,22 @@ const SubmitButton: React.FC<SubmitButtonProps> = (props) => {
 };
 
 const BenefitFormUI: React.FC = () => {
-  // const { id } = useParams<{ id: string }>();
+  const { id } = useParams<{ id: string }>();
   const [formSchema, setFormSchema] = useState<any>(null);
   const [formData, setFormData] = useState<any>({});
   const formRef = useRef<any>(null);
   const [docSchema, setDocSchema] = useState<any>(null);
   const [extraErrors, setExtraErrors] = useState<any>(null);
-  const [id, setId] = useState<string | null>(null);
   useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
+    const handleMessage = async (event: MessageEvent) => {
       window.postMessage({ type: "FORM_SUBMIT", data: formData }, "*");
 
       if (event.origin !== `${import.meta.env.VITE_BENEFICIERY_IFRAME_URL}`) {
         return;
       }
-      const { id, prefillData } = event.data;
+      const { prefillData } = event.data;
 
       const receivedData = prefillData;
-
-      if (id) {
-        setId(id);
-      }
-      if (prefillData) {
-        setFormData(receivedData);
-      }
-    };
-
-    window.addEventListener("message", handleMessage);
-    console.log("Received message event:", event);
-    return () => {
-      window.removeEventListener("message", handleMessage);
-    };
-  }, []);
-  useEffect(() => {
-    const getBenefitData = async () => {
       if (id) {
         const result = await getSchema(id);
 
@@ -70,10 +52,18 @@ const BenefitFormUI: React.FC = () => {
         const cleanedSchema = resultItem?.replace(/\\/g, "");
 
         const benefit = JSON.parse(cleanedSchema) || {};
-        getApplicationSchemaData(formData, benefit);
+
+        getApplicationSchemaData(receivedData, benefit);
+      }
+      if (prefillData) {
+        setFormData(receivedData);
       }
     };
-    getBenefitData();
+
+    window.addEventListener("message", handleMessage);
+    return () => {
+      window.removeEventListener("message", handleMessage);
+    };
   }, [id]);
 
   const getApplicationSchemaData = async (receivedData: any, benefit: any) => {
@@ -92,7 +82,7 @@ const BenefitFormUI: React.FC = () => {
           };
         }
       });
-      getEligibilitySchemaData(formData, benefit, {
+      getEligibilitySchemaData(receivedData, benefit, {
         ...applicationFormSchema,
         properties: prop,
       });
