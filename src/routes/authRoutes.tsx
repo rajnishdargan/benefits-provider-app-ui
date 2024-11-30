@@ -1,7 +1,13 @@
 import { lazy } from "react";
-import ViewApplicants from "../pages/benefits/viewAllBenefit/ApplicantDetails";
-import ApplicationDetails from "../pages/benefits/viewAllBenefit/ApplicationDetails";
-import BenefitFormUI from "../pages/benefits/benefitFormUI/BenefitFormUI";
+const ViewApplicants = lazy(
+  () => import("../pages/benefits/viewAllBenefit/ApplicantDetails")
+);
+const ApplicationDetails = lazy(
+  () => import("../pages/benefits/viewAllBenefit/ApplicationDetails")
+);
+const BenefitFormUI = lazy(
+  () => import("../pages/benefits/benefitFormUI/BenefitFormUI")
+);
 const BenefitsForm = lazy(() => import("../pages/benefits/form/Form"));
 const Dashboard = lazy(() => import("../pages/dashboard/Dashboard"));
 

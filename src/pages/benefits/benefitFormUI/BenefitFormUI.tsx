@@ -1,4 +1,4 @@
-import { Box, ChakraProvider } from "@chakra-ui/react";
+import { Box } from "@chakra-ui/react";
 import { Theme as ChakraTheme } from "@rjsf/chakra-ui";
 import { withTheme } from "@rjsf/core";
 import { SubmitButtonProps, getSubmitButtonOptions } from "@rjsf/utils";
@@ -12,6 +12,7 @@ import {
   convertApplicationFormFields,
   convertDocumentFields,
 } from "./ConvertToRJSF";
+import Loading from "../../../components/common_components/Loading";
 
 const Form = withTheme(ChakraTheme);
 const SubmitButton: React.FC<SubmitButtonProps> = (props) => {
@@ -28,22 +29,30 @@ const SubmitButton: React.FC<SubmitButtonProps> = (props) => {
 const BenefitFormUI: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [formSchema, setFormSchema] = useState<any>(null);
-  const [formData, setFormData] = useState<any>({});
+  const [formData, setFormData] = useState<object>({});
+  const [userData, setUserData] = useState<object | null>();
   const formRef = useRef<any>(null);
   const [docSchema, setDocSchema] = useState<any>(null);
   const [extraErrors, setExtraErrors] = useState<any>(null);
   useEffect(() => {
     const handleMessage = async (event: MessageEvent) => {
-      window.postMessage({ type: "FORM_SUBMIT", data: formData }, "*");
-
       if (event.origin !== `${import.meta.env.VITE_BENEFICIERY_IFRAME_URL}`) {
         return;
       }
       const prefillData = event.data;
-      const receivedData = prefillData;
+      setUserData(prefillData);
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => {
+      window.removeEventListener("message", handleMessage);
+    };
+  }, []);
+
+  useEffect(() => {
+    const getSchemaData = async () => {
       if (id) {
         const result = await getSchema(id);
-
         const targetTag =
           result?.responses?.[0]?.message?.order?.items?.[0]?.tags?.find(
             (tag: any) => tag?.descriptor?.code === "benefit_schema"
@@ -52,18 +61,11 @@ const BenefitFormUI: React.FC = () => {
         const cleanedSchema = resultItem?.replace(/\\/g, "");
         const benefit = JSON.parse(cleanedSchema) || {};
 
-        getApplicationSchemaData(receivedData, benefit);
-      }
-      if (prefillData) {
-        setFormData(receivedData);
+        getApplicationSchemaData(userData, benefit);
       }
     };
-
-    window.addEventListener("message", handleMessage);
-    return () => {
-      window.removeEventListener("message", handleMessage);
-    };
-  }, [id]);
+    getSchemaData();
+  }, [userData, id]);
 
   const getApplicationSchemaData = async (receivedData: any, benefit: any) => {
     if (benefit) {
@@ -81,12 +83,14 @@ const BenefitFormUI: React.FC = () => {
           };
         }
       });
+      setFormData(receivedData);
       getEligibilitySchemaData(receivedData, benefit, {
         ...applicationFormSchema,
         properties: prop,
       });
     }
   };
+
   const getEligibilitySchemaData = (
     formData: any,
     benefit: any,
@@ -124,7 +128,7 @@ const BenefitFormUI: React.FC = () => {
     setFormData(formData);
   };
   const handleFormSubmit = async () => {
-    let formDataNew = { ...formData };
+    const formDataNew: any = { ...formData };
     Object.keys(docSchema?.properties || {}).forEach((e: any) => {
       if (formDataNew[e]) {
         formDataNew[e] = btoa(formDataNew[e]);
@@ -147,47 +151,45 @@ const BenefitFormUI: React.FC = () => {
   };
 
   if (!formSchema) {
-    return <Box>Loading...</Box>;
+    return <Loading />;
   }
 
   return (
-    <ChakraProvider>
-      <Box maxW="600px" mx="auto" p="4">
-        <Form
-          ref={formRef}
-          showErrorList={false}
-          focusOnFirstError
-          noHtml5Validate
-          schema={formSchema as JSONSchema7}
-          validator={validator}
-          formData={formData}
-          onChange={handleChange}
-          onSubmit={handleFormSubmit}
-          templates={{ ButtonTemplates: { SubmitButton } }}
-          // transformErrors={(errors) => transformErrors(errors, formSchema, t)}
-          extraErrors={extraErrors}
-        />
-        <CommonButton
-          label="Submit Form"
-          onClick={() => {
-            let error: any = {};
-            Object.keys(docSchema?.properties || {}).forEach((e: any) => {
-              const field = docSchema?.properties[e];
-              if (field?.enum && field.enum.length === 0) {
-                error[e] = {
-                  __errors: [`${e} is not have document`],
-                };
-              }
-            });
-            if (Object.keys(error).length > 0) {
-              setExtraErrors(error);
-            } else if (formRef.current?.validateForm()) {
-              formRef?.current?.submit();
+    <Box p={4}>
+      <Form
+        ref={formRef}
+        showErrorList={false}
+        focusOnFirstError
+        noHtml5Validate
+        schema={formSchema as JSONSchema7}
+        validator={validator}
+        formData={formData}
+        onChange={handleChange}
+        onSubmit={handleFormSubmit}
+        templates={{ ButtonTemplates: { SubmitButton } }}
+        // transformErrors={(errors) => transformErrors(errors, formSchema, t)}
+        extraErrors={extraErrors}
+      />
+      <CommonButton
+        label="Submit Form"
+        onClick={() => {
+          let error: any = {};
+          Object.keys(docSchema?.properties || {}).forEach((e: any) => {
+            const field = docSchema?.properties[e];
+            if (field?.enum && field.enum.length === 0) {
+              error[e] = {
+                __errors: [`${e} is not have document`],
+              };
             }
-          }}
-        />
-      </Box>
-    </ChakraProvider>
+          });
+          if (Object.keys(error).length > 0) {
+            setExtraErrors(error);
+          } else if (formRef.current?.validateForm()) {
+            formRef?.current?.submit();
+          }
+        }}
+      />
+    </Box>
   );
 };
 
