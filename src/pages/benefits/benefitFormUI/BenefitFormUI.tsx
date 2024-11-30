@@ -39,17 +39,17 @@ const BenefitFormUI: React.FC = () => {
       if (event.origin !== `${import.meta.env.VITE_BENEFICIERY_IFRAME_URL}`) {
         return;
       }
-      const { prefillData } = event.data;
-
+      const prefillData = event.data;
       const receivedData = prefillData;
       if (id) {
         const result = await getSchema(id);
 
-        const resultItem =
-          result?.responses[0]?.message?.order?.items[0]?.tags[10]?.list[0]
-            ?.value;
+        const targetTag =
+          result?.responses?.[0]?.message?.order?.items?.[0]?.tags?.find(
+            (tag: any) => tag?.descriptor?.code === "benefit_schema"
+          );
+        const resultItem = targetTag?.list?.[0]?.value;
         const cleanedSchema = resultItem?.replace(/\\/g, "");
-
         const benefit = JSON.parse(cleanedSchema) || {};
 
         getApplicationSchemaData(receivedData, benefit);

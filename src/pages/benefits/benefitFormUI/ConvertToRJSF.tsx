@@ -123,7 +123,12 @@ export const convertDocumentFields = (
       type: "string",
       title: fieldLabel,
       required: field.isRequired,
-      enum: enumValues.length > 0 ? (enumValues as string[]) : [],
+      enum:
+        enumValues.length > 0
+          ? (enumValues as string[])
+          : field.isRequired
+          ? []
+          : [""],
       enumNames: (enumNames as string[]) || [],
     };
   });
