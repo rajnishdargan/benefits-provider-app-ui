@@ -18,11 +18,9 @@ const Form = withTheme(ChakraTheme);
 const SubmitButton: React.FC<SubmitButtonProps> = (props) => {
   const { uiSchema } = props;
   const { norender } = getSubmitButtonOptions(uiSchema);
-
   if (norender) {
     return null;
   }
-
   return <button type="submit" style={{ display: "none" }}></button>;
 };
 
@@ -30,16 +28,9 @@ const BenefitFormUI: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [formSchema, setFormSchema] = useState<any>(null);
   const [formData, setFormData] = useState<object>({});
-  const [userData, setUserData] = useState<object | null>();
   const formRef = useRef<any>(null);
   const [docSchema, setDocSchema] = useState<any>(null);
   const [extraErrors, setExtraErrors] = useState<any>(null);
-  useEffect(() => {
-    const init = async () => {
-      setUserData(JSON.parse(window.name || "{}"));
-    };
-    init();
-  }, []);
 
   useEffect(() => {
     const getApplicationSchemaData = async (
@@ -78,11 +69,12 @@ const BenefitFormUI: React.FC = () => {
         const resultItem = targetTag?.list?.[0]?.value;
         const cleanedSchema = resultItem?.replace(/\\/g, "");
         const benefit = JSON.parse(cleanedSchema) || {};
-        getApplicationSchemaData(userData, benefit);
+        const useData = window.name ? JSON.parse(window.name) : null;
+        getApplicationSchemaData(useData, benefit);
       }
     };
     getSchemaData();
-  }, [userData, id]);
+  }, [id]);
 
   const getEligibilitySchemaData = (
     formData: any,
