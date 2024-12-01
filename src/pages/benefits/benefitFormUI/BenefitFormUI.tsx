@@ -116,7 +116,7 @@ const BenefitFormUI: React.FC = () => {
     const formDataNew: any = { ...formData };
     Object.keys(docSchema?.properties || {}).forEach((e: any) => {
       if (formDataNew[e]) {
-        formDataNew[e] = btoa(formDataNew[e]);
+        formDataNew[e] = encodeToBase64(formDataNew?.[e]);
       } else {
         console.log(`${e} is missing from formDataNew`);
       }
@@ -179,3 +179,7 @@ const BenefitFormUI: React.FC = () => {
 };
 
 export default BenefitFormUI;
+
+function encodeToBase64(str: string) {
+  return btoa(unescape(encodeURIComponent(str)));
+}
