@@ -16,7 +16,7 @@ import Layout from "../../../components/layout/Layout";
 import "react-datepicker/dist/react-datepicker.css";
 import { useParams } from "react-router-dom";
 import { viewApplicationByApplicationId } from "../../../services/benefits";
-import Loading from "../../../components/common_components/Loading";
+import Loading from "../../../components/common/Loading";
 interface ApplicantData {
   applicationId: string;
   studentName: string;

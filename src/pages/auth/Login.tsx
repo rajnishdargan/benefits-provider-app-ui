@@ -13,7 +13,7 @@ import { useNavigate } from "react-router-dom";
 import Layout from "../../components/layout/Layout";
 import LeftSideBar from "../../components/common/login/LeftSideBar";
 // import { LoginProvider } from "../../services/auth";
-import Loading from "../../components/common_components/Loading";
+import Loading from "../../components/common/Loading";
 // import AlertMessage from "../../components/common/modal/AlertMessage";
 export default function Login() {
   const navigate = useNavigate();

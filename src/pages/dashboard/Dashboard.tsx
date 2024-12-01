@@ -10,7 +10,7 @@ import {
   financialOverviewDigit,
   popularBenefitDigit,
 } from "../../services/dashboard";
-import Loading from "../../components/common_components/Loading";
+import Loading from "../../components/common/Loading";
 import AlertMessage from "../../components/common/modal/AlertMessage";
 function Dashboard() {
   const [applicationData, setApplicationData] = React.useState<any>(null);

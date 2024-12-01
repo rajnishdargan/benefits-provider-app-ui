@@ -7,12 +7,12 @@ import { JSONSchema7 } from "json-schema";
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import CommonButton from "../../../components/common/buttons/SubmitButton";
+import Loading from "../../../components/common/Loading";
 import { getSchema, submitForm } from "../../../services/benefits";
 import {
   convertApplicationFormFields,
   convertDocumentFields,
 } from "./ConvertToRJSF";
-import Loading from "../../../components/common_components/Loading";
 
 const Form = withTheme(ChakraTheme);
 const SubmitButton: React.FC<SubmitButtonProps> = (props) => {
@@ -35,21 +35,39 @@ const BenefitFormUI: React.FC = () => {
   const [docSchema, setDocSchema] = useState<any>(null);
   const [extraErrors, setExtraErrors] = useState<any>(null);
   useEffect(() => {
-    const handleMessage = async (event: MessageEvent) => {
-      if (event.origin !== `${import.meta.env.VITE_BENEFICIERY_IFRAME_URL}`) {
-        return;
-      }
-      const prefillData = event.data;
-      setUserData(prefillData);
+    const init = async () => {
+      setUserData(JSON.parse(window.name || "{}"));
     };
-
-    window.addEventListener("message", handleMessage);
-    return () => {
-      window.removeEventListener("message", handleMessage);
-    };
+    init();
   }, []);
 
   useEffect(() => {
+    const getApplicationSchemaData = async (
+      receivedData: any,
+      benefit: any
+    ) => {
+      if (benefit) {
+        const applicationSchemaData = benefit?.en?.applicationForm;
+        const applicationFormSchema = convertApplicationFormFields(
+          applicationSchemaData
+        );
+
+        const prop = applicationFormSchema?.properties;
+        Object.keys(prop).forEach((item: string) => {
+          if (receivedData?.[item] && receivedData?.[item] !== "") {
+            prop[item] = {
+              ...prop[item],
+              readOnly: true,
+            };
+          }
+        });
+        setFormData(receivedData);
+        getEligibilitySchemaData(receivedData, benefit, {
+          ...applicationFormSchema,
+          properties: prop,
+        });
+      }
+    };
     const getSchemaData = async () => {
       if (id) {
         const result = await getSchema(id);
@@ -60,36 +78,11 @@ const BenefitFormUI: React.FC = () => {
         const resultItem = targetTag?.list?.[0]?.value;
         const cleanedSchema = resultItem?.replace(/\\/g, "");
         const benefit = JSON.parse(cleanedSchema) || {};
-
         getApplicationSchemaData(userData, benefit);
       }
     };
     getSchemaData();
   }, [userData, id]);
-
-  const getApplicationSchemaData = async (receivedData: any, benefit: any) => {
-    if (benefit) {
-      const applicationSchemaData = benefit?.en?.applicationForm;
-      const applicationFormSchema = convertApplicationFormFields(
-        applicationSchemaData
-      );
-
-      const prop = applicationFormSchema?.properties;
-      Object.keys(prop).forEach((item: string) => {
-        if (receivedData?.[item] && receivedData?.[item] !== "") {
-          prop[item] = {
-            ...prop[item],
-            readOnly: true,
-          };
-        }
-      });
-      setFormData(receivedData);
-      getEligibilitySchemaData(receivedData, benefit, {
-        ...applicationFormSchema,
-        properties: prop,
-      });
-    }
-  };
 
   const getEligibilitySchemaData = (
     formData: any,

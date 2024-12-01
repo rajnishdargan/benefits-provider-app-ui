@@ -15,7 +15,7 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import Layout from "../../components/layout/Layout";
 import LeftSideBar from "../../components/common/login/LeftSideBar";
 // import { sendOTP, userRegister } from "../../services/auth";
-import Loading from "../../components/common_components/Loading";
+import Loading from "../../components/common/Loading";
 // import AlertMessage from "../../components/common/modal/AlertMessage";
 
 export default function OTP() {

@@ -15,7 +15,7 @@ import { useNavigate, Link } from "react-router-dom";
 import Layout from "../../components/layout/Layout";
 import LeftSideBar from "../../components/common/login/LeftSideBar";
 // import { registerProvider } from "../../services/auth";
-import Loading from "../../components/common_components/Loading";
+import Loading from "../../components/common/Loading";
 import ModalShow from "../../components/common/modal/ModalShow";
 // import AlertMessage from "../../components/common/modal/AlertMessage";
 export default function UserRegister() {
