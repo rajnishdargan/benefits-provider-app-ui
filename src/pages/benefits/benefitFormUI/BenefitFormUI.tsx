@@ -114,6 +114,7 @@ const BenefitFormUI: React.FC = () => {
   };
   const handleFormSubmit = async () => {
     const formDataNew: any = { ...formData };
+    formDataNew.benefit_id = id;
     Object.keys(docSchema?.properties || {}).forEach((e: any) => {
       if (formDataNew[e]) {
         formDataNew[e] = encodeToBase64(formDataNew?.[e]);
