@@ -115,6 +115,7 @@ const BenefitFormUI: React.FC = () => {
   const handleFormSubmit = async () => {
     const formDataNew: any = { ...formData };
     formDataNew.benefit_id = id;
+    delete formDataNew.docs;
     Object.keys(docSchema?.properties || {}).forEach((e: any) => {
       if (formDataNew[e]) {
         formDataNew[e] = encodeToBase64(formDataNew?.[e]);
@@ -123,6 +124,7 @@ const BenefitFormUI: React.FC = () => {
       }
     });
     // API call for submit id and sent it to the post message
+
     const response = await submitForm(formDataNew);
     if (response) {
       window.parent.postMessage(
