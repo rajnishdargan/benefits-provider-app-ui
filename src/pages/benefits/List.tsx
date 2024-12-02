@@ -18,7 +18,7 @@ import Tab from "../../components/common/Tab";
 import Table from "../../components/common/table/Table";
 import { DataType } from "ka-table/enums";
 import { ICellTextProps } from "ka-table/props";
-import React, { memo, useState } from "react";
+import React, { memo, useEffect, useState } from "react";
 import { useTableInstance } from "ka-table";
 import { detailViewRow, formatDate } from "../../services/dashboard";
 import ChartWithErrorBoundary from "./ChartWithErrorBoundary";
@@ -159,6 +159,10 @@ const BenefitsList: React.FC<{
     }
   };
 
+  useEffect(() => {
+    fetchBenefitList(activeTab);
+  }, []);
+
   const handleTabClick = (tab: string) => {
     setActiveTab(parseInt(tab, 10));
     fetchBenefitList(parseInt(tab, 10));
@@ -208,7 +212,7 @@ const BenefitsList: React.FC<{
           detailsRow: {
             content: (props: any) => {
               const detailRowItem = detailData.find(
-                (item) => item.id === props.rowData.id
+                (item) => item?.id === props?.rowData?.id
               );
               return detailsRow({
                 detailData: detailRowItem,
