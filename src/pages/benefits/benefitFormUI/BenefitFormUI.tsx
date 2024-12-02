@@ -31,7 +31,7 @@ const BenefitFormUI: React.FC = () => {
   const formRef = useRef<any>(null);
   const [docSchema, setDocSchema] = useState<any>(null);
   const [extraErrors, setExtraErrors] = useState<any>(null);
-
+  const [disableSubmit, setDisableSubmit] = useState(false);
   useEffect(() => {
     const getApplicationSchemaData = async (
       receivedData: any,
@@ -127,6 +127,7 @@ const BenefitFormUI: React.FC = () => {
 
     const response = await submitForm(formDataNew);
     if (response) {
+      setDisableSubmit(true);
       window.parent.postMessage(
         {
           type: "FORM_SUBMIT",
@@ -134,6 +135,8 @@ const BenefitFormUI: React.FC = () => {
         },
         "*"
       );
+    } else {
+      setDisableSubmit(false);
     }
   };
 
@@ -159,6 +162,7 @@ const BenefitFormUI: React.FC = () => {
       />
       <CommonButton
         label="Submit Form"
+        isDisabled={disableSubmit}
         onClick={() => {
           let error: any = {};
           Object.keys(docSchema?.properties || {}).forEach((e: any) => {
