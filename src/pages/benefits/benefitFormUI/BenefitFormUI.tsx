@@ -122,7 +122,6 @@ const BenefitFormUI: React.FC = () => {
         console.log(`${e} is missing from formDataNew`);
       }
     });
-
     // API call for submit id and sent it to the post message
     const response = await submitForm(formDataNew);
     if (response) {
@@ -182,5 +181,5 @@ const BenefitFormUI: React.FC = () => {
 export default BenefitFormUI;
 
 function encodeToBase64(str: string) {
-  return btoa(unescape(encodeURIComponent(str)));
+  return `base64,${btoa(unescape(encodeURIComponent(str)))}`;
 }
