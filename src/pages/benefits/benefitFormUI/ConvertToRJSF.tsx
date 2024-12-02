@@ -130,6 +130,7 @@ export const convertDocumentFields = (
           ? []
           : [""],
       enumNames: (enumNames as string[]) || [],
+      default: enumValues[0] || "",
     };
   });
 
