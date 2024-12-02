@@ -48,7 +48,7 @@ const BenefitFormUI: React.FC = () => {
           if (receivedData?.[item] && receivedData?.[item] !== "") {
             prop[item] = {
               ...prop[item],
-              readOnly: true,
+              // readOnly: true,
             };
           }
         });
