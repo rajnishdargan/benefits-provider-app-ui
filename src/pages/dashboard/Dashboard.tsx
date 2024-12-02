@@ -23,34 +23,34 @@ function Dashboard() {
   const [message, setMessage] = React.useState("");
 
   React.useEffect(() => {
-    const userId = localStorage.getItem("user"); // Retrieve the user data from localStorage
     const fetchData = async () => {
       try {
-        if (userId) {
-          setIsLoading(true);
-          const digitApplicantResponse = await applicationOverviewDigit();
-          const digitFinancialResponse = await financialOverviewDigit();
-          const digitPopularResponse = await popularBenefitDigit();
-          const benefitSummaryResponse = await benefitSummaryDigit();
+        // if (userId) {
+        setIsLoading(true);
+        const digitApplicantResponse = await applicationOverviewDigit();
+        const digitFinancialResponse = await financialOverviewDigit();
+        const digitPopularResponse = await popularBenefitDigit();
+        const benefitSummaryResponse = await benefitSummaryDigit();
 
-          if (digitApplicantResponse) {
-            setApplicationData(digitApplicantResponse);
-          }
-          if (digitFinancialResponse) {
-            setFinancialData(digitFinancialResponse);
-          }
-          if (digitPopularResponse) {
-            setPopularData(digitPopularResponse);
-          }
-          if (benefitSummaryResponse) {
-            setBenefitSummaryData({ benefit_summary: benefitSummaryResponse });
-          }
-          setIsLoading(false);
-        } else {
-          setIsLoading(false);
-          // setMessage("No user data found!");
-          // setShowAlert(true);
+        if (digitApplicantResponse) {
+          setApplicationData(digitApplicantResponse);
         }
+        if (digitFinancialResponse) {
+          setFinancialData(digitFinancialResponse);
+        }
+        if (digitPopularResponse) {
+          setPopularData(digitPopularResponse);
+        }
+        if (benefitSummaryResponse) {
+          setBenefitSummaryData({ benefit_summary: benefitSummaryResponse });
+        }
+        setIsLoading(false);
+        // }
+        // else {
+        //   setIsLoading(false);
+        //   // setMessage("No user data found!");
+        //   // setShowAlert(true);
+        // }
       } catch (err) {
         console.log(err);
         setIsLoading(false);
