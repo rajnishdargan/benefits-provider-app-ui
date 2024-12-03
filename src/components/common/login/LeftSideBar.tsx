@@ -10,8 +10,8 @@ export default function LeftSideBar() {
       backgroundColor={"#121943"}
       align={"center"}
       justify={"center"}
-      h="100%" // Take full height
-      overflow="hidden" // Prevent overflows
+      h="100vh"
+      overflow="hidden"
     >
       <HStack>
         <Image src={Logo} />

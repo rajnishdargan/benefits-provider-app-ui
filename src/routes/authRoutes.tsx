@@ -27,11 +27,6 @@ const routes = [
     component: BenefitsForm,
   },
   {
-    path: "/home",
-    component: Dashboard,
-  },
-
-  {
     path: "/benefit_list",
     component: ViewAllBenefits,
   },
@@ -48,7 +43,7 @@ const routes = [
     component: BenefitFormUI,
   },
   {
-    path: "*",
+    path: "/",
     component: Dashboard,
   },
 ];

@@ -3,8 +3,12 @@ import {
   Button,
   Checkbox,
   FormControl,
+  FormErrorMessage,
+  FormLabel,
   HStack,
   Input,
+  Radio,
+  RadioGroup,
   Stack,
   Text,
   Tooltip,
@@ -14,88 +18,280 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, Link } from "react-router-dom";
 import Layout from "../../components/layout/Layout";
 import LeftSideBar from "../../components/common/login/LeftSideBar";
-// import { registerProvider } from "../../services/auth";
+import { registerProvider } from "../../services/auth";
 import Loading from "../../components/common/Loading";
 import ModalShow from "../../components/common/modal/ModalShow";
-// import AlertMessage from "../../components/common/modal/AlertMessage";
+import AlertMessage from "../../components/common/modal/AlertMessage";
 export default function UserRegister() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [isChecked, setIsChecked] = React.useState(false);
+  const [userName, setUserName] = React.useState("");
   const [name, setName] = React.useState("");
+  const [mobile, setMobile] = React.useState("");
+
   const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [gender, setGender] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
   const [open, setOpen] = React.useState(false);
-  // const [showAlert, setShowAlert] = React.useState(false);
-  // const [message, setMessage] = React.useState("");
+  const [showAlert, setShowAlert] = React.useState(false);
+  const [message, setMessage] = React.useState("");
   const [showTooltip, setShowTooltip] = React.useState(false);
+  const [errors, setErrors] = React.useState({
+    email: "",
+    name: "",
+    userName: "",
+    password: "",
+    mobile: "",
+    gender: "",
+  });
+
+  const validateField = (field: any, value: any) => {
+    let error = "";
+
+    switch (field) {
+      case "email":
+        if (!value.trim()) {
+          error = "Email is required.";
+        } else if (
+          !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(value)
+        ) {
+          error = "Invalid email address.";
+        }
+        break;
+      case "name":
+        if (!value.trim()) {
+          error = "Name is required.";
+        } else if (!/^[a-zA-Z\s]{2,50}$/.test(value)) {
+          error =
+            "Name must be 2-50 characters long and contain only letters and spaces.";
+        }
+        break;
+      case "mobile":
+        if (!value.trim()) {
+          error = "Mobile number is required.";
+        } else if (!/^\d{10}$/.test(value)) {
+          error = "Mobile number must be 10 digits.";
+        }
+        break;
+      case "userName":
+        if (!value.trim()) {
+          error = "Username is required.";
+        } else if (!/^[a-zA-Z0-9_]{3,15}$/.test(value)) {
+          error =
+            "Username must be 3-15 characters and can only contain letters, numbers, or underscores.";
+        }
+        break;
+      case "password":
+        if (!value.trim()) {
+          error = "Password is required.";
+        } else if (
+          !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/.test(
+            value
+          )
+        ) {
+          error =
+            "Password must be at least 6 characters and include one uppercase letter, one lowercase letter, one number, and one special character.";
+        }
+        break;
+      case "gender":
+        if (!value) {
+          error = "Gender is required.";
+        }
+        break;
+      default:
+        break;
+    }
+
+    setErrors((prevErrors) => ({ ...prevErrors, [field]: error }));
+  };
 
   const handleRegister = async () => {
-    localStorage.setItem("Email", email);
+    const isValid =
+      Object.values(errors).every((error) => error === "") &&
+      userName &&
+      name &&
+      email &&
+      password &&
+      gender &&
+      mobile;
+
+    if (!isValid) {
+      return;
+    }
     setIsLoading(true);
-    const timer = setTimeout(() => {
+
+    try {
+      const registerResponse = await registerProvider(
+        userName,
+        name,
+        email,
+        password,
+        gender,
+        mobile
+      );
+      if (registerResponse?.responseInfo?.status === "200") {
+        setIsLoading(false);
+        navigate("/");
+      } else {
+        setMessage(t("REGISTER_ERROR"));
+        setShowAlert(true);
+      }
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : t("REGISTER_ERROR"));
+      setShowAlert(true);
+    } finally {
       setIsLoading(false);
-      navigate("/otp", { state: { fromPage: "registration" } });
-    }, 3000);
-    return () => clearTimeout(timer);
-    // try {
-    //   const registerResponse = await registerProvider(name, email);
-    //   if (registerResponse) {
-    //     navigate("/otp", { state: { fromPage: "registration" } });
-    //   } else {
-    //     setMessage(t("REGISTER_ERROR"));
-    //     setShowAlert(true);
-    //   }
-    // } catch (err) {
-    //   setMessage(err instanceof Error ? err.message : t("REGISTER_ERROR"));
-    //   setShowAlert(true);
-    // } finally {
-    //   setIsLoading(false);
-    // }
+    }
   };
-  // const handleCloseAlertModal = () => {
-  //   setShowAlert(false);
-  // };
+  const handleCloseAlertModal = () => {
+    setShowAlert(false);
+  };
   const handleCloseModal = () => {
     setOpen(false);
     setIsChecked(true);
   };
-
+  const handleInputChange = (field: any, value: any) => {
+    validateField(field, value);
+    switch (field) {
+      case "email":
+        setEmail(value);
+        break;
+      case "name":
+        setName(value);
+        break;
+      case "mobile":
+        setMobile(value);
+        break;
+      case "userName":
+        setUserName(value);
+        break;
+      case "password":
+        setPassword(value);
+        break;
+      case "gender":
+        setGender(value);
+        break;
+      default:
+        break;
+    }
+  };
   return (
     <Layout showMenu={false} showSearchBar={false} showLanguage={true}>
       {isLoading ? (
         <Loading />
       ) : (
-        <HStack w="full" h="89vh" spacing={8} align="stretch">
+        <HStack w="full" h="100vh" spacing={8} align="stretch">
           <LeftSideBar />
           <VStack p={8} flex={1} align={"center"} justify={"center"} w={"full"}>
             <Stack spacing={6} w={"full"}>
-              <Text fontSize={"24px"} fontWeight={400} marginBottom={"14px"}>
+              <Text fontSize={"24px"} fontWeight={400} marginTop={"20px"}>
                 {t("REGISTER_TITLE")}
               </Text>
-              <FormControl id="email">
-                <Text fontSize={"16px"} fontWeight={400} marginBottom={"12px"}>
-                  {t("REGISTER_ORGANISATION_NAME_LABEL")}
+
+              <FormControl id="name" isInvalid={!!errors.name}>
+                <Text fontSize={"16px"} fontWeight={400} marginBottom={"8px"}>
+                  {t("REGISTER_NAME_LABEL")}
                 </Text>
                 <Input
                   type="text"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Organisation Name"
+                  onChange={(e) => handleInputChange("name", e.target.value)}
+                  placeholder="Enter name"
                   isRequired
                   marginBottom={"12px"}
                 />
-                <Text fontSize={"16px"} fontWeight={400} marginBottom={"12px"}>
-                  {t("LOGIN_EMAIL_ID_LABEL")}
+                {errors.name && (
+                  <FormErrorMessage>{errors.name}</FormErrorMessage>
+                )}
+                <Text fontSize={"16px"} fontWeight={400} marginBottom={"8px"}>
+                  {t("REGISTER_ORGANISATION_NAME_LABEL")}
+                </Text>
+                <Input
+                  type="text"
+                  value={userName}
+                  onChange={(e) =>
+                    handleInputChange("userName", e.target.value)
+                  }
+                  placeholder="user name"
+                  isRequired
+                  marginBottom={"12px"}
+                />
+                {errors.userName && (
+                  <FormErrorMessage>{errors.userName}</FormErrorMessage>
+                )}
+                <Text fontSize={"16px"} fontWeight={400} marginBottom={"8px"}>
+                  {t("REGISTER_EMAIL_ID_LABEL")}
                 </Text>
                 <Input
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Organisation Email"
+                  onChange={(e) => handleInputChange("email", e.target.value)}
+                  placeholder="Email ID"
+                  isRequired
+                  marginBottom={"8px"}
+                />
+                {errors.email && (
+                  <FormErrorMessage>{errors.email}</FormErrorMessage>
+                )}
+                <Text fontSize={"16px"} fontWeight={400} marginBottom={"8px"}>
+                  {t("REGISTER_MOBILE_NUMBER_LABEL")}
+                </Text>
+                <Input
+                  type="text"
+                  value={mobile}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/[^0-9]/g, "");
+                    handleInputChange("mobile", value);
+                  }}
+                  placeholder="Mobile number"
+                  isRequired
+                  marginBottom={"8px"}
+                />
+                {errors.mobile && (
+                  <FormErrorMessage>{errors.mobile}</FormErrorMessage>
+                )}
+
+                <FormControl id="gender" isInvalid={!!errors.gender}>
+                  <FormLabel
+                    fontSize={"16px"}
+                    fontWeight={400}
+                    marginBottom={"8px"}
+                  >
+                    {t("REGISTER_GENDER_LABEL")}
+                  </FormLabel>
+                  <RadioGroup
+                    onChange={(value) => handleInputChange("gender", value)}
+                    value={gender}
+                    marginBottom={"8px"}
+                  >
+                    <HStack spacing="24px">
+                      <Radio value="male">{t("REGISTER_GENDER_MALE")}</Radio>
+                      <Radio value="female">
+                        {t("REGISTER_GENDER_FEMALE")}
+                      </Radio>
+                    </HStack>
+                  </RadioGroup>
+                  {errors.gender && (
+                    <FormErrorMessage>{errors.gender}</FormErrorMessage>
+                  )}
+                </FormControl>
+
+                <Text fontSize={"16px"} fontWeight={400} marginBottom={"8px"}>
+                  {t("REGISTER_PASSWORD_LABEL")}
+                </Text>
+                <Input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Password"
                   isRequired
                   marginBottom={"12px"}
                 />
+                {errors.password && (
+                  <FormErrorMessage>{errors.password}</FormErrorMessage>
+                )}
               </FormControl>
 
               <Stack spacing={6}>
@@ -104,7 +300,7 @@ export default function UserRegister() {
                   align={"start"}
                   justify={"space-between"}
                 >
-                  <HStack marginBottom={"22px"}>
+                  <HStack marginBottom={"14px"}>
                     <Text fontSize={"16px"} fontWeight={400}>
                       {t("REGISTER_TERMS_AND_CONDTION_TEXT")}
                     </Text>
@@ -146,8 +342,17 @@ export default function UserRegister() {
                 <Button
                   colorScheme={"blue"}
                   variant={"solid"}
+                  mb={"10px"}
                   borderRadius={"100px"}
-                  isDisabled={!isChecked || !email || !name}
+                  isDisabled={
+                    !isChecked ||
+                    !email ||
+                    !name ||
+                    !password ||
+                    !mobile ||
+                    !userName ||
+                    !gender
+                  }
                   onClick={() => handleRegister()}
                 >
                   {/* {
@@ -165,13 +370,13 @@ export default function UserRegister() {
         </HStack>
       )}
       {open && <ModalShow show={open} close={handleCloseModal} />}
-      {/* {showAlert && (
+      {showAlert && (
         <AlertMessage
           message={message}
           show={showAlert}
           close={handleCloseAlertModal}
         />
-      )} */}
+      )}
     </Layout>
   );
 }
