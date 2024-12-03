@@ -1,6 +1,4 @@
-import { CheckIcon, CloseIcon } from "@chakra-ui/icons";
 import {
-  Button,
   FormControl,
   FormLabel,
   HStack,
