@@ -94,7 +94,6 @@ const ApplicationDetails: React.FC = () => {
               Status:
             </Text>
             <Text w="70%">{status ? status.toString() : "N/A"}</Text>
-            <CheckIcon color="#0037B9" />
           </HStack>
           {applicantData?.map((item) => (
             <HStack
@@ -134,32 +133,6 @@ const ApplicationDetails: React.FC = () => {
               </FormControl>
             </VStack>
           ))}
-          <HStack spacing={4} justifyContent={"center"} w="100%">
-            <Button
-              leftIcon={<CheckIcon />}
-              colorScheme="#3C5FDD"
-              bgColor={"#3C5FDD"}
-              variant="solid"
-              borderRadius={"100px"}
-              alignSelf="center"
-            >
-              <Text fontSize={"14px"}>Approve</Text>
-            </Button>
-
-            <Button
-              leftIcon={<CloseIcon color={"#C03744"} />}
-              colorScheme="#C03744"
-              variant="outline"
-              borderRadius={"100px"}
-              borderColor={"#C03744"}
-              alignSelf="center"
-              fontSize={"14px"}
-            >
-              <Text color={"#C03744"} fontSize={"14px"}>
-                Reject
-              </Text>
-            </Button>
-          </HStack>
         </VStack>
       </VStack>
     </Layout>
