@@ -1,9 +1,6 @@
-name: UAT EKS DEPLOYMENT
-
+name: Deploy to UAT EKS
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 jobs:
   build_and_Deploy_EKS-UAT:
     runs-on: ubuntu-latest
