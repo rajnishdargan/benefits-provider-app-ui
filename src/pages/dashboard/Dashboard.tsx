@@ -84,7 +84,7 @@ function Dashboard() {
       </VStack>
       {showAlert && (
         <AlertMessage
-          message={message}
+          messageData={message}
           show={showAlert}
           close={handleCloseAlertModal}
         />
