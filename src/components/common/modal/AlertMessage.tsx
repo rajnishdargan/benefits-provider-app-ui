@@ -6,14 +6,15 @@ import {
   ModalFooter,
   ModalBody,
   Button,
+  Text,
 } from "@chakra-ui/react";
 
 const AlertMessage = ({
-  message,
+  messageData,
   show,
   close,
 }: {
-  message: string;
+  messageData: string;
   show: boolean;
   close: () => void;
 }) => {
@@ -22,7 +23,9 @@ const AlertMessage = ({
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>Message</ModalHeader>
-        <ModalBody>{message}</ModalBody>
+        <ModalBody>
+          <Text>{messageData || "An unexpected error occurred."}</Text>
+        </ModalBody>
 
         <ModalFooter>
           <Button colorScheme="blue" mr={3} onClick={close}>

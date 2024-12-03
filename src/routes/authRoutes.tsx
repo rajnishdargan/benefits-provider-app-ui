@@ -43,7 +43,7 @@ const routes = [
     component: BenefitFormUI,
   },
   {
-    path: "/",
+    path: "*",
     component: Dashboard,
   },
 ];

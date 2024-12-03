@@ -7,10 +7,6 @@ import BenefitFormUI from "../pages/benefits/benefitFormUI/BenefitFormUI";
 //lazy loading
 const routes = [
   {
-    path: "/",
-    component: Login,
-  },
-  {
     path: "/otp",
     component: OTP,
   },
@@ -21,6 +17,10 @@ const routes = [
   {
     path: "/benefit/:id/apply",
     component: BenefitFormUI,
+  },
+  {
+    path: "*",
+    component: Login,
   },
 ];
 

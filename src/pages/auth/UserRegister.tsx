@@ -133,7 +133,8 @@ export default function UserRegister() {
       );
       if (registerResponse?.responseInfo?.status === "200") {
         setIsLoading(false);
-        navigate("/");
+        setMessage("Register successfully!");
+        setShowAlert(true);
       } else {
         setMessage(t("REGISTER_ERROR"));
         setShowAlert(true);
@@ -147,6 +148,7 @@ export default function UserRegister() {
   };
   const handleCloseAlertModal = () => {
     setShowAlert(false);
+    navigate("/");
   };
   const handleCloseModal = () => {
     setOpen(false);
@@ -372,7 +374,7 @@ export default function UserRegister() {
       {open && <ModalShow show={open} close={handleCloseModal} />}
       {showAlert && (
         <AlertMessage
-          message={message}
+          messageData={message}
           show={showAlert}
           close={handleCloseAlertModal}
         />

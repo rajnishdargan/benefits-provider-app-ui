@@ -28,7 +28,6 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [message, setMessage] = useState("");
-
   const validate = () => {
     const errors: { username?: string; password?: string } = {};
 
@@ -61,21 +60,24 @@ export default function Login() {
       if (loginResponse?.access_token) {
         localStorage.setItem("token", loginResponse?.access_token);
         setIsLoading(false);
-        navigate("/");
+        setMessage("Login successfully!");
+        setShowAlert(true);
       } else {
         setIsLoading(false);
         setMessage(loginResponse?.response?.data?.error_description);
         setShowAlert(true);
+        navigate(0);
       }
     } catch (err) {
       setIsLoading(false);
       setMessage(err as string);
       setShowAlert(true);
+      navigate(0);
     }
   };
-
   const handleCloseAlertModal = () => {
     setShowAlert(false);
+    navigate(0);
   };
 
   return (
@@ -172,7 +174,7 @@ export default function Login() {
 
       {showAlert && (
         <AlertMessage
-          message={message}
+          messageData={message}
           show={showAlert}
           close={handleCloseAlertModal}
         />
