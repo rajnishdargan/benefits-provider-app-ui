@@ -1,4 +1,11 @@
 // trans form erros in i18 lang translate
+
+interface UserData {
+  id: number;
+  label: string;
+  value: string;
+  length?: number;
+}
 export const transformErrors = (errors: any, schema: any, t: any) => {
   console.log(errors);
   const getTitle = (schemaItem: any) =>
@@ -15,7 +22,7 @@ export const transformErrors = (errors: any, schema: any, t: any) => {
     const getErrorObj = (message: any) => {
       returnData = { ...returnData, message };
     };
-    console.log("error.name--", error);
+
     switch (error.name) {
       case "required":
         getErrorObj(
@@ -42,11 +49,7 @@ export const transformErrors = (errors: any, schema: any, t: any) => {
         break;
       case "enum":
         getErrorObj(t("SELECT_MESSAGE"));
-        // if (error?.params?.allowedValues?.includes("No options available")) {
-        //   getErrorObj(t("INVALID_SELECTION").replace("{field}", t(title)));
-        // } else {
-        //   getErrorObj(t("SELECT_VALID_OPTION").replace("{field}", t(title)));
-        // }
+
         break;
       default:
         getErrorObj(error.message);
@@ -87,4 +90,31 @@ export function generateUUID(): string {
       .slice(10)
       .reduce((str, byte) => str + byte.toString(16).padStart(2, "0"), ""),
   ].join("-");
+}
+export function getPreviewDetails(applicationData: any) {
+  let idCounter = 1;
+  const result: UserData[] = [];
+  // documents.push("docs", "domicileCertificate");
+
+  function formatKey(key: any) {
+    const spacedKey = key.replace(/([a-z])([A-Z])/g, "$1 $2");
+
+    const normalizedKey = spacedKey.replace(/_/g, " ");
+
+    return normalizedKey.replace(/\b\w/g, (char: any) => char.toUpperCase());
+  }
+
+  for (const key in applicationData) {
+    if (applicationData.hasOwnProperty(key)) {
+      // Skip keys listed in the `arr`
+
+      result.push({
+        id: idCounter++,
+        label: formatKey(key),
+        value: applicationData[key],
+      });
+    }
+  }
+
+  return result;
 }

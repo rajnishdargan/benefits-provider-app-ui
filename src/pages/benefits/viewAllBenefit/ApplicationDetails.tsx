@@ -7,7 +7,6 @@ import {
   Input,
   InputGroup,
   InputLeftElement,
-  InputRightElement,
   Text,
   VStack,
 } from "@chakra-ui/react";
@@ -17,13 +16,12 @@ import "react-datepicker/dist/react-datepicker.css";
 import { useParams } from "react-router-dom";
 import { viewApplicationByApplicationId } from "../../../services/benefits";
 import Loading from "../../../components/common/Loading";
+import { getPreviewDetails } from "../../../utils/dataJSON/helper/helper";
 interface ApplicantData {
-  applicationId: string;
-  studentName: string;
-  gender: string;
-  age: number | string;
-  currentClass: string;
-  marks?: number | string; // Optional
+  id: number;
+  label: string;
+  value: string;
+  length?: number;
 }
 interface DocumentData {
   id: string;
@@ -33,13 +31,12 @@ interface DocumentData {
 
 const ApplicationDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const [applicantData, setApplicantData] = useState<ApplicantData | null>(
+  const [applicantData, setApplicantData] = useState<ApplicantData[] | null>(
     null
   );
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState<any[]>([]);
   const [documentData, setDocumentData] = useState<DocumentData[]>([]);
-
+  const [status, setStatus] = useState<any[]>([]);
   useEffect(() => {
     const fetchApplicationData = async () => {
       if (id) {
@@ -48,9 +45,15 @@ const ApplicationDetails: React.FC = () => {
           const applicantionDataResponse = await viewApplicationByApplicationId(
             id
           );
-          setLoading(false);
           setStatus(applicantionDataResponse?.status || "N/A");
-          setApplicantData(applicantionDataResponse?.applicant || null);
+          setLoading(false);
+
+          const data = getPreviewDetails(applicantionDataResponse?.applicant);
+          if (Array.isArray(data) && data.length > 0) {
+            setApplicantData(data as ApplicantData[]);
+          } else {
+            setApplicantData(null);
+          }
           setDocumentData(applicantionDataResponse?.documents || []);
         } catch (error) {
           setLoading(false);
@@ -70,7 +73,7 @@ const ApplicationDetails: React.FC = () => {
   return (
     <Layout
       _titleBar={{
-        title: `Applicant Details : ${applicantData?.applicationId || id}`,
+        title: `Applicant Details : ${applicantData[0]?.id || id}`,
       }}
       showMenu={true}
       showSearchBar={true}
@@ -78,130 +81,48 @@ const ApplicationDetails: React.FC = () => {
     >
       {loading && <Loading />}
       <VStack spacing="50px" p={"20px"} align="stretch">
-        <VStack align="start" spacing={4} p={4} bg="gray.50">
+        <VStack align="start" spacing={4} p={2} bg="gray.50">
           <HStack
             spacing={8}
             w="100%"
-            boxShadow="0px 4px 4px 0px #00000040"
-            p="4"
+            // boxShadow="0px 4px 4px 0px #00000040"
+            p="2"
             borderRadius="md"
             bg="white"
           >
-            <FormControl>
-              <FormLabel>Application ID </FormLabel>
-              <Input
-                value={applicantData.applicationId ?? "N/A"}
-                isReadOnly
-                variant="unstyled"
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel>Status </FormLabel>
-              <Input value={status ?? "N/A"} isReadOnly variant="unstyled" />
-            </FormControl>
+            <Text fontWeight="bold" w="30%">
+              Status:
+            </Text>
+            <Text w="70%">{status ? status.toString() : "N/A"}</Text>
+            <CheckIcon color="#0037B9" />
           </HStack>
-          <HStack
-            spacing={8}
-            w="100%"
-            boxShadow="0px 4px 4px 0px #00000040"
-            p="4"
-            borderRadius="md"
-            bg="white"
-          >
-            <VStack align="start" spacing={2} w="20%">
-              <FormControl>
-                <FormLabel>Full Name</FormLabel>
-                <InputGroup size="md">
-                  <Input
-                    value={applicantData.studentName}
-                    isReadOnly
-                    variant="unstyled"
-                  />
-                  <InputRightElement>
-                    <CheckIcon color="green.500" />
-                  </InputRightElement>
-                </InputGroup>
-              </FormControl>
-            </VStack>
-            <VStack align="start" spacing={2} w="20%">
-              <FormControl>
-                <FormLabel>Gender</FormLabel>
-                <InputGroup size="md">
-                  <Input
-                    value={applicantData.gender}
-                    isReadOnly
-                    variant="unstyled"
-                  />
-                  <InputRightElement>
-                    <CheckIcon color="green.500" />
-                  </InputRightElement>
-                </InputGroup>
-              </FormControl>
-            </VStack>
-            <VStack align="start" spacing={2} w="20%">
-              <FormControl>
-                <FormLabel>Age</FormLabel>
-                <InputGroup size="md">
-                  <Input
-                    value={applicantData.age}
-                    isReadOnly
-                    variant="unstyled"
-                  />
-                  <InputRightElement>
-                    <CheckIcon color="green.500" />
-                  </InputRightElement>
-                </InputGroup>
-              </FormControl>
-            </VStack>
-            <VStack align="start" spacing={2} w="20%">
-              <FormControl>
-                <FormLabel>Class</FormLabel>
-                <InputGroup size="md">
-                  <Input
-                    value={applicantData.currentClass}
-                    isReadOnly
-                    variant="unstyled"
-                  />
-                  <InputRightElement>
-                    <CheckIcon color="green.500" />
-                  </InputRightElement>
-                </InputGroup>
-              </FormControl>
-            </VStack>
-            <VStack align="start" spacing={2} w="20%">
-              <FormControl>
-                <FormLabel>Marks</FormLabel>
-                <InputGroup size="md">
-                  <Input
-                    value={applicantData.marks || "N/A"}
-                    isReadOnly
-                    variant="unstyled"
-                  />
-                  <InputRightElement>
-                    <CheckIcon color="green.500" />
-                  </InputRightElement>
-                </InputGroup>
-              </FormControl>
-            </VStack>
-          </HStack>
+          {applicantData?.map((item) => (
+            <HStack
+              key={item?.id}
+              spacing={8}
+              w="100%"
+              // boxShadow="0px 4px 4px 0px #00000040"
+              p="2"
+              borderRadius="md"
+              bg="white"
+            >
+              <Text fontWeight="bold" w="30%">
+                {item.label}:
+              </Text>
+              <Text w="70%">
+                {item.value !== null ? item.value.toString() : "N/A"}
+              </Text>
+            </HStack>
+          ))}
           <Text fontWeight="bold" fontSize={"24px"}>
             Supporting Documents
           </Text>
-          <HStack
-            spacing={4}
-            w="100%"
-            boxShadow="0px 4px 4px 0px #00000040"
-            p="4"
-            borderRadius="md"
-            bg="white"
-          >
-            {documentData.map((doc) => (
+          {documentData.map((doc) => (
+            <VStack spacing={4} w="100%" p="2" borderRadius="md" bg="white">
               <FormControl key={doc.id}>
-                <FormLabel>{doc.documentType.replace(/_/g, " ")}</FormLabel>
+                <FormLabel>{doc?.documentType?.replace(/_/g, " ")}</FormLabel>
                 <InputGroup>
-                  <InputLeftElement pointerEvents="none">
-                    <CheckIcon color="#0037B9" />
-                  </InputLeftElement>
+                  <InputLeftElement pointerEvents="none"></InputLeftElement>
                   <Input
                     color={"#0037B9"}
                     value={`File: ${doc.fileStoreId}`} // Use documentType for display
@@ -211,8 +132,8 @@ const ApplicationDetails: React.FC = () => {
                   />
                 </InputGroup>
               </FormControl>
-            ))}
-          </HStack>
+            </VStack>
+          ))}
           <HStack spacing={4} justifyContent={"center"} w="100%">
             <Button
               leftIcon={<CheckIcon />}
