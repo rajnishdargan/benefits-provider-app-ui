@@ -1,5 +1,4 @@
-name: DEV EKS DEPLOYMENT
-
+name: Deploy to DEV EKS
 on:
   push:
     branches:
