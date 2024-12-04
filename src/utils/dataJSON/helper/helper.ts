@@ -106,6 +106,7 @@ export function getPreviewDetails(applicationData: any) {
 
   for (const key in applicationData) {
     const hiddenKey = [
+      "age",
       "samagraId",
       "currentSchoolName",
       "currentSchoolAddress",
