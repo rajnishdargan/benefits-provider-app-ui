@@ -55,30 +55,61 @@ const PaginationControls: React.FC<{
   onPageChange: (page: number) => void;
 }> = ({ total, pageSize, currentPage, onPageChange }) => {
   const totalPages = Math.ceil(total / pageSize);
+  const pageLimit = 3;
+  const startPage = Math.floor(currentPage / pageLimit) * pageLimit;
+  const endPage = Math.min(startPage + pageLimit, totalPages);
+
+  const handleNext = () => {
+    if (currentPage < totalPages - 1) {
+      onPageChange(currentPage + 1);
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentPage > 0) {
+      onPageChange(currentPage - 1);
+    }
+  };
 
   return (
     <Box textAlign="center" mt={4}>
-      {Array.from({ length: totalPages }, (_, index) => (
-        <Button
-          key={index}
-          onClick={() => onPageChange(index)}
-          colorScheme={currentPage === index ? "blue" : "gray"}
-          mx={1}
-        >
-          {index + 1}
-        </Button>
-      ))}
+      <HStack spacing={2} justify="center">
+        {currentPage > 0 && (
+          <Button onClick={handlePrev} colorScheme="blue">
+            Previous
+          </Button>
+        )}
+
+        {Array.from({ length: endPage - startPage }, (_, index) => {
+          const pageIndex = startPage + index;
+          return (
+            <Button
+              key={pageIndex}
+              onClick={() => onPageChange(pageIndex)}
+              colorScheme={currentPage === pageIndex ? "blue" : "gray"}
+              mx={1}
+            >
+              {pageIndex + 1}
+            </Button>
+          );
+        })}
+
+        {currentPage < totalPages - 1 && (
+          <Button onClick={handleNext} colorScheme="blue">
+            Next
+          </Button>
+        )}
+      </HStack>
     </Box>
   );
 };
-
 const ApplicantDetails: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState<string>("asc");
   const { id } = useParams<{ id: string }>();
   const [applicationData, setApplicationData] = useState<any[]>([]);
   const [pageIndex, setPageIndex] = useState(0);
-  const pageSize = 5;
+  const pageSize = 10;
   useEffect(() => {
     const fetchApplicationData = async () => {
       if (id) {
@@ -132,7 +163,7 @@ const ApplicantDetails: React.FC = () => {
   return (
     <Layout
       _titleBar={{
-        title: `Applications List: ${id}`,
+        title: `Application List: ${id}`,
       }}
       showMenu={true}
       showSearchBar={true}
