@@ -216,7 +216,7 @@ export default function UserRegister() {
                   onChange={(e) =>
                     handleInputChange("userName", e.target.value)
                   }
-                  placeholder="user name"
+                  placeholder="Enter username"
                   isRequired
                   marginBottom={"12px"}
                 />
@@ -230,7 +230,7 @@ export default function UserRegister() {
                   type="email"
                   value={email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
-                  placeholder="Email ID"
+                  placeholder="Enter email ID"
                   isRequired
                   marginBottom={"8px"}
                 />
@@ -247,7 +247,7 @@ export default function UserRegister() {
                     const value = e.target.value.replace(/[^0-9]/g, "");
                     handleInputChange("mobile", value);
                   }}
-                  placeholder="Mobile number"
+                  placeholder="Enter mobile number"
                   isRequired
                   marginBottom={"8px"}
                 />
@@ -287,7 +287,7 @@ export default function UserRegister() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Password"
+                  placeholder="Enter password"
                   isRequired
                   marginBottom={"12px"}
                 />

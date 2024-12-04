@@ -118,7 +118,7 @@ export default function Login() {
                   onChange={(e) => setUserName(e.target.value)}
                   isRequired
                   marginTop={"14px"}
-                  placeholder="Organisation Email"
+                  placeholder="Enter username"
                 />
                 {errors.username && (
                   <FormErrorMessage>{errors.username}</FormErrorMessage>
@@ -135,7 +135,7 @@ export default function Login() {
                   onChange={(e) => setPassword(e.target.value)}
                   isRequired
                   marginTop={"14px"}
-                  placeholder="Organisation Email"
+                  placeholder="Enter password"
                 />
                 {errors.password && (
                   <FormErrorMessage>{errors.password}</FormErrorMessage>

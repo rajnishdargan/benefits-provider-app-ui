@@ -14,7 +14,7 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
-import Logo from "../../assets/Images/Logo.png";
+import Logo from "../../assets/Images/logo.png";
 import { useNavigate } from "react-router-dom";
 
 interface HeaderProps {
@@ -47,7 +47,7 @@ const Header: React.FC<HeaderProps> = ({
     {
       label: "Dashboard",
       onClick: () => {
-        navigate("/home");
+        navigate("/");
       },
     },
     // {

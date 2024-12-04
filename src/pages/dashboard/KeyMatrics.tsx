@@ -60,7 +60,7 @@ const KeyMetrics: React.FC<KeyMetricsProps> = ({
         {/* October 2024 Dropdown */}
         <Select
           w="175px"
-          placeholder="October 2024"
+          placeholder="November 2024"
           borderColor="gray.300"
           bg="white"
           _hover={{ borderColor: "gray.400" }}
