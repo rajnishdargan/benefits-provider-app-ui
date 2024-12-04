@@ -105,9 +105,16 @@ export function getPreviewDetails(applicationData: any) {
   }
 
   for (const key in applicationData) {
+    const hiddenKey = [
+      "samagraId",
+      "currentSchoolName",
+      "currentSchoolAddress",
+      "currentSchoolAddressDistrict",
+    ];
     if (applicationData.hasOwnProperty(key)) {
-      // Skip keys listed in the `arr`
-
+      if (hiddenKey?.includes(key)) {
+        continue;
+      }
       result.push({
         id: idCounter++,
         label: formatKey(key),

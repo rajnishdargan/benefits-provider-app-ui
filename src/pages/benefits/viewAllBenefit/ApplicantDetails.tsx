@@ -1,5 +1,7 @@
 import { SearchIcon, ArrowForwardIcon } from "@chakra-ui/icons";
 import {
+  Box,
+  Button,
   HStack,
   IconButton,
   Input,
@@ -46,11 +48,37 @@ const DetailsButton = ({ rowData }: ICellTextProps) => {
   );
 };
 
+const PaginationControls: React.FC<{
+  total: number;
+  pageSize: number;
+  currentPage: number;
+  onPageChange: (page: number) => void;
+}> = ({ total, pageSize, currentPage, onPageChange }) => {
+  const totalPages = Math.ceil(total / pageSize);
+
+  return (
+    <Box textAlign="center" mt={4}>
+      {Array.from({ length: totalPages }, (_, index) => (
+        <Button
+          key={index}
+          onClick={() => onPageChange(index)}
+          colorScheme={currentPage === index ? "blue" : "gray"}
+          mx={1}
+        >
+          {index + 1}
+        </Button>
+      ))}
+    </Box>
+  );
+};
+
 const ApplicantDetails: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState<string>("asc");
   const { id } = useParams<{ id: string }>();
-  const [applicationData, setApplicationData] = useState([]);
+  const [applicationData, setApplicationData] = useState<any[]>([]);
+  const [pageIndex, setPageIndex] = useState(0);
+  const pageSize = 5;
   useEffect(() => {
     const fetchApplicationData = async () => {
       if (id) {
@@ -74,11 +102,33 @@ const ApplicantDetails: React.FC = () => {
     fetchApplicationData();
   }, [id]);
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
+    setSearchTerm(e.target.value.toLowerCase());
+    setPageIndex(0);
   };
   const handleSortOrderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSortOrder(e.target.value);
+    setPageIndex(0);
   };
+  const handlePageChange = (newPageIndex: number) => {
+    setPageIndex(newPageIndex);
+  };
+  const filteredData = applicationData?.filter((item) =>
+    item?.studentName.toLowerCase().includes(searchTerm)
+  );
+
+  const sortedData = [...filteredData].sort((a, b) => {
+    if (sortOrder === "asc") {
+      return a.studentName.localeCompare(b.studentName);
+    } else if (sortOrder === "desc") {
+      return b.studentName.localeCompare(a.studentName);
+    }
+    return 0;
+  });
+
+  const paginatedData = sortedData.slice(
+    pageIndex * pageSize,
+    pageIndex * pageSize + pageSize
+  );
   return (
     <Layout
       _titleBar={{
@@ -115,7 +165,7 @@ const ApplicantDetails: React.FC = () => {
         </HStack>
         <Table
           columns={columns}
-          data={applicationData}
+          data={paginatedData}
           detailsRows={[1]}
           rowKeyField={"applicationId"}
           childComponents={{
@@ -123,6 +173,12 @@ const ApplicantDetails: React.FC = () => {
               content: (props: ICellTextProps) => CellTextContent(props),
             },
           }}
+        />
+        <PaginationControls
+          total={sortedData.length}
+          pageSize={pageSize}
+          currentPage={pageIndex}
+          onPageChange={handlePageChange}
         />
       </VStack>
     </Layout>
