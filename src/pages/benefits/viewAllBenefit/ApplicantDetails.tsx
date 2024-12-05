@@ -23,6 +23,12 @@ import { viewAllApplicationByBenefitId } from "../../../services/benefits";
 const columns = [
   { key: "studentName", title: "Name", dataType: DataType.String },
   { key: "applicationId", title: "Application ID", dataType: DataType.Number },
+  {
+    key: "orderId",
+    title: "Order ID (Beneficiary)",
+    dataType: DataType.Number,
+  },
+
   { key: "status", title: "Status", dataType: DataType.String },
 
   {
@@ -119,7 +125,8 @@ const ApplicantDetails: React.FC = () => {
           );
           const processedData = applicantionDataResponse?.map((item: any) => ({
             studentName: item?.applicant?.studentName || "N/A",
-            applicationId: item?.id || "N/A",
+            applicationId: item?.applicant?.applicationId || "N/A",
+            orderId: item?.order_id || "N/A",
             status: item?.status || "N/A",
           }));
           setApplicationData(processedData);
