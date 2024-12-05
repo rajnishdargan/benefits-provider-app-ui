@@ -113,6 +113,7 @@ const BenefitFormUI: React.FC = () => {
     setFormData(formData);
   };
   const handleFormSubmit = async () => {
+    setDisableSubmit(true);
     const formDataNew: any = { ...formData };
     formDataNew.benefit_id = id;
     delete formDataNew.docs;
@@ -124,7 +125,6 @@ const BenefitFormUI: React.FC = () => {
       }
     });
     // API call for submit id and sent it to the post message
-
     const response = await submitForm(formDataNew);
     if (response) {
       setDisableSubmit(true);
