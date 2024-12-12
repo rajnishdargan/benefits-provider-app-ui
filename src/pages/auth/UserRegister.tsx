@@ -51,58 +51,48 @@ export default function UserRegister() {
   const validateField = (field: any, value: any) => {
     let error = "";
 
-    switch (field) {
-      case "email":
-        if (!value.trim()) {
-          error = "Email is required.";
-        } else if (
-          !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(value)
-        ) {
-          error = "Invalid email address.";
-        }
-        break;
-      case "name":
-        if (!value.trim()) {
-          error = "Name is required.";
-        } else if (!/^[a-zA-Z\s]{2,50}$/.test(value)) {
-          error =
-            "Name must be 2-50 characters long and contain only letters and spaces.";
-        }
-        break;
-      case "mobile":
-        if (!value.trim()) {
-          error = "Mobile number is required.";
-        } else if (!/^\d{10}$/.test(value)) {
-          error = "Mobile number must be 10 digits.";
-        }
-        break;
-      case "userName":
-        if (!value.trim()) {
-          error = "Username is required.";
-        } else if (!/^\w{3,15}$/.test(value)) {
-          error =
-            "Username must be 3-15 characters and can only contain letters, numbers, or underscores.";
-        }
-        break;
-      case "password":
-        if (!value.trim()) {
-          error = "Password is required.";
-        } else if (
-          !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/.test(
-            value
-          )
-        ) {
-          error =
-            "Password must be at least 6 characters and include one uppercase letter, one lowercase letter, one number, and one special character.";
-        }
-        break;
-      case "gender":
-        if (!value) {
-          error = "Gender is required.";
-        }
-        break;
-      default:
-        break;
+    if (field === "email") {
+      if (!value.trim()) {
+        error = "Email is required.";
+      } else if (
+        !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(value)
+      ) {
+        error = "Invalid email address.";
+      }
+    } else if (field === "name") {
+      if (!value.trim()) {
+        error = "Name is required.";
+      } else if (!/^[a-zA-Z\s]{2,50}$/.test(value)) {
+        error =
+          "Name must be 2-50 characters long and contain only letters and spaces.";
+      }
+    } else if (field === "mobile") {
+      if (!value.trim()) {
+        error = "Mobile number is required.";
+      } else if (!/^\d{10}$/.test(value)) {
+        error = "Mobile number must be 10 digits.";
+      }
+    } else if (field === "userName") {
+      if (!value.trim()) {
+        error = "Username is required.";
+      } else if (!/^\w{3,15}$/.test(value)) {
+        error =
+          "Username must be 3-15 characters and can only contain letters, numbers, or underscores.";
+      }
+    } else if (field === "password") {
+      if (!value.trim()) {
+        error = t("LOGIN_PASSWORD_REQUIRED_HELPER_TEXT");
+      } else if (
+        !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/.test(
+          value
+        )
+      ) {
+        error = t("REGISTER_PASSWORD_LENGTH_HELPER_TEXT");
+      }
+    } else if (field === "gender") {
+      if (!value) {
+        error = "Gender is required.";
+      }
     }
 
     setErrors((prevErrors) => ({ ...prevErrors, [field]: error }));
@@ -208,6 +198,8 @@ export default function UserRegister() {
                 {errors.name && (
                   <FormErrorMessage>{errors.name}</FormErrorMessage>
                 )}
+              </FormControl>
+              <FormControl id="userName" isInvalid={!!errors.userName}>
                 <Text fontSize={"16px"} fontWeight={400} marginBottom={"8px"}>
                   {t("REGISTER_ORGANISATION_NAME_LABEL")}
                 </Text>
@@ -224,6 +216,8 @@ export default function UserRegister() {
                 {errors.userName && (
                   <FormErrorMessage>{errors.userName}</FormErrorMessage>
                 )}
+              </FormControl>
+              <FormControl id="email" isInvalid={!!errors.email}>
                 <Text fontSize={"16px"} fontWeight={400} marginBottom={"8px"}>
                   {t("REGISTER_EMAIL_ID_LABEL")}
                 </Text>
@@ -238,6 +232,8 @@ export default function UserRegister() {
                 {errors.email && (
                   <FormErrorMessage>{errors.email}</FormErrorMessage>
                 )}
+              </FormControl>
+              <FormControl id="mobile" isInvalid={!!errors.mobile}>
                 <Text fontSize={"16px"} fontWeight={400} marginBottom={"8px"}>
                   {t("REGISTER_MOBILE_NUMBER_LABEL")}
                 </Text>
@@ -255,39 +251,42 @@ export default function UserRegister() {
                 {errors.mobile && (
                   <FormErrorMessage>{errors.mobile}</FormErrorMessage>
                 )}
+              </FormControl>
 
-                <FormControl id="gender" isInvalid={!!errors.gender}>
-                  <FormLabel
-                    fontSize={"16px"}
-                    fontWeight={400}
-                    marginBottom={"8px"}
-                  >
-                    {t("REGISTER_GENDER_LABEL")}
-                  </FormLabel>
-                  <RadioGroup
-                    onChange={(value) => handleInputChange("gender", value)}
-                    value={gender}
-                    marginBottom={"8px"}
-                  >
-                    <HStack spacing="24px">
-                      <Radio value="male">{t("REGISTER_GENDER_MALE")}</Radio>
-                      <Radio value="female">
-                        {t("REGISTER_GENDER_FEMALE")}
-                      </Radio>
-                    </HStack>
-                  </RadioGroup>
-                  {errors.gender && (
-                    <FormErrorMessage>{errors.gender}</FormErrorMessage>
-                  )}
-                </FormControl>
-
+              <FormControl id="gender" isInvalid={!!errors.gender}>
+                <FormLabel
+                  fontSize={"16px"}
+                  fontWeight={400}
+                  marginBottom={"8px"}
+                >
+                  {t("REGISTER_GENDER_LABEL")}
+                </FormLabel>
+                <RadioGroup
+                  onChange={(value) => handleInputChange("gender", value)}
+                  value={gender}
+                  marginBottom={"8px"}
+                >
+                  <HStack spacing="24px">
+                    <Radio value="male">{t("REGISTER_GENDER_MALE")}</Radio>
+                    <Radio value="female">{t("REGISTER_GENDER_FEMALE")}</Radio>
+                  </HStack>
+                </RadioGroup>
+                {errors.gender && (
+                  <FormErrorMessage>{errors.gender}</FormErrorMessage>
+                )}
+              </FormControl>
+              <FormControl id="password" isInvalid={!!errors.password}>
                 <Text fontSize={"16px"} fontWeight={400} marginBottom={"8px"}>
                   {t("REGISTER_PASSWORD_LABEL")}
                 </Text>
                 <Input
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="new-password"
+                  data-private
+                  onChange={(e) =>
+                    handleInputChange("password", e.target.value)
+                  }
                   placeholder="Enter password"
                   isRequired
                   marginBottom={"12px"}
@@ -354,7 +353,8 @@ export default function UserRegister() {
                     !password ||
                     !mobile ||
                     !userName ||
-                    !gender
+                    !gender ||
+                    !Object.values(errors).every((error) => error === "")
                   }
                   onClick={() => handleRegister()}
                 >

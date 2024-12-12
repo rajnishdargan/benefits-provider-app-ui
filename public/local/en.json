@@ -40,6 +40,7 @@
   "REGISTER_ORGANISATION_NAME_LABEL": "Username",
   "REGISTER_PROCEED_BUTTON": "Proceed",
   "REGISTER_ERROR": "Provider with this email already exists, try login",
+  "REGISTER_PASSWORD_LENGTH_HELPER_TEXT": "Password must be at least 6 characters and include one uppercase letter, one lowercase letter, one number, and one special character.",
   "DASHBOARD_VISUAL_REPRESENTATION_TITLE": "Visual Representation",
   "REGISTER_TERMS_AND_CONDTION_TITLE": "Terms and Conditions",
   "REGISTER_TERMS_AND_CONDTION_TEXT": "Read and accept the",

@@ -43,26 +43,6 @@ export const visualRepresentation = {
   ],
 };
 
-// Sample data in JSON format
-export const tableData = Array.from({ length: 30 }, (_, i) => {
-  const statusList = ["Active", "Closed", "Drafts"];
-  const status = statusList[Math.floor(i / 10)];
-  return {
-    id: Math.floor(Math.random() * 1000) + 1,
-    name: `Pre-Matric Scholarship-SC ${status} ${Math.floor(
-      Math.random() * 1000
-    )}`,
-    applicants: Math.floor(Math.random() * 1000),
-    approved: Math.floor(Math.random() * 1000),
-    rejected: Math.floor(Math.random() * 1000),
-    disbursalPending: Math.floor(Math.random() * 1000),
-    deadline: `${Math.floor(Math.random() * 12) + 1} ${
-      Math.floor(Math.random() * 28) + 1
-    }, ${Math.floor(Math.random() * 3) + 2021}`,
-    status,
-  };
-});
-
 // sample data for card on dashboard
 export const cardData = [
   {
