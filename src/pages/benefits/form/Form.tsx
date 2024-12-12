@@ -49,12 +49,9 @@ const fixedStep = [
 export default function CreateBenefitForm() {
   const [formData, setFormData] = React.useState({});
 
-  // Handle form submission
   const handleSubmit = ({ formData }: any) => {
     console.log("Submitted Data:", formData);
     setFormData(formData);
-    // Navigate to next step
-    // navigate(`/benefits/form`); // Replace with actual step logic
   };
 
   return (

@@ -1,13 +1,11 @@
 import { Text } from "@chakra-ui/react";
 import Chart from "react-apexcharts";
 
-// Error boundary wrapper for the Chart component
 interface ChartProps {
   options: {
     labels: string[];
-    [key: string]: any; // This allows for any other properties
   };
-  series: number[]; // Assuming series is an array of numbers
+  series: number[];
 }
 const ChartWithErrorBoundary: React.FC<ChartProps> = ({ options, series }) => {
   if (!series?.length || !options?.labels?.length) {

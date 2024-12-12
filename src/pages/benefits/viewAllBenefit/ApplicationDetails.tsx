@@ -80,14 +80,7 @@ const ApplicationDetails: React.FC = () => {
       {loading && <Loading />}
       <VStack spacing="50px" p={"20px"} align="stretch">
         <VStack align="start" spacing={4} p={2} bg="gray.50">
-          <HStack
-            spacing={8}
-            w="100%"
-            // boxShadow="0px 4px 4px 0px #00000040"
-            p="2"
-            borderRadius="md"
-            bg="white"
-          >
+          <HStack spacing={8} w="100%" p="2" borderRadius="md" bg="white">
             <Text fontWeight="bold" w="30%">
               Status:
             </Text>
@@ -98,7 +91,6 @@ const ApplicationDetails: React.FC = () => {
               key={item?.id}
               spacing={8}
               w="100%"
-              // boxShadow="0px 4px 4px 0px #00000040"
               p="2"
               borderRadius="md"
               bg="white"
@@ -129,7 +121,7 @@ const ApplicationDetails: React.FC = () => {
                   <InputLeftElement pointerEvents="none"></InputLeftElement>
                   <Input
                     color={"#0037B9"}
-                    value={`File: ${doc.fileStoreId}`} // Use documentType for display
+                    value={`File: ${doc.fileStoreId}`}
                     isReadOnly
                     variant="unstyled"
                     pl="2.5rem"

@@ -2,7 +2,7 @@ import { HStack, Text, VStack } from "@chakra-ui/react";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import CommonCard from "../../components/common/card/CommonCard";
-import StatBox from "../../components/common/widget/StatBox"; // Reusing StatBox
+import StatBox from "../../components/common/widget/StatBox";
 import Chart from "react-apexcharts";
 
 interface ApplicationData {

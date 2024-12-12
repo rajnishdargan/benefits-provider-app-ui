@@ -25,16 +25,10 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
+import PaginationList from "./PaginationList";
 const columns = [
   { key: "name", title: "Name", dataType: DataType.String },
   { key: "applicants", title: "Applicants", dataType: DataType.Number },
-  /* { key: "approved", title: "Approved", dataType: DataType.Number },
-  { key: "rejected", title: "Rejected", dataType: DataType.Number },
-  {
-    key: "disbursalPending",
-    title: "Disbursal Pending",
-    dataType: DataType.Number,
-  },*/
   { key: "deadline", title: "Deadline", dataType: DataType.String },
   {
     key: "actions",
@@ -42,6 +36,13 @@ const columns = [
     dataType: DataType.String,
   },
 ];
+
+interface Benefit {
+  name: string;
+  id: string | number;
+  applicants: number;
+  deadline: string;
+}
 const DeadLineCell = (prop: ICellTextProps) => {
   return (
     <HStack>
@@ -86,7 +87,8 @@ const ViewAllBenefits = () => {
   const { t } = useTranslation();
   const datePickerRef = useRef<DatePicker | null>(null);
   const datePickerCreatedRef = useRef<DatePicker | null>(null);
-
+  const [pageIndex, setPageIndex] = useState(0);
+  const PAGE_SIZE = 10;
   const fetchBenefitsData = async () => {
     const statusValues = {
       0: "ACTIVE",
@@ -95,13 +97,13 @@ const ViewAllBenefits = () => {
     };
 
     const payload = {
-      name: searchTerm || null,
+      name: searchTerm.toLowerCase() || null,
       valid_till: validTill ?? null,
       created_start: createdAt ?? null,
       created_end: createdAt ?? null,
       status: statusValues[activeTab as 0 | 1 | 2],
-      page_no: 0,
-      page_size: 10,
+      page_no: pageIndex,
+      page_size: PAGE_SIZE,
       sort_by: "benefit_name",
       sort_order: sortOrder,
     };
@@ -123,6 +125,7 @@ const ViewAllBenefits = () => {
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
+    setPageIndex(0);
   };
 
   const handleValidTillChange = (date: Date | null) => {
@@ -139,12 +142,23 @@ const ViewAllBenefits = () => {
     } else {
       setCreatedAt(null);
     }
+    setPageIndex(0);
   };
 
   const handleSortOrderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSortOrder(e.target.value);
+    setPageIndex(0);
   };
-
+  const handlePageChange = (newPageIndex: number) => {
+    setPageIndex(newPageIndex);
+  };
+  const filteredData = data?.filter((item: Benefit) =>
+    item?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  const paginatedData = filteredData?.slice(
+    pageIndex * PAGE_SIZE,
+    pageIndex * PAGE_SIZE + PAGE_SIZE
+  );
   return (
     <Layout
       _titleBar={{
@@ -251,7 +265,6 @@ const ViewAllBenefits = () => {
             </InputGroup>
           </HStack>
 
-          {/* Sort Order */}
           <Select
             placeholder="Sort Order"
             onChange={handleSortOrderChange}
@@ -278,7 +291,7 @@ const ViewAllBenefits = () => {
         {data?.length > 0 ? (
           <Table
             columns={columns}
-            data={data}
+            data={paginatedData}
             rowKeyField={"id"}
             childComponents={{
               cellText: {
@@ -291,6 +304,12 @@ const ViewAllBenefits = () => {
             {t("BENEFIT_LIST_TABLE_NO_DATA_MESSAGE")}
           </Text>
         )}
+        <PaginationList
+          total={data?.length}
+          pageSize={PAGE_SIZE}
+          currentPage={pageIndex}
+          onPageChange={handlePageChange}
+        />
       </VStack>
     </Layout>
   );

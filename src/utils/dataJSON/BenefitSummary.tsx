@@ -1,5 +1,3 @@
-//Heading
-
 export const tableHeader = [
   { id: 1, label: "Name" },
   { id: 2, label: "Applicants" },
@@ -11,16 +9,13 @@ export const tableHeader = [
 ];
 
 export const visualRepresentation = {
-  applicantsDisbursals: Array.from(
-    { length: 7 },
-    (_, i) => ({
-      label: new Date(Date.now() + i * 24 * 60 * 60 * 1000).toLocaleString(
-        "en-us",
-        { weekday: "long" }
-      ),
-      count: Math.floor(Math.random() * 100),
-    }) // Extract the first 2 letters
-  ),
+  applicantsDisbursals: Array.from({ length: 7 }, (_, i) => ({
+    label: new Date(Date.now() + i * 24 * 60 * 60 * 1000).toLocaleString(
+      "en-us",
+      { weekday: "long" }
+    ),
+    count: Math.floor(Math.random() * 100),
+  })),
   gender: [
     { label: "Male", count: 13 },
     { label: "Female", count: 27 },
@@ -43,7 +38,6 @@ export const visualRepresentation = {
   ],
 };
 
-// sample data for card on dashboard
 export const cardData = [
   {
     id: 1,

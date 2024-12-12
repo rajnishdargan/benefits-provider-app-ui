@@ -44,14 +44,15 @@ const BenefitFormUI: React.FC = () => {
         );
 
         const prop = applicationFormSchema?.properties;
+
         Object.keys(prop).forEach((item: string) => {
           if (receivedData?.[item] && receivedData?.[item] !== "") {
             prop[item] = {
               ...prop[item],
-              // readOnly: true,
             };
           }
         });
+
         setFormData(receivedData);
         getEligibilitySchemaData(receivedData, benefit, {
           ...applicationFormSchema,
@@ -105,7 +106,6 @@ const BenefitFormUI: React.FC = () => {
       required,
       properties,
     };
-
     setFormSchema(allSchema);
   };
 
@@ -114,7 +114,6 @@ const BenefitFormUI: React.FC = () => {
   };
   const handleFormSubmit = async () => {
     setDisableSubmit(true);
-
     const formDataNew: any = { ...formData };
     formDataNew.benefit_id = id;
     delete formDataNew.docs;
@@ -158,7 +157,6 @@ const BenefitFormUI: React.FC = () => {
         onChange={handleChange}
         onSubmit={handleFormSubmit}
         templates={{ ButtonTemplates: { SubmitButton } }}
-        // transformErrors={(errors) => transformErrors(errors, formSchema, t)}
         extraErrors={extraErrors}
       />
       <CommonButton

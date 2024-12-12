@@ -31,14 +31,12 @@ export default function Login() {
   const validate = () => {
     const errors: { username?: string; password?: string } = {};
 
-    // Email validation
     if (!userName.trim()) {
       errors.username = "Username is required.";
     } else if (!/^\w{3,15}$/.test(userName)) {
       errors.username =
         "Username must be 3-15 characters and contain only letters, numbers, or underscores.";
     }
-    // Password validation
     if (!password.trim()) {
       errors.password = t("LOGIN_PASSWORD_REQUIRED_HELPER_TEXT");
     } else if (password.length < 6) {

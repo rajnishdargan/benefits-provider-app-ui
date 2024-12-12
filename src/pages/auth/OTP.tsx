@@ -11,7 +11,6 @@ import {
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-
 import Layout from "../../components/layout/Layout";
 import LeftSideBar from "../../components/common/login/LeftSideBar";
 import Loading from "../../components/common/Loading";

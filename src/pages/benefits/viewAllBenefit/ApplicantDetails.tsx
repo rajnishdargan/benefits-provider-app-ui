@@ -1,7 +1,5 @@
 import { SearchIcon, ArrowForwardIcon } from "@chakra-ui/icons";
 import {
-  Box,
-  Button,
   HStack,
   IconButton,
   Input,
@@ -17,7 +15,7 @@ import React, { useEffect, useState } from "react";
 import Layout from "../../../components/layout/Layout";
 import "react-datepicker/dist/react-datepicker.css";
 import { useNavigate, useParams } from "react-router-dom";
-
+import PaginationList from "./PaginationList";
 import { viewAllApplicationByBenefitId } from "../../../services/benefits";
 
 const columns = [
@@ -51,62 +49,6 @@ const DetailsButton = ({ rowData }: ICellTextProps) => {
         }}
       />
     </HStack>
-  );
-};
-
-const PaginationControls: React.FC<{
-  total: number;
-  pageSize: number;
-  currentPage: number;
-  onPageChange: (page: number) => void;
-}> = ({ total, pageSize, currentPage, onPageChange }) => {
-  const totalPages = Math.ceil(total / pageSize);
-  const pageLimit = 3;
-  const startPage = Math.floor(currentPage / pageLimit) * pageLimit;
-  const endPage = Math.min(startPage + pageLimit, totalPages);
-
-  const handleNext = () => {
-    if (currentPage < totalPages - 1) {
-      onPageChange(currentPage + 1);
-    }
-  };
-
-  const handlePrev = () => {
-    if (currentPage > 0) {
-      onPageChange(currentPage - 1);
-    }
-  };
-
-  return (
-    <Box textAlign="center" mt={4}>
-      <HStack spacing={2} justify="center">
-        {currentPage > 0 && (
-          <Button onClick={handlePrev} colorScheme="blue">
-            Previous
-          </Button>
-        )}
-
-        {Array.from({ length: endPage - startPage }, (_, index) => {
-          const pageIndex = startPage + index;
-          return (
-            <Button
-              key={pageIndex}
-              onClick={() => onPageChange(pageIndex)}
-              colorScheme={currentPage === pageIndex ? "blue" : "gray"}
-              mx={1}
-            >
-              {pageIndex + 1}
-            </Button>
-          );
-        })}
-
-        {currentPage < totalPages - 1 && (
-          <Button onClick={handleNext} colorScheme="blue">
-            Next
-          </Button>
-        )}
-      </HStack>
-    </Box>
   );
 };
 const ApplicantDetails: React.FC = () => {
@@ -212,7 +154,7 @@ const ApplicantDetails: React.FC = () => {
             },
           }}
         />
-        <PaginationControls
+        <PaginationList
           total={sortedData.length}
           pageSize={pageSize}
           currentPage={pageIndex}
