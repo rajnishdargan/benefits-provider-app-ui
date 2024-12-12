@@ -38,6 +38,7 @@ export default function UserRegister() {
   const [showAlert, setShowAlert] = React.useState(false);
   const [message, setMessage] = React.useState("");
   const [showTooltip, setShowTooltip] = React.useState(false);
+
   const [errors, setErrors] = React.useState({
     email: "",
     name: "",
@@ -78,7 +79,7 @@ export default function UserRegister() {
       case "userName":
         if (!value.trim()) {
           error = "Username is required.";
-        } else if (!/^[a-zA-Z0-9_]{3,15}$/.test(value)) {
+        } else if (!/^\w{3,15}$/.test(value)) {
           error =
             "Username must be 3-15 characters and can only contain letters, numbers, or underscores.";
         }
@@ -357,11 +358,6 @@ export default function UserRegister() {
                   }
                   onClick={() => handleRegister()}
                 >
-                  {/* {
-                  localStorage.setItem("token", "true");
-                  
-                  navigate("/otp");
-                } */}
                   <Text fontSize="14px" fontWeight="400">
                     {t("REGISTER_PROCEED_BUTTON")}
                   </Text>

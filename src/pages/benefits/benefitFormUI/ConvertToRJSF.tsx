@@ -37,13 +37,13 @@ export const convertApplicationFormFields = (
       title: field.label,
     };
     if (field.name === "bankAccountNumber") {
-      fieldSchema.minLength = 9; // Minimum length for bank account numbers
-      fieldSchema.maxLength = 18; // Maximum length for bank account numbers
-      fieldSchema.pattern = "^[0-9]+$"; // Ensure only numbers are allowed
+      fieldSchema.minLength = 9;
+      fieldSchema.maxLength = 18;
+      fieldSchema.pattern = "^[0-9]+$";
     }
 
     if (field.name === "bankIfscCode") {
-      fieldSchema.pattern = "^[A-Z]{4}0[A-Z0-9]{6}$"; // IFSC code format
+      fieldSchema.pattern = "^[A-Z]{4}0[A-Z0-9]{6}$";
       fieldSchema.title = field.label || "Enter valid IFSC code";
     }
     if (field.type === "radio" || field.type === "select") {
@@ -69,13 +69,10 @@ export const convertDocumentFields = (
     properties: {},
   };
 
-  // Object to hold grouped results
   const groupedByAllowedProofs: any = {};
 
-  // Iterate through the data
   schemaArr.forEach((item) => {
     item.allowedProofs.forEach((proof: any) => {
-      // If the proof does not exist in the results object, create it
       if (!groupedByAllowedProofs[proof]) {
         groupedByAllowedProofs[proof] = {
           name: proof,
@@ -92,14 +89,11 @@ export const convertDocumentFields = (
           ),
         };
       }
-      // Push the current item to the corresponding proof's schema
       groupedByAllowedProofs[proof].schema.push(item);
     });
   });
 
-  // Convert the results object to an array
   const schemaDoc = Object.values(groupedByAllowedProofs);
-  // const userDocsDataType = userDocs?.docs_datatype || [];
   schemaDoc.forEach((field: any) => {
     const matchingDocs = userDocs?.filter((doc: Doc) =>
       field?.name?.includes(doc.doc_subtype)
@@ -119,16 +113,19 @@ export const convertDocumentFields = (
         e.documentType ? e.documentType : e?.criteria?.name || ""
       )
       .join(", ")}`;
+    let enumValuesToUse: string[] = [];
+    if (enumValues.length > 0) {
+      enumValuesToUse = enumValues as string[];
+    } else if (field.isRequired) {
+      enumValuesToUse = [];
+    } else {
+      enumValuesToUse = [""];
+    }
     schema.properties![field?.name] = {
       type: "string",
       title: fieldLabel,
       required: field.isRequired,
-      enum:
-        enumValues.length > 0
-          ? (enumValues as string[])
-          : field.isRequired
-          ? []
-          : [""],
+      enum: enumValuesToUse,
       enumNames: (enumNames as string[]) || [],
       default: enumValues[0] || "",
     };

@@ -1,5 +1,3 @@
-// trans form erros in i18 lang translate
-
 interface UserData {
   id: number;
   label: string;
@@ -12,9 +10,6 @@ export const transformErrors = (errors: any, schema: any, t: any) => {
     schemaItem?.label || schemaItem?.title || "";
 
   const getMessage = (error: any) => {
-    // if (error?.stack) {
-    //   return { stack: error?.stack };
-    // }
     const schemaItem = schema?.properties?.[error?.property?.replace(".", "")];
     const title = getTitle(schemaItem);
     let returnData = {};
@@ -70,9 +65,10 @@ export function generateUUID(): string {
   }
   const array = new Uint8Array(16);
   crypto.getRandomValues(array);
-  array[6] = (array[6] & 0x0f) | 0x40; // Version 4 +
-  array[8] = (array[8] & 0x3f) | 0x80; // Variant 10xxxxxxVariant 10xxxxxx +
-  // Convert array to UUID format: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
+  // Version 4 +
+  array[6] = (array[6] & 0x0f) | 0x40;
+  // Variant 10xxxxxxVariant 10xxxxxx Convert array to UUID format: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
+  array[8] = (array[8] & 0x3f) | 0x80;
   return [
     array
       .slice(0, 4)
@@ -94,7 +90,6 @@ export function generateUUID(): string {
 export function getPreviewDetails(applicationData: any) {
   let idCounter = 1;
   const result: UserData[] = [];
-  // documents.push("docs", "domicileCertificate");
 
   function formatKey(key: any) {
     const spacedKey = key.replace(/([a-z])([A-Z])/g, "$1 $2");
@@ -123,6 +118,5 @@ export function getPreviewDetails(applicationData: any) {
       });
     }
   }
-
   return result;
 }

@@ -34,15 +34,15 @@ export default function Login() {
     // Email validation
     if (!userName.trim()) {
       errors.username = "Username is required.";
-    } else if (!/^[a-zA-Z0-9_]{3,15}$/.test(userName)) {
+    } else if (!/^\w{3,15}$/.test(userName)) {
       errors.username =
         "Username must be 3-15 characters and contain only letters, numbers, or underscores.";
     }
     // Password validation
     if (!password.trim()) {
-      errors.password = "Password is required.";
+      errors.password = t("LOGIN_PASSWORD_REQUIRED_HELPER_TEXT");
     } else if (password.length < 6) {
-      errors.password = "Password must be at least 6 characters.";
+      errors.password = t("LOGIN_PASSWORD_LENGTH_HELPER_TEXT");
     }
 
     setErrors(errors);

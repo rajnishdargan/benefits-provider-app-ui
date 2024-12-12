@@ -115,7 +115,14 @@ const ApplicationDetails: React.FC = () => {
             Supporting Documents
           </Text>
           {documentData.map((doc) => (
-            <VStack spacing={4} w="100%" p="2" borderRadius="md" bg="white">
+            <VStack
+              key={doc.id}
+              spacing={4}
+              w="100%"
+              p="2"
+              borderRadius="md"
+              bg="white"
+            >
               <FormControl key={doc.id}>
                 <FormLabel>{doc?.documentType?.replace(/_/g, " ")}</FormLabel>
                 <InputGroup>

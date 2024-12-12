@@ -21,6 +21,8 @@
   "LOGIN_OTP_TITLE": "User Log In",
   "LOGIN_OTP_SUBMIT_BUTTON": "Submit",
   "LOGIN_ERROR": "Provider with this email does not exist, try registering",
+  "LOGIN_PASSWORD_REQUIRED_HELPER_TEXT": "Password is required.",
+  "LOGIN_PASSWORD_LENGTH_HELPER_TEXT": "Password must be at least 6 characters.",
   "OTP_WELCOME_TEXT": "Welcome Back Ministry of Social Justice!",
   "OTP_ENTER_OTP_LABEL": "Enter the 6-digit OTP sent to your Email ID",
   "OTP_RESEND_REQUEST_TEXT": "Request to",

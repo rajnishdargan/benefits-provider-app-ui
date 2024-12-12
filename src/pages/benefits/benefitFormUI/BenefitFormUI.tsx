@@ -114,6 +114,7 @@ const BenefitFormUI: React.FC = () => {
   };
   const handleFormSubmit = async () => {
     setDisableSubmit(true);
+
     const formDataNew: any = { ...formData };
     formDataNew.benefit_id = id;
     delete formDataNew.docs;
@@ -124,16 +125,16 @@ const BenefitFormUI: React.FC = () => {
         console.log(`${e} is missing from formDataNew`);
       }
     });
-    // API call for submit id and sent it to the post message
     const response = await submitForm(formDataNew);
     if (response) {
       setDisableSubmit(true);
+      const targetOrigin = import.meta.env.VITE_BENEFICIERY_IFRAME_URL;
       window.parent.postMessage(
         {
           type: "FORM_SUBMIT",
           data: { submit: response, userData: formDataNew },
         },
-        "*"
+        targetOrigin
       );
     } else {
       setDisableSubmit(false);
@@ -187,5 +188,10 @@ const BenefitFormUI: React.FC = () => {
 export default BenefitFormUI;
 
 function encodeToBase64(str: string) {
-  return `base64,${btoa(unescape(encodeURIComponent(str)))}`;
+  try {
+    return `base64,${btoa(encodeURIComponent(str))}`;
+  } catch (error) {
+    console.error("Failed to encode string to base64:", error);
+    throw new Error("Failed to encode string to base64");
+  }
 }

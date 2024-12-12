@@ -25,7 +25,6 @@ function Dashboard() {
   React.useEffect(() => {
     const fetchData = async () => {
       try {
-        // if (userId) {
         setIsLoading(true);
         const digitApplicantResponse = await applicationOverviewDigit();
         const digitFinancialResponse = await financialOverviewDigit();
@@ -45,12 +44,6 @@ function Dashboard() {
           setBenefitSummaryData({ benefit_summary: benefitSummaryResponse });
         }
         setIsLoading(false);
-        // }
-        // else {
-        //   setIsLoading(false);
-        //   // setMessage("No user data found!");
-        //   // setShowAlert(true);
-        // }
       } catch (err) {
         console.log(err);
         setIsLoading(false);
