@@ -1,6 +1,6 @@
 import Chart from "react-apexcharts";
 import { useTranslation } from "react-i18next";
-import { HStack, VStack, Select, Text } from "@chakra-ui/react";
+import { HStack, VStack, Text } from "@chakra-ui/react";
 import { visualRepresentation } from "../../utils/dataJSON/BenefitSummary";
 
 const CommonBarChart = () => {
@@ -220,20 +220,18 @@ const CommonBarChart = () => {
   return (
     <VStack spacing="60px" align="stretch" px="170px" pb="60px">
       <HStack justify="space-between">
-        {/* Key Metrics Heading */}
         <Text fontSize="36px" fontWeight="400" color="#06164B">
           {t("DASHBOARD_VISUAL_REPRESENTATION_TITLE")}
         </Text>
 
-        {/* October 2024 Dropdown */}
-        <Select
+        {/* <Select
           w="175px"
           placeholder="November 2024"
           borderColor="gray.300"
           bg="white"
           _hover={{ borderColor: "gray.400" }}
           _focus={{ borderColor: "blue.500", boxShadow: "outline" }}
-        />
+        /> */}
       </HStack>
       <HStack align="stretch" spacing={"35px"}>
         {data?.length > 0 &&

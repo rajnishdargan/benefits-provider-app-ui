@@ -1,5 +1,4 @@
-// src/components/KeyMetrics.tsx
-import { HStack, Select, Text, VStack } from "@chakra-ui/react";
+import { HStack, Text, VStack } from "@chakra-ui/react";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import CommonCard from "../../components/common/card/CommonCard";
@@ -52,20 +51,18 @@ const KeyMetrics: React.FC<KeyMetricsProps> = ({
   return (
     <VStack spacing="60px" align="stretch">
       <HStack justify="space-between">
-        {/* Key Metrics Heading */}
         <Text fontSize="36px" fontWeight="400" color="#06164B">
           {t("DASHBOARD_KEY_METRICS_TITLE")}
         </Text>
 
-        {/* October 2024 Dropdown */}
-        <Select
+        {/* <Select
           w="175px"
           placeholder="November 2024"
           borderColor="gray.300"
           bg="white"
           _hover={{ borderColor: "gray.400" }}
           _focus={{ borderColor: "blue.500", boxShadow: "outline" }}
-        />
+        /> */}
       </HStack>
 
       <HStack align="stretch" spacing={"60px"}>
