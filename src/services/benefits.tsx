@@ -1,14 +1,10 @@
-import { tableData } from "../utils/dataJSON/BenefitSummary";
 import { generateUUID } from "../utils/dataJSON/helper/helper";
+
 import axios from "axios";
 const apiUrl = import.meta.env.VITE_DIGIT_BASE_URL;
 const initAPI = import.meta.env.VITE_APPLICATION_API;
 const schemaAPI = import.meta.env.VITE_SCHEMA_API;
-export const getAll = async () => {
-  //   const response = await axios.get(`http://localhost:3001/api/benefits`);
 
-  return tableData;
-};
 interface BenefitRequestInfo {
   apiId: string;
   ver?: string | null;
@@ -92,13 +88,13 @@ interface PrefillData {
   middleName: string;
   lastName: string;
   gender: string;
-  class: string; // You can specify an enum or union type if you have predefined classes
-  annualIncome: string; // You can specify types for certificates, if needed
-  caste: string; // Same as annualIncome
-  disabled: string; // Assuming it is "yes" or "no"
-  state: string; // Assuming this refers to domicile certificate data
-  student: string; // You can define a union type if the values are specific
-  identityProof: string | null; // Can be nullable if not provided
+  class: string;
+  annualIncome: string;
+  caste: string;
+  disabled: string;
+  state: string;
+  student: string;
+  identityProof: string | null;
 }
 export const createBenefitForm = async (payload: BenefitPayload) => {
   try {
@@ -126,7 +122,7 @@ export const updateForm = async (
 
 export const viewAllBenefitsData = async (payload: ViewAllBenefits) => {
   try {
-    const response = await axios.post(`/benefits/v1/_search`, payload);
+    const response = await axios.post(`${apiUrl}/benefits/v1/_search`, payload);
     return response?.data;
   } catch (error) {
     console.log(error);

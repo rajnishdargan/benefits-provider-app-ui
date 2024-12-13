@@ -13,12 +13,12 @@ import {
 } from "@chakra-ui/react";
 import { Theme as ChakraUITheme } from "@rjsf/chakra-ui";
 import { withTheme } from "@rjsf/core";
-import { JSONSchema7 } from "json-schema"; // Use this for the schema type
+import { JSONSchema7 } from "json-schema";
 import React, { useState } from "react";
 import validator from "@rjsf/validator-ajv6";
 const Form = withTheme(ChakraUITheme);
 interface UiSchema {
-  [key: string]: any; // This provides flexibility for your UI schema
+  [key: string]: any;
 }
 const stepsData = [
   {
@@ -46,16 +46,16 @@ const stepsData = [
 interface StepItem {
   step: number;
   title: string;
-  schema: JSONSchema7; // Use the appropriate type for your schema
+  schema: JSONSchema7;
   uiSchema: UiSchema;
   isOpen: boolean;
 }
 
 interface MultiStepFormProps {
   items: StepItem[];
-  formData: Record<string, any>; // Adjust this type as per your form data structure
-  onChange: (data: Record<string, any>) => void; // Function to handle form data changes
-  onSubmit: () => void; // Function to handle form submission
+  formData: Record<string, any>;
+  onChange: (data: Record<string, any>) => void;
+  onSubmit: () => void;
 }
 
 const MultiStepForm: React.FC<MultiStepFormProps> = ({
@@ -67,22 +67,15 @@ const MultiStepForm: React.FC<MultiStepFormProps> = ({
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [currentStep, setCurrentStep] = useState<number>(0);
   const isLastStep = currentStep === items.length - 1;
-  // useEffect(() => {
-  //   setCompletedSteps([]);
-  // }, []);
-
   const handleSaveAndNext = () => {
-    // Mark the current step as completed
     setCompletedSteps((prev) => [...prev, items[currentStep].step]);
 
-    // Move to the next step
     if (!isLastStep) {
       setCurrentStep((prev) => prev + 1);
     } else {
-      onSubmit(); // Call the submit function if it's the last step
+      onSubmit();
     }
   };
-
   return (
     <Box p={5} mx="auto">
       <Accordion
@@ -93,7 +86,6 @@ const MultiStepForm: React.FC<MultiStepFormProps> = ({
           <React.Fragment key={stepItem?.step}>
             <AccordionItem border="none">
               <HStack spacing={4} align="flex-start">
-                {/* Vertical Dotted Line and Check Icon */}
                 <VStack
                   spacing={0}
                   align="center"
@@ -114,8 +106,8 @@ const MultiStepForm: React.FC<MultiStepFormProps> = ({
                     boxSize={5}
                     position="relative"
                     zIndex={1}
-                    onClick={() => setCurrentStep(index)} // Allow clicking on icon to toggle
-                    cursor="pointer" // Change cursor to pointer
+                    onClick={() => setCurrentStep(index)}
+                    cursor="pointer"
                   />
                   {index < stepsData.length - 1 && (
                     <Divider
@@ -146,7 +138,6 @@ const MultiStepForm: React.FC<MultiStepFormProps> = ({
                         schema={stepItem?.schema}
                         formData={formData}
                         onChange={onChange}
-                        // onSubmit={onSubmit}
                         uiSchema={stepItem?.uiSchema}
                         validator={validator}
                       />

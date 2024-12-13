@@ -241,7 +241,7 @@ export default function UserRegister() {
                   type="text"
                   value={mobile}
                   onChange={(e) => {
-                    const value = e.target.value.replace(/[^0-9]/g, "");
+                    const value = e.target.value.replace(/\D/g, "");
                     handleInputChange("mobile", value);
                   }}
                   placeholder="Enter mobile number"
