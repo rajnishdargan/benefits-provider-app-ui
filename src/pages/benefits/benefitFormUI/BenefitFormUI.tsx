@@ -42,6 +42,7 @@ const BenefitFormUI: React.FC = () => {
         const applicationFormSchema = convertApplicationFormFields(
           applicationSchemaData
         );
+        console.log("applicationFormScheme", applicationSchemaData);
 
         const prop = applicationFormSchema?.properties;
 
@@ -69,6 +70,7 @@ const BenefitFormUI: React.FC = () => {
           );
         const resultItem = targetTag?.list?.[0]?.value;
         const cleanedSchema = resultItem?.replace(/\\/g, "");
+        console.log("cleannedSchema", resultItem);
         const benefit = JSON.parse(cleanedSchema) || {};
         const useData = window.name ? JSON.parse(window.name) : null;
         getApplicationSchemaData(useData, benefit);
@@ -106,6 +108,7 @@ const BenefitFormUI: React.FC = () => {
       required,
       properties,
     };
+    console.log("allschema", allSchema);
     setFormSchema(allSchema);
   };
 
