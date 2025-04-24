@@ -1,0 +1,64 @@
+name: Deploy to DEV Docker Host
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_and_deploy_docker:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout repo
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '20'
+
+      # Install dependencies and build
+      - name: Install dependencies and build
+        run: |
+          if [ -f .env ]; then rm .env; fi
+          echo '${{ secrets.DEV_ENV }}' > .env
+          yarn install
+          yarn run build
+
+      # Copy Dockerfile and nginx config to dist/
+      - name: Prepare dist directory
+        run: |
+          if [ ! -d dist ]; then mkdir dist; fi
+          cp nginx.conf dist/
+          cp Dockerfile dist/
+
+      # Log in to Docker Hub
+      - name: Docker Login
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      # Build and push Docker image
+      - name: Build and Push Docker Image
+        run: |
+          cd dist
+          docker build -t ${{ secrets.DOCKER_REPO_NAME_DEV }}:${{ secrets.DOCKER_IMAGE_DEV }} .
+          docker push ${{ secrets.DOCKER_REPO_NAME_DEV }}:${{ secrets.DOCKER_IMAGE_DEV }}
+
+      # Deploy via SSH to Docker Host
+      - name: Deploy Docker Container on Remote Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}  # default 22
+          script: |
+            docker pull ${{ secrets.DOCKER_REPO_NAME_DEV }}:${{ secrets.DOCKER_IMAGE_DEV }}
+
+            docker stop dev-app || true
+            docker rm dev-app || true
+
+            docker run -d \
+              --name dev-app \
+              -p 80:80 \
+              ${{ secrets.DOCKER_REPO_NAME_DEV }}:${{ secrets.DOCKER_IMAGE_DEV }}
