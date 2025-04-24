@@ -60,5 +60,5 @@ jobs:
 
             docker run -d \
               --name dev-app \
-              -p 80:80 \
+              -p 8082:80 \
               ${{ secrets.DOCKER_REPO_NAME_DEV }}:${{ secrets.DOCKER_IMAGE_DEV }}
