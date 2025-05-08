@@ -26,10 +26,12 @@ import "react-datepicker/dist/react-datepicker.css";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import PaginationList from "./PaginationList";
+import { getBenefitList } from "../../../services/benefits"; // Import the real API call
+
 const columns = [
-  { key: "name", title: "Name", dataType: DataType.String },
-  { key: "applicants", title: "Applicants", dataType: DataType.Number },
-  { key: "deadline", title: "Deadline", dataType: DataType.String },
+  { key: "title", title: "Benefit Name", dataType: DataType.String },
+  // { key: "applicants", title: "Applicants", dataType: DataType.Number },
+  // { key: "deadline", title: "Deadline", dataType: DataType.String },
   {
     key: "actions",
     title: "Actions",
@@ -37,37 +39,36 @@ const columns = [
   },
 ];
 
-interface Benefit {
-  name: string;
-  id: string | number;
-  applicants: number;
-  deadline: string;
-}
-const DeadLineCell = (prop: ICellTextProps) => {
-  return (
-    <HStack>
-      <Text fontSize="16px" fontWeight="400">
-        {prop?.value
-          ? new Date(prop.value).toLocaleString("en-GB", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            })
-          : ""}
-        <sup style={{ color: "blue" }}>+3</sup>
-      </Text>
-    </HStack>
-  );
-};
+// interface Benefit {
+//   name: string;
+//   id: string | number;
+//   applicants: number;
+//   deadline: string;
+// }
+// const DeadLineCell = (prop: ICellTextProps) => {
+//   return (
+//     <HStack>
+//       <Text fontSize="16px" fontWeight="400">
+//         {prop?.value
+//           ? new Date(prop.value).toLocaleString("en-GB", {
+//               day: "2-digit",
+//               month: "short",
+//               year: "numeric",
+//             })
+//           : ""}
+//         <sup style={{ color: "blue" }}>+3</sup>
+//       </Text>
+//     </HStack>
+//   );
+// };
 
 const ActionCell = ({ rowData }: ICellTextProps) => {
   const navigate = useNavigate();
   return (
     <HStack>
-      <IconButton aria-label="Edit" icon={<ChevronDownIcon />} size="lg" />
       <IconButton
         onClick={() => {
-          navigate(`/${rowData?.rowData?.id}/applicants_list`);
+          navigate(`/applicants_list/${rowData?.documentId}`);
         }}
         aria-label="Show Details"
         icon={<ArrowForwardIcon />}
@@ -77,88 +78,111 @@ const ActionCell = ({ rowData }: ICellTextProps) => {
   );
 };
 
+const customCellText = (props: ICellTextProps) => {
+  switch (props.column.key) {
+    case "actions":
+      return <ActionCell {...(props as any)} rowData={props.rowData} />;
+    default:
+      return props.value;
+  }
+};
+
 const ViewAllBenefits = () => {
-  const [activeTab, setActiveTab] = useState(0);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [validTill, setValidTill] = useState<string | null>("");
-  const [createdAt, setCreatedAt] = useState<string | null>("");
-  const [sortOrder, setSortOrder] = useState<string>("asc");
+  // const [activeTab, setActiveTab] = useState(0);
+  // const [searchTerm, setSearchTerm] = useState("");
+  // const [validTill, setValidTill] = useState<string | null>("");
+  // const [createdAt, setCreatedAt] = useState<string | null>("");
+  // const [sortOrder, setSortOrder] = useState<string>("asc");
   const [data, setData] = useState([]);
-  const { t } = useTranslation();
-  const datePickerRef = useRef<DatePicker | null>(null);
-  const datePickerCreatedRef = useRef<DatePicker | null>(null);
-  const [pageIndex, setPageIndex] = useState(0);
   const PAGE_SIZE = 10;
-  const fetchBenefitsData = async () => {
-    const statusValues = {
-      0: "ACTIVE",
-      1: "CLOSED",
-      2: "DRAFT",
-    };
+  const [pageIndex, setPageIndex] = useState(0);
 
-    const payload = {
-      name: searchTerm.toLowerCase() || null,
-      valid_till: validTill ?? null,
-      created_start: createdAt ?? null,
-      created_end: createdAt ?? null,
-      status: statusValues[activeTab as 0 | 1 | 2],
-      page_no: pageIndex,
-      page_size: PAGE_SIZE,
-      sort_by: "benefit_name",
-      sort_order: sortOrder,
-    };
-
-    const response = await viewAllBenefitsData(payload);
-
-    if (response) {
-      setData(response);
+  const fetchAllBenefits = async () => {
+    try {
+      const response = await getBenefitList();
+      if (response) {
+        setData(response);
+      }
+    } catch (error) {
+      console.error("Error fetching all benefits:", error);
     }
   };
 
   useEffect(() => {
-    fetchBenefitsData();
-  }, [activeTab, searchTerm, validTill, createdAt, sortOrder]);
+    fetchAllBenefits();
+  }, []);
 
-  const handleTabClick = (tab: string) => {
-    setActiveTab(parseInt(tab, 10));
-  };
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-    setPageIndex(0);
-  };
-
-  const handleValidTillChange = (date: Date | null) => {
-    if (date) {
-      setValidTill(format(date, "yyyy-MM-dd"));
-    } else {
-      setValidTill(null);
-    }
-  };
-
-  const handleCreatedAtChange = (date: Date | null) => {
-    if (date) {
-      setCreatedAt(format(date, "yyyy-MM-dd"));
-    } else {
-      setCreatedAt(null);
-    }
-    setPageIndex(0);
-  };
-
-  const handleSortOrderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSortOrder(e.target.value);
-    setPageIndex(0);
-  };
-  const handlePageChange = (newPageIndex: number) => {
-    setPageIndex(newPageIndex);
-  };
-  const filteredData = data?.filter((item: Benefit) =>
-    item?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  const paginatedData = filteredData?.slice(
+  const paginatedData = data?.slice(
     pageIndex * PAGE_SIZE,
     pageIndex * PAGE_SIZE + PAGE_SIZE
   );
+
+  const handlePageChange = (newPageIndex: number) => {
+    setPageIndex(newPageIndex);
+  };
+
+  //
+  // const fetchBenefitsData = async () => {
+  //   const statusValues = {
+  //     0: "ACTIVE",
+  //     1: "CLOSED",
+  //     2: "DRAFT",
+  //   };
+
+  //   const payload = {
+  //     name: searchTerm.toLowerCase() || null,
+  //     valid_till: validTill ?? null,
+  //     created_start: createdAt ?? null,
+  //     created_end: createdAt ?? null,
+  //     status: statusValues[activeTab as 0 | 1 | 2],
+  //     page_no: pageIndex,
+  //     page_size: PAGE_SIZE,
+  //     sort_by: "benefit_name",
+  //     sort_order: sortOrder,
+  //   };
+
+  //   const response = await viewAllBenefitsData(payload);
+
+  //   if (response) {
+  //     setData(response);
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   fetchBenefitsData();
+  // }, [activeTab, searchTerm, validTill, createdAt, sortOrder]);
+
+  // const handleTabClick = (tab: string) => {
+  //   setActiveTab(parseInt(tab, 10));
+  // };
+
+  // const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   setSearchTerm(e.target.value);
+  //   setPageIndex(0);
+  // };
+
+  // const handleValidTillChange = (date: Date | null) => {
+  //   if (date) {
+  //     setValidTill(format(date, "yyyy-MM-dd"));
+  //   } else {
+  //     setValidTill(null);
+  //   }
+  // };
+
+  // const handleCreatedAtChange = (date: Date | null) => {
+  //   if (date) {
+  //     setCreatedAt(format(date, "yyyy-MM-dd"));
+  //   } else {
+  //     setCreatedAt(null);
+  //   }
+  //   setPageIndex(0);
+  // };
+
+  // const handleSortOrderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  //   setSortOrder(e.target.value);
+  //   setPageIndex(0);
+  // };
+
   return (
     <Layout
       _titleBar={{
@@ -169,7 +193,7 @@ const ViewAllBenefits = () => {
       showLanguage={false}
     >
       <VStack spacing="50px" p={"20px"} align="stretch">
-        <HStack spacing={4}>
+        {/* <HStack spacing={4}>
           <InputGroup maxWidth="300px" rounded={"full"} size="lg">
             <Input
               placeholder="Search by name.."
@@ -274,8 +298,8 @@ const ViewAllBenefits = () => {
             <option value="asc">Ascending</option>
             <option value="desc">Descending</option>
           </Select>
-        </HStack>
-        <HStack justifyContent="space-between">
+        </HStack> */}
+        {/* <HStack justifyContent="space-between">
           <Tab
             activeIndex={activeTab}
             handleTabClick={(index: number) =>
@@ -287,7 +311,7 @@ const ViewAllBenefits = () => {
               { label: "Drafts", value: "2" },
             ]}
           />
-        </HStack>
+        </HStack> */}
         {data?.length > 0 ? (
           <Table
             columns={columns}
@@ -301,7 +325,7 @@ const ViewAllBenefits = () => {
           />
         ) : (
           <Text fontSize="lg" textAlign="center" color="gray.500">
-            {t("BENEFIT_LIST_TABLE_NO_DATA_MESSAGE")}
+            No data available
           </Text>
         )}
         <PaginationList
@@ -316,14 +340,13 @@ const ViewAllBenefits = () => {
 };
 
 export default ViewAllBenefits;
-
-const customCellText = (props: ICellTextProps) => {
-  switch (props.column.key) {
-    case "deadline":
-      return <DeadLineCell {...props} />;
-    case "actions":
-      return <ActionCell {...(props as any)} rowData={props} />;
-    default:
-      return props.value;
-  }
-};
+// const customCellText = (props: ICellTextProps) => {
+//   switch (props.column.key) {
+//     case "deadline":
+//       return <DeadLineCell {...props} />;
+//     case "actions":
+//       return <ActionCell {...(props as any)} rowData={props} />;
+//     default:
+//       return props.value;
+//   }
+// };
