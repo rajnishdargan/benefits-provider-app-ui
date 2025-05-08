@@ -1,137 +1,268 @@
-import {
-  FormControl,
-  FormLabel,
-  HStack,
-  Input,
-  InputGroup,
-  InputLeftElement,
-  Text,
-  VStack,
-} from "@chakra-ui/react";
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
+import { Text, VStack, Center, Button, HStack } from "@chakra-ui/react";
 import Layout from "../../../components/layout/Layout";
-import "react-datepicker/dist/react-datepicker.css";
 import { useParams } from "react-router-dom";
-import { viewApplicationByApplicationId } from "../../../services/benefits";
 import Loading from "../../../components/common/Loading";
-import { getPreviewDetails } from "../../../utils/dataJSON/helper/helper";
+import Table from "../../../components/common/table/Table";
+import { ICellTextProps } from "ka-table";
+import { CheckIcon, CloseIcon } from "@chakra-ui/icons";
+import ApplicationInfo from "../../../components/ApplicationInfo";
+import DocumentList from "../../../components/DocumentList";
+
+// Types
 interface ApplicantData {
   id: number;
-  label: string;
-  value: string;
-  length?: number;
+  name: string;
+  applicationStatus: string;
+  applicationId: string;
+  disabilityStatus: string;
 }
-interface DocumentData {
-  id: string;
-  documentType: string;
-  fileStoreId: string;
+
+interface Document {
+  id: number;
+  type: string;
+  title: string;
+  content: Record<string, any>;
+  status: string;
 }
 
 const ApplicationDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const [applicantData, setApplicantData] = useState<ApplicantData[] | null>(
-    null
-  );
+  const [applicantData, setApplicantData] = useState<ApplicantData[]>([]);
   const [loading, setLoading] = useState(false);
-  const [documentData, setDocumentData] = useState<DocumentData[]>([]);
-  const [status, setStatus] = useState<any[]>([]);
-  useEffect(() => {
-    const fetchApplicationData = async () => {
-      if (id) {
-        setLoading(true);
-        try {
-          const applicantionDataResponse = await viewApplicationByApplicationId(
-            id
-          );
-          setStatus(applicantionDataResponse?.status || "N/A");
-          setLoading(false);
+  const [documents, setDocuments] = useState<Document[]>([]);
 
-          const data = getPreviewDetails(applicantionDataResponse?.applicant);
-          if (Array.isArray(data) && data.length > 0) {
-            setApplicantData(data as ApplicantData[]);
-          } else {
-            setApplicantData(null);
-          }
-          setDocumentData(applicantionDataResponse?.documents || []);
-        } catch (error) {
-          setLoading(false);
-          console.error(error);
-        }
-      } else {
+  useEffect(() => {
+    const fetchMockData = async () => {
+      if (!id) return;
+
+      setLoading(true);
+      await new Promise((res) => setTimeout(res, 1000)); // simulate delay
+
+      try {
+        const mockResponse = {
+          status: "Approved",
+          applicant: {
+            name: "Jane Doe",
+            applicationStatus: "Approved",
+            applicationId: "123456",
+            disabilityStatus: "Yes",
+            age: 30,
+            gender: "Female",
+            class: "12th Grade",
+            marks: "90%",
+            financialDetails: "Family Income: 5 Lakh per annum",
+          },
+          document: [
+            {
+              id: 1,
+              type: "Income Certificate",
+              title: "Income Proof 2024",
+              content: { income: "5 LPA", verified: true },
+              status: "Pending",
+            },
+            {
+              id: 2,
+              type: "Caste Certificate",
+              title: "SC Caste Certificate",
+              content: { caste: "SC", issuedBy: "Govt", year: 2022 },
+              status: "Pending",
+            },
+          ],
+        };
+
+        setApplicantData([
+          {
+            id: 1,
+            name: mockResponse.applicant.name,
+            applicationStatus: mockResponse.applicant.applicationStatus,
+            applicationId: mockResponse.applicant.applicationId,
+            disabilityStatus: mockResponse.applicant.disabilityStatus,
+          },
+        ]);
+
+        setDocuments(mockResponse.document);
+      } catch (err) {
+        console.error("Error fetching application data:", err);
+      } finally {
         setLoading(false);
-        console.error("id is undefined");
       }
     };
-    fetchApplicationData();
+
+    fetchMockData();
   }, [id]);
 
-  if (!applicantData) {
-    return <Loading />;
-  }
+  const applicantColumns = [
+    { key: "name", title: "Name", dataType: "string" },
+    {
+      key: "applicationStatus",
+      title: "Application Status",
+      dataType: "string",
+    },
+    { key: "applicationId", title: "Application ID", dataType: "string" },
+    { key: "disabilityStatus", title: "Disability Status", dataType: "string" },
+  ];
+
+  const customCellText = (props: ICellTextProps) => {
+    switch (props.column.key) {
+      case "applicationStatus": {
+        let statusColor =
+          props.value === "Submitted"
+            ? "yellow.400"
+            : props.value === "Rejected"
+            ? "red.500"
+            : props.value === "Approved"
+            ? "green.500"
+            : "gray.500";
+
+        return (
+          <Text color={statusColor} fontWeight="bold">
+            {props.value}
+          </Text>
+        );
+      }
+
+      case "disabilityStatus":
+        return props.value === "Yes" ? (
+          <CheckIcon color="green.500" />
+        ) : (
+          <CloseIcon color="red.500" />
+        );
+
+      default:
+        return props.value || "N/A";
+    }
+  };
+
+  const handleDocumentStatus = (
+    documentId: number,
+    status: "Accepted" | "Rejected"
+  ) => {
+    setDocuments((prevDocs) =>
+      prevDocs.map((doc) => (doc.id === documentId ? { ...doc, status } : doc))
+    );
+  };
+  // Handle application status (approve/reject)
+  const handleApplicationStatus = (status: string) => {
+    console.log(`${status} application`);
+    // You can replace the console.log with an API call here
+    // Example:
+    // axios.post('/api/approve-reject', { status })
+    // .then(response => { ... })
+    // .catch(error => { ... });
+  };
+  if (loading) return <Loading />;
+
   return (
     <Layout
-      _titleBar={{
-        title: `Applicant Details : ${id}`,
-      }}
+      _titleBar={{ title: `Application Detail : ${id}` }}
       showMenu={true}
       showSearchBar={true}
       showLanguage={false}
     >
-      {loading && <Loading />}
-      <VStack spacing="50px" p={"20px"} align="stretch">
-        <VStack align="start" spacing={4} p={2} bg="gray.50">
-          <HStack spacing={8} w="100%" p="2" borderRadius="md" bg="white">
-            <Text fontWeight="bold" w="30%">
-              Status:
-            </Text>
-            <Text w="70%">{status ? status.toString() : "N/A"}</Text>
-          </HStack>
-          {applicantData?.map((item) => (
-            <HStack
-              key={item?.id}
-              spacing={8}
-              w="100%"
-              p="2"
-              borderRadius="md"
-              bg="white"
-            >
-              <Text fontWeight="bold" w="30%">
-                {item.label}:
-              </Text>
-              <Text w="70%">
-                {item.value !== null ? item.value.toString() : "N/A"}
-              </Text>
-            </HStack>
-          ))}
-          <Text fontWeight="bold" fontSize={"24px"}>
-            Supporting Documents
+      <Center p="20px">
+        <VStack spacing="50px" align="stretch" width="full" maxWidth="1200px">
+          <Text
+            fontSize="2xl"
+            fontWeight="bold"
+            color="gray.700"
+            textAlign="left"
+          >
+            Application Details
           </Text>
-          {documentData.map((doc) => (
-            <VStack
-              key={doc.id}
-              spacing={4}
-              w="100%"
-              p="2"
-              borderRadius="md"
-              bg="white"
+
+          {applicantData.length > 0 ? (
+            <>
+              <Table
+                columns={applicantColumns}
+                data={applicantData}
+                rowKeyField="id"
+                childComponents={{
+                  cellText: {
+                    content: (props: ICellTextProps) => customCellText(props),
+                  },
+                }}
+                rowStyle={{ textAlign: "center" }}
+                columnStyle={{ textAlign: "center" }}
+              />
+
+              {/* Display Application Info Always */}
+              <ApplicationInfo details={applicantData[0]} />
+              <Text
+                fontSize="2xl"
+                fontWeight="bold"
+                color="gray.700"
+                textAlign="left"
+              >
+                Supporting Document
+              </Text>
+
+              {/* Display Document List */}
+              <DocumentList
+                documents={documents}
+                onUpdateStatus={handleDocumentStatus}
+              />
+            </>
+          ) : (
+            <Text fontSize="lg" textAlign="center" color="gray.500">
+              No applicant data available
+            </Text>
+          )}
+
+          {/* Accept and Reject Buttons */}
+          <HStack justify="center" spacing={4}>
+            <Button
+              colorScheme="red"
+              variant="outline"
+              leftIcon={<CloseIcon color="red.500" />}
+              color="red.500"
+              borderColor="red.500"
+              borderRadius="50px"
+              width="200px" // Increased width
+              _hover={{
+                backgroundColor: "transparent",
+                borderColor: "red.600",
+              }}
+              onClick={() => handleApplicationStatus("Rejected")}
+              sx={{
+                fontFamily: "Poppins",
+                fontWeight: 500,
+                fontSize: "14px",
+                lineHeight: "20px",
+                letterSpacing: "0.1px",
+                textAlign: "center",
+                verticalAlign: "middle",
+              }}
             >
-              <FormControl key={doc.id}>
-                <FormLabel>{doc?.documentType?.replace(/_/g, " ")}</FormLabel>
-                <InputGroup>
-                  <InputLeftElement pointerEvents="none"></InputLeftElement>
-                  <Input
-                    color={"#0037B9"}
-                    value={`File: ${doc.fileStoreId}`}
-                    isReadOnly
-                    variant="unstyled"
-                    pl="2.5rem"
-                  />
-                </InputGroup>
-              </FormControl>
-            </VStack>
-          ))}
+              Reject
+            </Button>
+
+            <Button
+              bg="#3C5FDD" // Replace with your background color
+              color="white"
+              width="200px" // Adjusted width
+              onClick={() => handleApplicationStatus("Accepted")}
+              borderRadius="50px"
+              _hover={{
+                bg: "#3C5FDD", // Keep the same background on hover (no change)
+                transform: "none", // Prevent scaling on hover
+                boxShadow: "none", // Remove any box shadow on hover
+              }}
+              sx={{
+                fontFamily: "Poppins",
+                fontWeight: 500,
+                fontSize: "14px",
+                lineHeight: "20px",
+                letterSpacing: "0.1px",
+                textAlign: "center",
+                verticalAlign: "middle",
+              }}
+            >
+              Accept
+            </Button>
+          </HStack>
         </VStack>
-      </VStack>
+      </Center>
     </Layout>
   );
 };
