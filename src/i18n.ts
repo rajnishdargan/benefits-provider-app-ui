@@ -10,7 +10,7 @@ export const initializeI18n = (defaultLanguage: string = "en") => {
       lng: defaultLanguage,
       fallbackLng: "en",
       backend: {
-        loadPath: `/${import.meta.env.VITE_APP_BASE_UBA_UI}/local/{{lng}}.json`, // Path to the translation files
+        loadPath: `/local/{{lng}}.json`, // Path to the translation files
       },
       interpolation: {
         escapeValue: false, // React already escapes values
