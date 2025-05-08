@@ -1,7 +1,7 @@
 import { generateUUID } from "../utils/dataJSON/helper/helper";
 
 import axios from "axios";
-const apiUrl = import.meta.env.VITE_DIGIT_BASE_URL;
+const apiUrl = import.meta.env.VITE_PROVIDER_BASE_URL;
 const initAPI = import.meta.env.VITE_APPLICATION_API;
 const schemaAPI = import.meta.env.VITE_SCHEMA_API;
 
@@ -203,5 +203,26 @@ export const getSchema = async (id: string) => {
     return response?.data;
   } catch (error) {
     console.log(error);
+  }
+};
+
+export const getBenefitList = async () => {
+  try {
+    const response = await axios.get(
+      `${import.meta.env.VITE_CATALOG_PROVIDER_API_URL}/benefits?populate=*`,
+      {
+        headers: {
+          accept: "application/json",
+          Authorization: `Bearer ${
+            import.meta.env.VITE_CATALOG_PROVIDER_TOKEN
+          }`,
+        },
+      }
+    );
+
+    console.log(response.data);
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching benefits:", error);
   }
 };
