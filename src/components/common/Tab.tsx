@@ -33,10 +33,12 @@ const CustomTab: React.FC<CustomTabProps> = ({
       onChange={handleTabClick}
     >
       <TabList>
-        {Array.isArray(tabs) &&
-          tabs.map(({ label, value }, index) => (
+        {tabs.map((tab, index) => {
+          const isActive = index === activeIndex;
+
+          return (
             <Tab
-              key={value || index}
+              key={tab.value || index}
               pb={2}
               _hover={{ outline: "none", borderColor: "white" }}
               _focus={{ outline: "none", borderColor: "blue.500" }}
@@ -46,14 +48,15 @@ const CustomTab: React.FC<CustomTabProps> = ({
                   w={2}
                   h={2}
                   borderRadius="full"
-                  bg={index == activeIndex ? "#30713D" : "white"}
+                  bg={isActive ? "#30713D" : "white"}
                 />
-                <Text fontSize={"16px"} fontWeight={400}>
-                  {label}
+                <Text fontSize="16px" fontWeight={400}>
+                  {tab.label}
                 </Text>
               </HStack>
             </Tab>
-          ))}
+          );
+        })}
       </TabList>
       <TabIndicator mt="-1.5px" height="2px" bg="blue.500" borderRadius="1px" />
     </Tabs>

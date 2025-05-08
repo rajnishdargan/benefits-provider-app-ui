@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: '20'
 
-            # Install dependencies and build the project
+      # Install dependencies and build
       - name: Install dependencies and build
         run: |
           ls -ltra
