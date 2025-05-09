@@ -45,7 +45,7 @@ const Header: React.FC<HeaderProps> = ({
   // Array of menu names
   const menuNames = [
     {
-      label: "Dashboard",
+      label: "Benefit List",
       onClick: () => {
         navigate("/");
       },

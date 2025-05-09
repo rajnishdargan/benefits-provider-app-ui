@@ -1,12 +1,19 @@
 import React from "react";
-import { VStack, Text, Box, SimpleGrid } from "@chakra-ui/react";
+import { VStack, Text } from "@chakra-ui/react";
+import { Table } from "ka-table"; // Importing ka-table directly
 
 interface ApplicationInfoProps {
   details: { [key: string]: any };
 }
 
 const ApplicationInfo: React.FC<ApplicationInfoProps> = ({ details }) => {
-  const entries = Object.entries(details);
+  // Prepare the data for the table
+  const entries = Object.entries(details).map(([key, value]) => ({
+    name: key
+      .replace(/([A-Z])/g, " $1") // Add space before capital letters
+      .replace(/^./, (c) => c.toUpperCase()), // Capitalize first letter
+    value: value || "N/A",
+  }));
 
   return (
     <VStack
@@ -18,43 +25,15 @@ const ApplicationInfo: React.FC<ApplicationInfoProps> = ({ details }) => {
       boxShadow="md"
       width="full"
     >
-      <SimpleGrid
-        columns={{ base: 1, sm: 1, md: 2, lg: 2 }}
-        spacingY={{ base: 6, sm: 8, md: 10 }}
-        width="80%"
-        paddingLeft="100px"
-        justifyContent="center"
-      >
-        {entries.map(([key, value], index) => (
-          <Box key={index}>
-            <Text
-              fontFamily="Poppins"
-              fontWeight="700"
-              fontSize="14px"
-              lineHeight="20px"
-              letterSpacing="0.25px"
-              verticalAlign="middle"
-            >
-              {key
-                .replace(/([A-Z])/g, " $1") // Add space before capital letters
-                .replace(/^./, (c) => c.toUpperCase()) // Capitalize first letter
-                .trim()}
-              :
-            </Text>
-            <Text
-              pl={4}
-              fontFamily="Poppins"
-              fontWeight="400"
-              fontSize="14px"
-              lineHeight="20px"
-              letterSpacing="0.25px"
-              verticalAlign="middle"
-            >
-              {value}
-            </Text>
-          </Box>
-        ))}
-      </SimpleGrid>
+      {/* Table component with entries */}
+      <Table
+        rowKeyField="name"
+        data={entries}
+        columns={[
+          { key: "name", title: "Field", dataType: "string" },
+          { key: "value", title: "Value", dataType: "string" },
+        ]}
+      />
     </VStack>
   );
 };

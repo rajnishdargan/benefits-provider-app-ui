@@ -12,12 +12,12 @@ import {
   ModalHeader,
   ModalCloseButton,
   ModalBody,
-  Code,
-  IconButton,
   HStack,
 } from "@chakra-ui/react";
-import { CheckIcon, CloseIcon } from "@chakra-ui/icons";
+import { CheckIcon, CloseIcon, InfoOutlineIcon } from "@chakra-ui/icons";
+import Table from "./common/table/Table";
 
+// Document interface
 export interface Document {
   id: number;
   type: string;
@@ -47,10 +47,15 @@ const DocumentList: React.FC<DocumentListProps> = ({
     onOpen();
   };
 
+  const handleCloseModal = () => {
+    setSelectedDocument(null); // Clear the selected document
+    onClose(); // Close the modal
+  };
+
   return (
     <VStack
-      spacing={6} // Increased space between rows
-      align="center" // Center the content horizontally
+      spacing={6}
+      align="center"
       p="20px"
       borderRadius="8px"
       marginTop="20px"
@@ -58,7 +63,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
       width="full"
     >
       <SimpleGrid
-        columns={{ base: 1, sm: 1, md: 2, lg: 2 }}
+        columns={{ base: 1, sm: 1, md: 2, lg: 1 }}
         spacingY={{ base: 6, sm: 8, md: 10 }}
         width="80%"
         paddingLeft="100px"
@@ -77,6 +82,14 @@ const DocumentList: React.FC<DocumentListProps> = ({
             </Text>
             <Box pl={4}>
               <HStack spacing={2}>
+                {/* Icon based on document status */}
+                {doc.status === "Accepted" && <CheckIcon color="green.500" />}
+                {doc.status === "Rejected" && <CloseIcon color="red.500" />}
+                {doc.status === "Pending" && (
+                  <InfoOutlineIcon color="yellow.500" />
+                )}
+
+                {/* Document title */}
                 <Button
                   variant="link"
                   colorScheme="blue"
@@ -84,24 +97,6 @@ const DocumentList: React.FC<DocumentListProps> = ({
                 >
                   {doc.title}
                 </Button>
-                <IconButton
-                  aria-label="Accept"
-                  icon={<CheckIcon />}
-                  bg="green.100"
-                  color="green.700"
-                  size="sm"
-                  onClick={() => onUpdateStatus(doc.id, "Accepted")}
-                  isDisabled={doc.status !== "Pending"}
-                />
-                <IconButton
-                  aria-label="Reject"
-                  icon={<CloseIcon />}
-                  bg="red.100"
-                  color="red.700"
-                  size="sm"
-                  onClick={() => onUpdateStatus(doc.id, "Rejected")}
-                  isDisabled={doc.status !== "Pending"}
-                />
               </HStack>
             </Box>
           </Box>
@@ -109,18 +104,33 @@ const DocumentList: React.FC<DocumentListProps> = ({
       </SimpleGrid>
 
       {/* Preview Modal */}
-      <Modal isOpen={isOpen} onClose={onClose} size="xl">
+      <Modal
+        isOpen={isOpen}
+        onClose={handleCloseModal}
+        size="xl"
+        motionPreset="slideInBottom"
+      >
         <ModalOverlay />
-        <ModalContent>
+        <ModalContent maxHeight="80vh" overflowY="auto">
           <ModalHeader>Preview: {selectedDocument?.title}</ModalHeader>
           <ModalCloseButton />
-          <ModalBody>
-            <Code
-              whiteSpace="pre-wrap"
-              display="block"
-              p={4}
-              children={JSON.stringify(selectedDocument?.content, null, 2)}
-            />
+          <ModalBody overflowY="auto">
+            {/* Use ka-table to render the document content as a table */}
+            {selectedDocument?.content && (
+              <Table
+                rowKeyField="name"
+                data={Object.entries(selectedDocument.content).map(
+                  ([key, value]) => ({
+                    name: key,
+                    value: value,
+                  })
+                )}
+                columns={[
+                  { key: "name", title: "Field" },
+                  { key: "value", title: "Value" },
+                ]}
+              />
+            )}
           </ModalBody>
         </ModalContent>
       </Modal>
