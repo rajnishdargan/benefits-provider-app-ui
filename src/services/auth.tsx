@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const apiUrl = import.meta.env.VITE_DIGIT_BASE_URL;
+const apiUrl = import.meta.env.VITE_PROVIDER_BASE_URL;
 
 export const registerProvider = async (
   username: string,

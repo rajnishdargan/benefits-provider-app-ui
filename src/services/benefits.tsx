@@ -1,9 +1,8 @@
 import { generateUUID } from "../utils/dataJSON/helper/helper";
 
 import axios from "axios";
-const apiUrl = import.meta.env.VITE_DIGIT_BASE_URL;
-const initAPI = import.meta.env.VITE_APPLICATION_API;
-const schemaAPI = import.meta.env.VITE_SCHEMA_API;
+const apiUrl = import.meta.env.VITE_PROVIDER_BASE_URL;
+const schemaAPI = import.meta.env.VITE_BENEFIT_SCHEMA_API;
 
 interface BenefitRequestInfo {
   apiId: string;
@@ -161,10 +160,7 @@ export const viewApplicationByApplicationId = async (id: string) => {
 
 export const submitForm = async (payload: PrefillData) => {
   try {
-    const response = await axios.post(
-      `${initAPI}/api/application-init`,
-      payload
-    );
+    const response = await axios.post(`${apiUrl}/applications`, payload);
     return response?.data;
   } catch (error) {
     console.log(error);
