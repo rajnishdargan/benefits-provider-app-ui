@@ -39,7 +39,7 @@ const routes = [
     component: ApplicationDetails,
   },
   {
-    path: "/benefit/:id/apply",
+    path: "/benefit/apply",
     component: BenefitFormUI,
   },
   {

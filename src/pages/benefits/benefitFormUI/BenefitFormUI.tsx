@@ -5,7 +5,7 @@ import { SubmitButtonProps, getSubmitButtonOptions } from "@rjsf/utils";
 import validator from "@rjsf/validator-ajv8";
 import { JSONSchema7 } from "json-schema";
 import React, { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+// import { useParams } from "react-router-dom";
 import CommonButton from "../../../components/common/buttons/SubmitButton";
 import Loading from "../../../components/common/Loading";
 import { getSchema, submitForm } from "../../../services/benefits";
@@ -13,7 +13,7 @@ import {
   convertApplicationFormFields,
   convertDocumentFields,
 } from "./ConvertToRJSF";
-
+import { useLocation } from "react-router-dom";
 const Form = withTheme(ChakraTheme);
 const SubmitButton: React.FC<SubmitButtonProps> = (props) => {
   const { uiSchema } = props;
@@ -34,7 +34,10 @@ interface EligibilityItem {
   display?: boolean;
 }
 const BenefitFormUI: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  // const { id } = useParams<{ id: string }>();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const id = searchParams.get("id"); // this will be your `id` string or null
   const [formSchema, setFormSchema] = useState<any>(null);
   const [formData, setFormData] = useState<object>({});
   const formRef = useRef<any>(null);
