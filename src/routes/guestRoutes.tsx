@@ -2,7 +2,7 @@ import { lazy } from "react";
 const UserRegister = lazy(() => import("../pages/auth/UserRegister"));
 const Login = lazy(() => import("../pages/auth/Login"));
 const OTP = lazy(() => import("../pages/auth/OTP"));
-import BenefitFormUI from "../pages/benefits/benefitFormUI/BenefitFormUI";
+import BenefitApplicationForm from "../pages/benefits/benefitFormUI/BenefitApplicationForm";
 
 //lazy loading
 const routes = [
@@ -15,8 +15,8 @@ const routes = [
     component: UserRegister,
   },
   {
-    path: "/benefit/apply",
-    component: BenefitFormUI,
+    path: "/benefit/apply/:id",
+    component: BenefitApplicationForm,
   },
   {
     path: "*",
