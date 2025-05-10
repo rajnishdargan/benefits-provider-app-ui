@@ -5,9 +5,7 @@ const ViewApplicants = lazy(
 const ApplicationDetails = lazy(
   () => import("../pages/benefits/viewAllBenefit/ApplicationDetails")
 );
-const BenefitFormUI = lazy(
-  () => import("../pages/benefits/benefitFormUI/BenefitFormUI")
-);
+
 const BenefitsForm = lazy(() => import("../pages/benefits/form/Form"));
 const Dashboard = lazy(() => import("../pages/dashboard/Dashboard"));
 
@@ -38,10 +36,7 @@ const routes = [
     path: "/application_detail/:id",
     component: ApplicationDetails,
   },
-  {
-    path: "/benefit/apply",
-    component: BenefitFormUI,
-  },
+
   {
     path: "*",
     component: Dashboard,
