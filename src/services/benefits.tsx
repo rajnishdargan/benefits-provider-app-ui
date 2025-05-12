@@ -1,7 +1,7 @@
 import { generateUUID } from "../utils/dataJSON/helper/helper";
 
 import axios from "axios";
-const apiUrl = import.meta.env.VITE_PROVIDER_BASE_URL;
+const apiUrl = import.meta.env.VITE_PROVIDER_API_BASE_URL;
 const schemaAPI = import.meta.env.VITE_BENEFIT_SCHEMA_API;
 
 interface BenefitRequestInfo {
