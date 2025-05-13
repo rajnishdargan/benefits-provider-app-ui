@@ -1,40 +1,97 @@
 import React from "react";
-import { VStack } from "@chakra-ui/react";
-import { Table } from "ka-table"; // Importing ka-table directly
-import { DataType } from "ka-table/enums";
+import { Table, DataType } from "ka-table";
+import "ka-table/style.css";
+
 interface ApplicationInfoProps {
-  details: { [key: string]: string | number | boolean | null | undefined };
+  details: { [key: string]: any };
+}
+
+interface DoubleEntryRow {
+  name1: string;
+  value1: string;
+  name2?: string;
+  value2?: string;
 }
 
 const ApplicationInfo: React.FC<ApplicationInfoProps> = ({ details }) => {
   // Prepare the data for the table
   const entries = Object.entries(details).map(([key, value]) => ({
     name: key
-      .replace(/([A-Z])/g, " $1") // Add space before capital letters
-      .replace(/^./, (c) => c.toUpperCase()), // Capitalize first letter
-    value: value || "N/A",
+      .replace(/([A-Z])/g, " $1")
+      .replace(/^./, (c) => c.toUpperCase()),
+    value: value?.toString() || "N/A",
   }));
 
+  const groupedEntries: DoubleEntryRow[] = [];
+  for (let i = 0; i < entries.length; i += 2) {
+    groupedEntries.push({
+      name1: entries[i].name,
+      value1: entries[i].value,
+      name2: entries[i + 1]?.name,
+      value2: entries[i + 1]?.value,
+    });
+  }
+
   return (
-    <VStack
-      spacing={6}
-      align="center"
-      p="20px"
-      borderRadius="8px"
-      marginTop="20px"
-      boxShadow="md"
-      width="full"
-    >
-      {/* Table component with entries */}
+    <div>
       <Table
-        rowKeyField="name"
-        data={entries}
+        rowKeyField="name1"
+        data={groupedEntries}
         columns={[
-          { key: "name", title: "Field", dataType: DataType.String },
-          { key: "value", title: "Value", dataType: DataType.String },
+          {
+            key: "name1",
+            title: "Field",
+            dataType: DataType.String,
+            style: { fontWeight: "bold" },
+          },
+          {
+            key: "value1",
+            title: "Value",
+            dataType: DataType.String,
+          },
+          {
+            key: "name2",
+            title: "Field",
+            dataType: DataType.String,
+            style: { fontWeight: "bold" },
+          },
+          {
+            key: "value2",
+            title: "Value",
+            dataType: DataType.String,
+          },
         ]}
+        childComponents={{
+          table: {
+            elementAttributes: () => ({
+              style: { width: "100%", borderCollapse: "collapse" },
+            }),
+          },
+          cellText: {
+            content: ({ column, value }) => {
+              if (column.key?.toString().startsWith("name")) {
+                return <strong>{value}</strong>;
+              }
+              return value;
+            },
+          },
+        }}
       />
-    </VStack>
+
+      {/* Inline styles */}
+      <style>
+        {`
+          .ka-thead-cell {
+            font-weight: bold;
+            background-color: #f5f5f5;
+          }
+
+          .ka-cell {
+            padding: 8px;
+          }
+        `}
+      </style>
+    </div>
   );
 };
 
