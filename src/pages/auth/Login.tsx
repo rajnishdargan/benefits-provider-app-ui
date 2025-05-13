@@ -52,7 +52,6 @@ export default function Login() {
     setIsLoading(true);
     try {
       const loginResponse = await LoginProvider(userName, password);
-      console.log("loginResponse", loginResponse);
       if (loginResponse?.data?.token) {
         localStorage.setItem("token", loginResponse?.data?.token);
         setIsLoading(false);
