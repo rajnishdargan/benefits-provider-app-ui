@@ -57,7 +57,7 @@ export default function Login() {
         localStorage.setItem("token", loginResponse?.data?.token);
         setIsLoading(false);
         setMessage("Login successfully!");
-        setShowAlert(true);
+        navigate(0);
       } else {
         setIsLoading(false);
         setMessage(loginResponse?.response?.data?.error_description);
