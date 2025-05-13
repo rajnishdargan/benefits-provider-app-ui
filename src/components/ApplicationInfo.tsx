@@ -3,7 +3,7 @@ import { VStack } from "@chakra-ui/react";
 import { Table } from "ka-table"; // Importing ka-table directly
 import { DataType } from "ka-table/enums";
 interface ApplicationInfoProps {
-  details: { [key: string]: any };
+  details: { [key: string]: string | number | boolean | null | undefined };
 }
 
 const ApplicationInfo: React.FC<ApplicationInfoProps> = ({ details }) => {

@@ -209,5 +209,6 @@ export const getBenefitList = async () => {
     return response.data;
   } catch (error) {
     console.error("Error fetching benefits:", error);
+    throw error;
   }
 };
