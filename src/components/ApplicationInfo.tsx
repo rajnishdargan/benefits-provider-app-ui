@@ -1,7 +1,7 @@
 import React from "react";
-import { VStack, Text } from "@chakra-ui/react";
+import { VStack } from "@chakra-ui/react";
 import { Table } from "ka-table"; // Importing ka-table directly
-
+import { DataType } from "ka-table/enums";
 interface ApplicationInfoProps {
   details: { [key: string]: any };
 }
@@ -30,8 +30,8 @@ const ApplicationInfo: React.FC<ApplicationInfoProps> = ({ details }) => {
         rowKeyField="name"
         data={entries}
         columns={[
-          { key: "name", title: "Field", dataType: "string" },
-          { key: "value", title: "Value", dataType: "string" },
+          { key: "name", title: "Field", dataType: DataType.String },
+          { key: "value", title: "Value", dataType: DataType.String },
         ]}
       />
     </VStack>

@@ -23,20 +23,14 @@ export interface Document {
   type: string;
   title: string;
   content: any;
-  status: "Pending" | "Accepted" | "Rejected";
+  status: string;
 }
 
 interface DocumentListProps {
   documents: Document[];
-  onUpdateStatus: (id: number, status: "Accepted" | "Rejected") => void;
-  title?: string;
 }
 
-const DocumentList: React.FC<DocumentListProps> = ({
-  documents,
-  onUpdateStatus,
-  title = "Required Documents",
-}) => {
+const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(
     null

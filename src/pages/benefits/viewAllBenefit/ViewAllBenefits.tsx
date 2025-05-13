@@ -1,33 +1,37 @@
 import {
   ArrowForwardIcon,
-  ChevronDownIcon,
-  SearchIcon,
+  // ChevronDownIcon,
+  // SearchIcon,
 } from "@chakra-ui/icons";
 import {
   HStack,
   IconButton,
-  Input,
+  /* Input,
   InputGroup,
-  InputRightElement,
-  Select,
+   InputRightElement,
+   Select,
+  */
   Text,
   VStack,
 } from "@chakra-ui/react";
-import Tab from "../../../components/common/Tab";
+
 import Table from "../../../components/common/table/Table";
 import { DataType } from "ka-table/enums";
 import { ICellTextProps } from "ka-table/props";
-import React, { useEffect, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { viewAllBenefitsData } from "../../../services/benefits";
+import { useEffect, useState } from "react";
 import Layout from "../../../components/layout/Layout";
-import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import PaginationList from "./PaginationList";
 import { getBenefitList } from "../../../services/benefits"; // Import the real API call
-
+/*
+import React from "react"
+import { useTranslation } from "react-i18next";
+import { viewAllBenefitsData } from "../../../services/benefits";
+import { format } from "date-fns";
+import DatePicker from "react-datepicker";
+import Tab from "../../../components/common/Tab";
+*/
 const columns = [
   { key: "title", title: "Benefit Name", dataType: DataType.String },
   // { key: "applicants", title: "Applicants", dataType: DataType.Number },
@@ -39,29 +43,29 @@ const columns = [
   },
 ];
 
-// interface Benefit {
-//   name: string;
-//   id: string | number;
-//   applicants: number;
-//   deadline: string;
-// }
-// const DeadLineCell = (prop: ICellTextProps) => {
-//   return (
-//     <HStack>
-//       <Text fontSize="16px" fontWeight="400">
-//         {prop?.value
-//           ? new Date(prop.value).toLocaleString("en-GB", {
-//               day: "2-digit",
-//               month: "short",
-//               year: "numeric",
-//             })
-//           : ""}
-//         <sup style={{ color: "blue" }}>+3</sup>
-//       </Text>
-//     </HStack>
-//   );
-// };
-
+/* interface Benefit {
+  name: string;
+  id: string | number;
+  applicants: number;
+  deadline: string;
+}
+const DeadLineCell = (prop: ICellTextProps) => {
+  return (
+    <HStack>
+      <Text fontSize="16px" fontWeight="400">
+        {prop?.value
+          ? new Date(prop.value).toLocaleString("en-GB", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
+          : ""}
+        <sup style={{ color: "blue" }}>+3</sup>
+      </Text>
+    </HStack>
+  );
+};
+ */
 const ActionCell = ({ rowData }: ICellTextProps) => {
   const navigate = useNavigate();
   return (
@@ -88,11 +92,11 @@ const customCellText = (props: ICellTextProps) => {
 };
 
 const ViewAllBenefits = () => {
-  // const [activeTab, setActiveTab] = useState(0);
-  // const [searchTerm, setSearchTerm] = useState("");
-  // const [validTill, setValidTill] = useState<string | null>("");
-  // const [createdAt, setCreatedAt] = useState<string | null>("");
-  // const [sortOrder, setSortOrder] = useState<string>("asc");
+  /* const [activeTab, setActiveTab] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [validTill, setValidTill] = useState<string | null>("");
+  const [createdAt, setCreatedAt] = useState<string | null>("");
+  const [sortOrder, setSortOrder] = useState<string>("asc"); */
   const [data, setData] = useState([]);
   const PAGE_SIZE = 10;
   const [pageIndex, setPageIndex] = useState(0);
@@ -121,68 +125,68 @@ const ViewAllBenefits = () => {
     setPageIndex(newPageIndex);
   };
 
-  //
-  // const fetchBenefitsData = async () => {
-  //   const statusValues = {
-  //     0: "ACTIVE",
-  //     1: "CLOSED",
-  //     2: "DRAFT",
-  //   };
+  /*  
+  const fetchBenefitsData = async () => {
+    const statusValues = {
+      0: "ACTIVE",
+      1: "CLOSED",
+      2: "DRAFT",
+    };
 
-  //   const payload = {
-  //     name: searchTerm.toLowerCase() || null,
-  //     valid_till: validTill ?? null,
-  //     created_start: createdAt ?? null,
-  //     created_end: createdAt ?? null,
-  //     status: statusValues[activeTab as 0 | 1 | 2],
-  //     page_no: pageIndex,
-  //     page_size: PAGE_SIZE,
-  //     sort_by: "benefit_name",
-  //     sort_order: sortOrder,
-  //   };
+    const payload = {
+      name: searchTerm.toLowerCase() || null,
+      valid_till: validTill ?? null,
+      created_start: createdAt ?? null,
+      created_end: createdAt ?? null,
+      status: statusValues[activeTab as 0 | 1 | 2],
+      page_no: pageIndex,
+      page_size: PAGE_SIZE,
+      sort_by: "benefit_name",
+      sort_order: sortOrder,
+    };
 
-  //   const response = await viewAllBenefitsData(payload);
+    const response = await viewAllBenefitsData(payload);
 
-  //   if (response) {
-  //     setData(response);
-  //   }
-  // };
+    if (response) {
+      setData(response);
+    }
+  };
 
-  // useEffect(() => {
-  //   fetchBenefitsData();
-  // }, [activeTab, searchTerm, validTill, createdAt, sortOrder]);
+  useEffect(() => {
+    fetchBenefitsData();
+  }, [activeTab, searchTerm, validTill, createdAt, sortOrder]);
 
-  // const handleTabClick = (tab: string) => {
-  //   setActiveTab(parseInt(tab, 10));
-  // };
+  const handleTabClick = (tab: string) => {
+    setActiveTab(parseInt(tab, 10));
+  };
 
-  // const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   setSearchTerm(e.target.value);
-  //   setPageIndex(0);
-  // };
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setPageIndex(0);
+  };
 
-  // const handleValidTillChange = (date: Date | null) => {
-  //   if (date) {
-  //     setValidTill(format(date, "yyyy-MM-dd"));
-  //   } else {
-  //     setValidTill(null);
-  //   }
-  // };
+  const handleValidTillChange = (date: Date | null) => {
+    if (date) {
+      setValidTill(format(date, "yyyy-MM-dd"));
+    } else {
+      setValidTill(null);
+    }
+  };
 
-  // const handleCreatedAtChange = (date: Date | null) => {
-  //   if (date) {
-  //     setCreatedAt(format(date, "yyyy-MM-dd"));
-  //   } else {
-  //     setCreatedAt(null);
-  //   }
-  //   setPageIndex(0);
-  // };
+  const handleCreatedAtChange = (date: Date | null) => {
+    if (date) {
+      setCreatedAt(format(date, "yyyy-MM-dd"));
+    } else {
+      setCreatedAt(null);
+    }
+    setPageIndex(0);
+  };
 
-  // const handleSortOrderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-  //   setSortOrder(e.target.value);
-  //   setPageIndex(0);
-  // };
-
+  const handleSortOrderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSortOrder(e.target.value);
+    setPageIndex(0);
+  };
+ */
   return (
     <Layout
       _titleBar={{
@@ -340,13 +344,14 @@ const ViewAllBenefits = () => {
 };
 
 export default ViewAllBenefits;
-// const customCellText = (props: ICellTextProps) => {
-//   switch (props.column.key) {
-//     case "deadline":
-//       return <DeadLineCell {...props} />;
-//     case "actions":
-//       return <ActionCell {...(props as any)} rowData={props} />;
-//     default:
-//       return props.value;
-//   }
-// };
+/* const customCellText = (props: ICellTextProps) => {
+  switch (props.column.key) {
+    case "deadline":
+      return <DeadLineCell {...props} />;
+    case "actions":
+      return <ActionCell {...(props as any)} rowData={props} />;
+    default:
+      return props.value;
+  }
+};
+ */

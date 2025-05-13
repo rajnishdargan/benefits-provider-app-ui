@@ -10,6 +10,7 @@ import ApplicationInfo from "../../../components/ApplicationInfo";
 import DocumentList from "../../../components/DocumentList";
 
 // Types
+
 interface ApplicantData {
   id: number;
   name: string;
@@ -128,11 +129,11 @@ const ApplicationDetails: React.FC = () => {
     switch (props.column.key) {
       case "applicationStatus": {
         let statusColor =
-          props.value === "Submitted"
+          props.value === "Pending"
             ? "yellow.400"
             : props.value === "Rejected"
             ? "red.500"
-            : props.value === "Approved"
+            : props.value === "Accepted"
             ? "green.500"
             : "gray.500";
 
@@ -153,15 +154,6 @@ const ApplicationDetails: React.FC = () => {
       default:
         return props.value || "N/A";
     }
-  };
-
-  const handleDocumentStatus = (
-    documentId: number,
-    status: "Accepted" | "Rejected"
-  ) => {
-    setDocuments((prevDocs) =>
-      prevDocs.map((doc) => (doc.id === documentId ? { ...doc, status } : doc))
-    );
   };
 
   const handleApplicationStatus = (status: string) => {
@@ -221,14 +213,14 @@ const ApplicationDetails: React.FC = () => {
                 justify="space-between"
                 width="full"
               >
+                {applicant && (
+                  <Box flex={{ base: "1 1 100%", md: "1 1 48%" }}>
+                    <ApplicationInfo details={applicant} />
+                  </Box>
+                )}
+
                 <Box flex={{ base: "1 1 100%", md: "1 1 48%" }}>
-                  <ApplicationInfo details={applicant} />
-                </Box>
-                <Box flex={{ base: "1 1 100%", md: "1 1 48%" }}>
-                  <DocumentList
-                    documents={documents}
-                    onUpdateStatus={handleDocumentStatus}
-                  />
+                  <DocumentList documents={documents} />
                 </Box>
               </HStack>
             </>
