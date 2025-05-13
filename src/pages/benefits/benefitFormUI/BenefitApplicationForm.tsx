@@ -24,8 +24,18 @@ const SubmitButton: React.FC<SubmitButtonProps> = (props) => {
   return <button type="submit" style={{ display: "none" }}></button>;
 };
 
-const BenefitFormUI: React.FC = () => {
+interface EligibilityItem {
+  value: string;
+  descriptor?: {
+    code?: string;
+    name?: string;
+    short_desc?: string;
+  };
+  display?: boolean;
+}
+const BenefitApplicationForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+
   const [formSchema, setFormSchema] = useState<any>(null);
   const [formData, setFormData] = useState<object>({});
   const formRef = useRef<any>(null);
@@ -35,14 +45,13 @@ const BenefitFormUI: React.FC = () => {
   useEffect(() => {
     const getApplicationSchemaData = async (
       receivedData: any,
-      benefit: any
+      benefit: any,
+      documentTag: any,
+      eligibilityTag: any
     ) => {
       if (benefit) {
-        const applicationSchemaData = benefit?.en?.applicationForm;
-        const applicationFormSchema = convertApplicationFormFields(
-          applicationSchemaData
-        );
-        console.log("applicationFormScheme", applicationSchemaData);
+        // const applicationSchemaData = benefit?.en?.applicationForm;
+        const applicationFormSchema = convertApplicationFormFields(benefit);
 
         const prop = applicationFormSchema?.properties;
 
@@ -55,7 +64,7 @@ const BenefitFormUI: React.FC = () => {
         });
 
         setFormData(receivedData);
-        getEligibilitySchemaData(receivedData, benefit, {
+        getEligibilitySchemaData(receivedData, documentTag, eligibilityTag, {
           ...applicationFormSchema,
           properties: prop,
         });
@@ -64,16 +73,32 @@ const BenefitFormUI: React.FC = () => {
     const getSchemaData = async () => {
       if (id) {
         const result = await getSchema(id);
-        const targetTag =
-          result?.responses?.[0]?.message?.order?.items?.[0]?.tags?.find(
-            (tag: any) => tag?.descriptor?.code === "benefit_schema"
+        const schemaTag =
+          result?.responses?.[0]?.message?.catalog?.providers?.[0]?.items?.[0]?.tags?.find(
+            (tag: any) => tag?.descriptor?.code === "applicationForm"
           );
-        const resultItem = targetTag?.list?.[0]?.value;
-        const cleanedSchema = resultItem?.replace(/\\/g, "");
-        console.log("cleannedSchema", resultItem);
-        const benefit = JSON.parse(cleanedSchema) || {};
+
+        const documentTag =
+          result?.responses?.[0]?.message?.catalog?.providers?.[0]?.items?.[0]?.tags?.find(
+            (tag: any) => tag?.descriptor?.code === "required-docs"
+          );
+        const eligibilityTag =
+          result?.responses?.[0]?.message?.catalog?.providers?.[0]?.items?.[0]?.tags?.find(
+            (tag: any) => tag?.descriptor?.code === "eligibility"
+          );
+
+        const parsedValues = schemaTag.list.map((item: EligibilityItem) =>
+          JSON.parse(item.value)
+        );
+
         const useData = window.name ? JSON.parse(window.name) : null;
-        getApplicationSchemaData(useData, benefit);
+        // const useData = userInfo;
+        getApplicationSchemaData(
+          useData,
+          parsedValues,
+          documentTag,
+          eligibilityTag
+        );
       }
     };
     getSchemaData();
@@ -81,11 +106,17 @@ const BenefitFormUI: React.FC = () => {
 
   const getEligibilitySchemaData = (
     formData: any,
-    benefit: any,
+    documentTag: any,
+    eligibilityTag: any,
     applicationFormSchema: any
   ) => {
-    const eligSchemaStatic = benefit.en.eligibility;
-    const docSchemaStatic = benefit.en.documents;
+    const eligSchemaStatic = eligibilityTag.list.map((item: EligibilityItem) =>
+      JSON.parse(item.value)
+    );
+    const docSchemaStatic =
+      documentTag?.list
+        ?.filter((item: any) => item?.descriptor?.code === "mandatory-doc")
+        ?.map((item: any) => JSON.parse(item.value)) || [];
 
     const docSchemaArr = [...eligSchemaStatic, ...docSchemaStatic];
 
@@ -117,9 +148,12 @@ const BenefitFormUI: React.FC = () => {
   };
   const handleFormSubmit = async () => {
     setDisableSubmit(true);
+
     const formDataNew: any = { ...formData };
-    formDataNew.benefit_id = id;
+
+    formDataNew.benefitId = id;
     delete formDataNew.docs;
+
     Object.keys(docSchema?.properties || {}).forEach((e: any) => {
       if (formDataNew[e]) {
         formDataNew[e] = encodeToBase64(formDataNew?.[e]);
@@ -127,6 +161,8 @@ const BenefitFormUI: React.FC = () => {
         console.log(`${e} is missing from formDataNew`);
       }
     });
+    console.log("formDataNew", formDataNew);
+
     const response = await submitForm(formDataNew);
     if (response) {
       setDisableSubmit(true);
@@ -186,7 +222,7 @@ const BenefitFormUI: React.FC = () => {
   );
 };
 
-export default BenefitFormUI;
+export default BenefitApplicationForm;
 
 function encodeToBase64(str: string) {
   try {
