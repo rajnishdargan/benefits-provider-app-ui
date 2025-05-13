@@ -65,21 +65,19 @@ export const registerProvider = async (
   }
 };
 
-export const LoginProvider = async (username: string, password: string) => {
+export const LoginProvider = async (email: string, password: string) => {
   try {
-    const payload = `username=${encodeURIComponent(
-      username
-    )}&scope=read&grant_type=password&tenantId=pg&password=${encodeURIComponent(
-      password
-    )}&userType=EMPLOYEE`;
+    const payload = {
+      email: email,
+      password: password,
+    };
     const config = {
       headers: {
-        Authorization: `Basic ${import.meta.env.VITE_LOGIN_AUTH_TOKEN}`,
-        "Content-Type": "application/x-www-form-urlencoded",
+        "Content-Type": "application/json",
       },
     };
     const response = await axios.post(
-      `${apiUrl}/user/oauth/token`,
+      `${apiUrl}/auth/login`,
       payload,
       config
     );

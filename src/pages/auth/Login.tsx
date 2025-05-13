@@ -33,9 +33,6 @@ export default function Login() {
 
     if (!userName.trim()) {
       errors.username = "Username is required.";
-    } else if (!/^\w{3,15}$/.test(userName)) {
-      errors.username =
-        "Username must be 3-15 characters and contain only letters, numbers, or underscores.";
     }
     if (!password.trim()) {
       errors.password = t("LOGIN_PASSWORD_REQUIRED_HELPER_TEXT");
@@ -55,11 +52,11 @@ export default function Login() {
     setIsLoading(true);
     try {
       const loginResponse = await LoginProvider(userName, password);
-      if (loginResponse?.access_token) {
-        localStorage.setItem("token", loginResponse?.access_token);
+      if (loginResponse?.data?.token) {
+        localStorage.setItem("token", loginResponse?.data?.token);
         setIsLoading(false);
         setMessage("Login successfully!");
-        setShowAlert(true);
+        navigate(0);
       } else {
         setIsLoading(false);
         setMessage(loginResponse?.response?.data?.error_description);
