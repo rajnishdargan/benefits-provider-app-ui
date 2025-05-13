@@ -149,7 +149,7 @@ export default function Login() {
                     {t("LOGIN_LOGIN_BUTTON")}
                   </Text>
                 </Button>
-                <Button
+                {/* <Button
                   colorScheme={"blue"}
                   variant={"outline"}
                   borderRadius={"100px"}
@@ -160,7 +160,7 @@ export default function Login() {
                   <Text fontSize={"14px"} fontWeight={400}>
                     {t("LOGIN_REGISTER_BUTTON")}
                   </Text>
-                </Button>
+                </Button> */}
               </Stack>
             </Stack>
           </VStack>

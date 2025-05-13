@@ -1,13 +1,16 @@
 import { lazy } from "react";
 const ViewApplicants = lazy(
-  () => import("../pages/benefits/viewAllBenefit/ApplicantDetails")
+  () => import("../pages/benefits/viewAllBenefit/ApplicationLists")
 );
 const ApplicationDetails = lazy(
   () => import("../pages/benefits/viewAllBenefit/ApplicationDetails")
 );
 
 const BenefitsForm = lazy(() => import("../pages/benefits/form/Form"));
-const Dashboard = lazy(() => import("../pages/dashboard/Dashboard"));
+// const Dashboard = lazy(() => import("../pages/dashboard/Dashboard"));
+const ManageBenefits = lazy(
+  () => import("../pages/benefits/manageBenefits/ManageBenefits")
+);
 
 const ViewAllBenefits = lazy(
   () => import("../pages/benefits/viewAllBenefit/ViewAllBenefits")
@@ -25,11 +28,11 @@ const routes = [
     component: BenefitsForm,
   },
   {
-    path: "/benefit_list",
+    path: "/",
     component: ViewAllBenefits,
   },
   {
-    path: "/:id/applicants_list",
+    path: "/applicants_list/:id",
     component: ViewApplicants,
   },
   {
@@ -38,8 +41,12 @@ const routes = [
   },
 
   {
+    path: "/manage-benefits",
+    component: ManageBenefits,
+  },
+  {
     path: "*",
-    component: Dashboard,
+    component: ViewAllBenefits,
   },
 ];
 
