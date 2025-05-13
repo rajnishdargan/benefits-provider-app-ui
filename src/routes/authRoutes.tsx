@@ -1,13 +1,13 @@
 import { lazy } from "react";
 const ViewApplicants = lazy(
-  () => import("../pages/benefits/viewAllBenefit/ApplicantDetails")
+  () => import("../pages/benefits/viewAllBenefit/ApplicationLists")
 );
 const ApplicationDetails = lazy(
   () => import("../pages/benefits/viewAllBenefit/ApplicationDetails")
 );
 
 const BenefitsForm = lazy(() => import("../pages/benefits/form/Form"));
-const Dashboard = lazy(() => import("../pages/dashboard/Dashboard"));
+// const Dashboard = lazy(() => import("../pages/dashboard/Dashboard"));
 const ManageBenefits = lazy(
   () => import("../pages/benefits/manageBenefits/ManageBenefits")
 );
@@ -28,7 +28,7 @@ const routes = [
     component: BenefitsForm,
   },
   {
-    path: "/benefit_list",
+    path: "/",
     component: ViewAllBenefits,
   },
   {
@@ -46,7 +46,7 @@ const routes = [
   },
   {
     path: "*",
-    component: Dashboard,
+    component: ViewAllBenefits,
   },
 ];
 
