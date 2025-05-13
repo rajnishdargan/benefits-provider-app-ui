@@ -1,11 +1,8 @@
 import React from "react";
-import { SearchIcon, ChevronDownIcon } from "@chakra-ui/icons";
+import { ChevronDownIcon } from "@chakra-ui/icons";
 import {
   Box,
   HStack,
-  Input,
-  InputGroup,
-  InputRightElement,
   Menu,
   MenuButton,
   MenuItem,
@@ -199,7 +196,7 @@ const DropdownMenu: React.FC<{ menu: any }> = ({ menu }) => (
     </MenuList>
   </Menu>
 );
-
+/*
 const SearchBar: React.FC = () => (
   <HStack align="center">
     <InputGroup maxWidth="300px" rounded={"full"} size="lg">
@@ -210,6 +207,7 @@ const SearchBar: React.FC = () => (
     </InputGroup>
   </HStack>
 );
+*/
 
 const LanguageDropdown: React.FC = () => (
   <Select borderRadius="8" size="sm" width="100px">

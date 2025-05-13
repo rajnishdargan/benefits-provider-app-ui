@@ -4,7 +4,7 @@ import Layout from "../../../components/layout/Layout";
 import { useParams } from "react-router-dom";
 import Loading from "../../../components/common/Loading";
 import Table from "../../../components/common/table/Table";
-import { ICellTextProps } from "ka-table";
+// import { ICellTextProps } from "ka-table";
 import { CheckIcon, CloseIcon } from "@chakra-ui/icons";
 import ApplicationInfo from "../../../components/ApplicationInfo";
 import DocumentList from "../../../components/DocumentList";
@@ -125,7 +125,7 @@ const ApplicationDetails: React.FC = () => {
     { key: "disabilityStatus", title: "Disability Status", dataType: "string" },
   ];
 
-  const customCellText = (props: ICellTextProps) => {
+  const customCellText = (props: any) => {
     switch (props.column.key) {
       case "applicationStatus": {
         let statusColor =
@@ -189,7 +189,7 @@ const ApplicationDetails: React.FC = () => {
                 rowKeyField="id"
                 childComponents={{
                   cellText: {
-                    content: (props: ICellTextProps) => customCellText(props),
+                    content: (props: any) => customCellText(props),
                   },
                 }}
                 rowStyle={{ textAlign: "center" }}
