@@ -49,13 +49,14 @@ const ApplicationLists: React.FC = () => {
   const [applicationData, setApplicationData] = useState<any[]>([]);
   const [pageIndex, setPageIndex] = useState(0);
   const pageSize = 10;
-
+  const [benefitName, setBenefitName] = useState<string>("");
   useEffect(() => {
     const fetchApplicationData = async () => {
       if (id) {
         try {
           const applicantionDataResponse = await viewAllApplicationByBenefitId(id);
           console.log("applicantionDataResponse", applicantionDataResponse);
+          setBenefitName(applicantionDataResponse?.benefit?.title || "");
           if (!applicantionDataResponse?.applications || !Array.isArray(applicantionDataResponse?.applications)) {
             console.error("Invalid response format from API");
             setApplicationData([]);
@@ -114,7 +115,7 @@ const ApplicationLists: React.FC = () => {
   return (
     <Layout
       _titleBar={{
-        title: `Application List`,
+        title: `Application List For: ${benefitName}`,
       }}
       showMenu={true}
       showSearchBar={true}

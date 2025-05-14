@@ -35,6 +35,7 @@ const ApplicationDetails: React.FC = () => {
   const [loading, setLoading] = useState(true); // Default to true to show loading initially
   const [documents, setDocuments] = useState<Document[]>([]);
   const [applicant, setApplicant] = useState<Record<string, any> | null>(null);
+  const [benefitName, setBenefitName] = useState<string>("");
 
   useEffect(() => {
     const fetchApplicationData = async () => {
@@ -43,7 +44,9 @@ const ApplicationDetails: React.FC = () => {
       try {
         setLoading(true); // Set loading to true before fetching data
         const applicationData = await getApplicationDetails(id);
-
+        if (applicationData?.benefit?.title) {
+          setBenefitName(applicationData?.benefit?.title);
+        }
         // Extract applicant details from the nested structure
         const applicantDetails = applicationData.applicationData;
 
@@ -131,22 +134,13 @@ const ApplicationDetails: React.FC = () => {
 
   return (
     <Layout
-      _titleBar={{ title: `Application Detail : ${id}` }}
+      _titleBar={{ title: `Application Detail For : ${benefitName}` }}
       showMenu={true}
       showSearchBar={true}
       showLanguage={false}
     >
       <Center p="20px">
         <VStack spacing="50px" align="stretch" width="full" maxWidth="1200px">
-          <Text
-            fontSize="2xl"
-            fontWeight="bold"
-            color="gray.700"
-            textAlign="left"
-          >
-            Application Details
-          </Text>
-
           {applicantData.length > 0 ? (
             <>
               <Table
@@ -182,7 +176,7 @@ const ApplicationDetails: React.FC = () => {
               >
                 {/* Applicant Info - Full Width */}
                 {applicant && (
-                  <Box flex="1 1 100%" mb={0}> {/* Removed margin-bottom to eliminate the gap */}
+                  <Box flex="1 1 100%" mb={0}>
                     <ApplicationInfo details={applicant} />
                   </Box>
                 )}
