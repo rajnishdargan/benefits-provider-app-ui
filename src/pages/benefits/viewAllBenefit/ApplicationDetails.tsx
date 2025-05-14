@@ -44,7 +44,7 @@ const ApplicationDetails: React.FC = () => {
         const applicationData = await getApplicationDetails(id);
 
         // Extract applicant details from the nested structure
-        const applicantDetails = applicationData.applicationData.applicationData;
+        const applicantDetails = applicationData.applicationData;
 
         setApplicant(applicantDetails);
 
@@ -64,7 +64,7 @@ const ApplicationDetails: React.FC = () => {
           type: "Document", // You can adjust this if there's a specific type
           title: file.filePath.split("/").pop(), // Extract file name from path
           content: file,
-          status: file.verificationStatus.status,
+          status: file?.verificationStatus?.status,
         }));
 
         setDocuments(documents);
@@ -197,7 +197,7 @@ const ApplicationDetails: React.FC = () => {
                   >
                     Supporting Documents
                   </Text>
-                  <Box width="100%">
+                  <Box flex="1 1 100%">
                     <DocumentList documents={documents} />
                   </Box>
                 </Box>

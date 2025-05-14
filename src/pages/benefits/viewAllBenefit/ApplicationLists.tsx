@@ -61,9 +61,9 @@ const ApplicationLists: React.FC = () => {
             return;
           }
           const processedData = applicantionDataResponse?.map((item: any) => ({
-            studentName: `${item?.applicationData?.applicationData?.firstName || "N/A"} ${
-              item?.applicationData?.applicationData?.middleName || ""
-            } ${item?.applicationData?.applicationData?.lastName || "N/A"}`.trim(),
+            studentName: `${item?.applicationData?.firstName || "N/A"} ${
+              item?.applicationData?.middleName || ""
+            } ${item?.applicationData?.lastName || "N/A"}`.trim(),
             applicationId: item?.id || "N/A",
             status: item?.status || "N/A",
           }));
@@ -113,7 +113,7 @@ const ApplicationLists: React.FC = () => {
   return (
     <Layout
       _titleBar={{
-        title: `Application List: ${id}`,
+        title: `Application List`,
       }}
       showMenu={true}
       showSearchBar={true}
