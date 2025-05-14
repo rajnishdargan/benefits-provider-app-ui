@@ -9,7 +9,6 @@ import { CheckIcon, CloseIcon } from "@chakra-ui/icons";
 import ApplicationInfo from "../../../components/ApplicationInfo";
 import DocumentList from "../../../components/DocumentList";
 import { getApplicationDetails } from "../../../services/applicationService";
-import { getApplicationDetails } from "../../../services/applicationService";
 
 // Types
 
