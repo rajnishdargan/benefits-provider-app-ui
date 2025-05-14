@@ -13,17 +13,23 @@ import {
   ModalCloseButton,
   ModalBody,
   HStack,
+  IconButton,
+  Image,
+  Tooltip,
+  useToast,
 } from "@chakra-ui/react";
-import { CheckIcon, CloseIcon, InfoOutlineIcon } from "@chakra-ui/icons";
+import { CheckIcon, CloseIcon, InfoOutlineIcon, ViewIcon } from "@chakra-ui/icons";
 import Table from "./common/table/Table";
+import { decodeBase64ToJson, isBase64 } from "../services/helperService"
+import { omit } from "lodash";
 
-// Document interface
 export interface Document {
   id: number;
   type: string;
   title: string;
   content: any;
   status: string;
+  fileContent: string; // assuming this might be base64 image or structured content
 }
 
 interface DocumentListProps {
@@ -31,86 +37,170 @@ interface DocumentListProps {
 }
 
 const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const [selectedDocument, setSelectedDocument] = useState<Document | null>(
-    null
-  );
+  const {
+    isOpen: isPreviewOpen,
+    onOpen: onPreviewOpen,
+    onClose: onPreviewClose,
+  } = useDisclosure();
+  const {
+    isOpen: isImageOpen,
+    onOpen: onImageOpen,
+    onClose: onImageClose,
+  } = useDisclosure();
+
+  const toast = useToast();
+
+  const [selectedDocument, setSelectedDocument] = useState<any | null>(null);
+  const [docList, setDocList] = useState<Document[]>(documents);
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
 
   const handlePreview = (doc: Document) => {
-    setSelectedDocument(doc);
-    onOpen();
+    let decodedContent;
+
+    if (doc?.fileContent) {
+      const decoded = decodeBase64ToJson(doc.fileContent);
+      if (decoded?.credentialSubject) {
+        const filteredData = omit(decoded.credentialSubject, [
+          "@context",
+          "original_vc",
+          "originalvc",
+          "id",
+        ]);
+        decodedContent = filteredData;
+      } else {
+        decodedContent = {};
+      }
+    }
+
+    setSelectedDocument({ content: decodedContent });
+    onPreviewOpen();
   };
 
-  const handleCloseModal = () => {
-    setSelectedDocument(null); // Clear the selected document
-    onClose(); // Close the modal
+  const handleVerifyAll = () => {
+    const updatedDocs = docList.map((doc) => ({
+      ...doc,
+      status: "Accepted",
+    }));
+    setDocList(updatedDocs);
+  };
+
+  const handleImagePreview = (doc: Document) => {
+    // Decode the base64 content (if present) into a JSON object
+    const decodedData = decodeBase64ToJson(doc.fileContent);
+    console.log("Decoded Data:", decodedData);
+
+    // Retrieve the base64 image content and mimetype from the decoded data
+    const ImageBase64 = decodedData?.credentialSubject?.originalvc?.content;
+    const mimeType = decodedData?.credentialSubject?.originalvc?.mimetype || "image/png"; // Default to PNG if mimetype is missing
+    console.log("Image Base64:", ImageBase64);
+    console.log("MIME Type:", mimeType);
+
+    // Check if the content is a valid base64 string
+    if (ImageBase64 && isBase64(ImageBase64)) {
+      // If it's base64, create a data URI with the correct MIME type and set it as the image source
+      setImageSrc(`data:${mimeType};base64,${ImageBase64}`);
+      onImageOpen(); // Open the image preview
+    } else {
+      // Show a toast message if the content is invalid
+      toast({
+        title: "Unable to Preview Image",
+        description: "The image content is either missing or invalid.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
   };
 
   return (
-    <VStack
-      spacing={6}
-      align="center"
-      p="20px"
-      borderRadius="8px"
-      marginTop="20px"
-      boxShadow="md"
-      width="full"
-    >
-      <SimpleGrid
-        columns={{ base: 1, sm: 1, md: 2, lg: 1 }}
-        spacingY={{ base: 6, sm: 8, md: 10 }}
-        width="80%"
-        paddingLeft="100px"
-      >
-        {documents.map((doc) => (
-          <Box key={doc.id}>
-            <Text
-              fontFamily="Poppins"
-              fontWeight="600"
-              fontSize="14px"
-              lineHeight="20px"
-              letterSpacing="0.25px"
-              verticalAlign="middle"
-            >
-              {doc.type}:
+    <VStack spacing={6} align="center" p="20px" width="full">
+      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6} width="80%">
+        {docList.map((doc) => (
+          <Box
+            key={doc.id}
+            p={4}
+            borderWidth="1px"
+            borderRadius="md"
+            boxShadow="sm"
+            overflow="hidden"
+          >
+            <Text fontWeight="bold" mb={2}>
+              {doc.type}
             </Text>
-            <Box pl={4}>
-              <HStack spacing={2}>
-                {/* Icon based on document status */}
-                {doc.status === "Accepted" && <CheckIcon color="green.500" />}
-                {doc.status === "Rejected" && <CloseIcon color="red.500" />}
-                {(doc.status === "Pending" || !doc.status) && (
-                  <InfoOutlineIcon color="yellow.500" />
-                )}
+            <HStack spacing={2} align="center" width="100%" justify="space-between">
+            {/* Status icon */}
+            {doc.status === "Accepted" && <CheckIcon color="green.500" />}
+            {doc.status === "Rejected" && <CloseIcon color="red.500" />}
+            {(doc.status === "Pending" || !doc.status) && <InfoOutlineIcon color="yellow.500" />}
 
-                {/* Document title */}
+            {/* Title with truncation from the right */}
+            <Tooltip label={doc.title} hasArrow>
+              <Box maxW="250px" isTruncated>
                 <Button
                   variant="link"
                   colorScheme="blue"
                   onClick={() => handlePreview(doc)}
+                  whiteSpace="nowrap"
+                  overflow="hidden"
+                  textOverflow="ellipsis"
                 >
                   {doc.title}
                 </Button>
-              </HStack>
-            </Box>
+              </Box>
+            </Tooltip>
+
+            {/* Eye icon to preview document image */}
+            <IconButton
+              icon={<ViewIcon />}
+              aria-label="Preview image"
+              size="sm"
+              variant="ghost"
+              onClick={() => handleImagePreview(doc)}
+              ml="auto" // This pushes the button to the right
+            />
+          </HStack>
           </Box>
         ))}
       </SimpleGrid>
 
-      {/* Preview Modal */}
+      <Button
+        bg="teal.500"
+        color="white"
+        width="200px"
+        onClick={handleVerifyAll}
+        borderRadius="50px"
+        _hover={{
+          bg: "teal.600",
+          transform: "none",
+          boxShadow: "none",
+        }}
+        sx={{
+          fontFamily: "Poppins",
+          fontWeight: 500,
+          fontSize: "14px",
+          lineHeight: "20px",
+          letterSpacing: "0.1px",
+          textAlign: "center",
+          verticalAlign: "middle",
+        }}
+      >
+        Verify All Documents
+      </Button>
+
+      {/* JSON Preview Modal */}
       <Modal
-        isOpen={isOpen}
-        onClose={handleCloseModal}
+        isOpen={isPreviewOpen}
+        onClose={onPreviewClose}
         size="xl"
         motionPreset="slideInBottom"
       >
         <ModalOverlay />
         <ModalContent maxHeight="80vh" overflowY="auto">
-          <ModalHeader>Preview: {selectedDocument?.title}</ModalHeader>
+          <ModalHeader>Preview Data</ModalHeader>
           <ModalCloseButton />
           <ModalBody overflowY="auto">
-            {/* Use ka-table to render the document content as a table */}
-            {selectedDocument?.content && (
+            {selectedDocument?.content &&
+            Object.keys(selectedDocument.content).length > 0 ? (
               <Table
                 rowKeyField="name"
                 data={Object.entries(selectedDocument.content).map(
@@ -124,6 +214,35 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
                   { key: "value", title: "Value" },
                 ]}
               />
+            ) : (
+              <Text>No content available for preview.</Text>
+            )}
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+
+      {/* Image Modal */}
+      <Modal
+        isOpen={isImageOpen}
+        onClose={onImageClose}
+        size="2xl"
+        motionPreset="scale"
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Document Image</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {imageSrc ? (
+              <Image
+                src={imageSrc}
+                alt="Document Image"
+                width="100%"
+                objectFit="contain" // Ensure the image is not stretched
+                style={{ imageRendering: "auto" }} // Prevent blurring
+              />
+            ) : (
+              <Text>No image available.</Text>
             )}
           </ModalBody>
         </ModalContent>

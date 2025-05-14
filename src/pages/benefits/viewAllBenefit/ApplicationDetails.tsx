@@ -64,6 +64,7 @@ const ApplicationDetails: React.FC = () => {
           type: "Document", // You can adjust this if there's a specific type
           title: file.filePath.split("/").pop(), // Extract file name from path
           content: file,
+          fileContent: file.fileContent,
           status: file?.verificationStatus?.status,
         }));
 
