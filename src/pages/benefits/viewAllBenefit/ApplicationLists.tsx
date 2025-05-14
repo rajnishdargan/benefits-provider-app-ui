@@ -55,12 +55,13 @@ const ApplicationLists: React.FC = () => {
       if (id) {
         try {
           const applicantionDataResponse = await viewAllApplicationByBenefitId(id);
-          if (!applicantionDataResponse || !Array.isArray(applicantionDataResponse)) {
+          console.log("applicantionDataResponse", applicantionDataResponse);
+          if (!applicantionDataResponse?.applications || !Array.isArray(applicantionDataResponse?.applications)) {
             console.error("Invalid response format from API");
             setApplicationData([]);
             return;
           }
-          const processedData = applicantionDataResponse?.map((item: any) => ({
+          const processedData = applicantionDataResponse?.applications?.map((item: any) => ({
             studentName: `${item?.applicationData?.firstName || "N/A"} ${
               item?.applicationData?.middleName || ""
             } ${item?.applicationData?.lastName || "N/A"}`.trim(),
