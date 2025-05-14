@@ -9,7 +9,6 @@ import { CheckIcon, CloseIcon } from "@chakra-ui/icons";
 import ApplicationInfo from "../../../components/ApplicationInfo";
 import DocumentList from "../../../components/DocumentList";
 import { getApplicationDetails } from "../../../services/applicationService";
-import { getApplicationDetails } from "../../../services/applicationService";
 
 // Types
 
@@ -27,6 +26,7 @@ interface Document {
   title: string;
   content: Record<string, any>;
   status: string;
+  fileContent: string;
 }
 
 const ApplicationDetails: React.FC = () => {
