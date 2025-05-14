@@ -8,6 +8,7 @@ import Table from "../../../components/common/table/Table";
 import { CheckIcon, CloseIcon } from "@chakra-ui/icons";
 import ApplicationInfo from "../../../components/ApplicationInfo";
 import DocumentList from "../../../components/DocumentList";
+import { getApplicationDetails } from "../../../services/applicationService";
 
 // Types
 
@@ -15,7 +16,7 @@ interface ApplicantData {
   id: number;
   name: string;
   applicationStatus: string;
-  applicationId: string;
+  studentId: string;
   disabilityStatus: string;
 }
 
@@ -35,75 +36,38 @@ const ApplicationDetails: React.FC = () => {
   const [applicant, setApplicant] = useState<Record<string, any> | null>(null);
 
   useEffect(() => {
-    const fetchMockData = async () => {
+    const fetchApplicationData = async () => {
       if (!id) return;
 
       try {
         setLoading(true); // Set loading to true before fetching data
-        const mockResponse = {
-          status: "Approved",
-          applicant: {
-            firstName: "Amit",
-            middleName: "Kumar",
-            lastName: "Sharma",
-            nspOtr: "NSP123456789",
-            phoneNumber: "9876543210",
-            studentId: "STU2024A",
-            aadhaar: "123412341234",
-            udid: "UDID987654321",
-            gender: "male",
-            dob: "2010-08-15",
-            annualIncome: "200000",
-            class: "9",
-            currentSchoolName: "Springfield Public School",
-            previousYearMarks: "85",
-            disabilityType: "blindness",
-            disabilityRange: "45",
-            studentType: "dayScholar",
-            tutionAdminFeePaid: "5000",
-            miscFeePaid: "1000",
-            currentlyEnrolledInOtherGovtScheme: "no",
-            haveTwoOfYourDifferentlyAbledSiblingsAvailedThisScholarship: "no",
-            bankName: "State Bank of India",
-            bankIfscCode: "SBIN0001234",
-            branchCode: "001",
-            bankAddress: "123 Main Street, New Delhi",
-            bankAccountNumber: "123456789012",
-            bankAccountHolderName: "Amit Sharma",
-          },
-          document: [
-            {
-              id: 1,
-              type: "Income Certificate",
-              title: "Income Proof 2024",
-              content: { income: "5 LPA", verified: true },
-              status: "Accepted",
-            },
-            {
-              id: 2,
-              type: "Caste Certificate",
-              title: "SC Caste Certificate",
-              content: { caste: "SC", issuedBy: "Govt", year: 2022 },
-              status: "Pending",
-            },
-          ],
-        };
+        const applicationData = await getApplicationDetails(id);
 
-        setApplicant(mockResponse.applicant);
+        // Extract applicant details from the nested structure
+        const applicantDetails = applicationData.applicationData;
+
+        setApplicant(applicantDetails);
 
         setApplicantData([
           {
             id: 1,
-            name: `${mockResponse.applicant.firstName} ${mockResponse.applicant.middleName} ${mockResponse.applicant.lastName}`,
-            applicationStatus: mockResponse.status,
-            applicationId: mockResponse.applicant.studentId,
-            disabilityStatus: mockResponse.applicant.disabilityType
-              ? "Yes"
-              : "No",
+            name: `${applicantDetails.firstName} ${applicantDetails.middleName} ${applicantDetails.lastName}`,
+            applicationStatus: applicationData.status,
+            studentId: applicantDetails.studentId,
+            disabilityStatus: applicantDetails.disabilityType ? "Yes" : "No",
           },
         ]);
 
-        setDocuments(mockResponse.document);
+        // Map documents from applicationFiles
+        const documents = applicationData.applicationFiles.map((file: any) => ({
+          id: file.id,
+          type: "Document", // You can adjust this if there's a specific type
+          title: file.filePath.split("/").pop(), // Extract file name from path
+          content: file,
+          status: file?.verificationStatus?.status,
+        }));
+
+        setDocuments(documents);
       } catch (err) {
         console.error("Error fetching application data:", err);
       } finally {
@@ -111,7 +75,7 @@ const ApplicationDetails: React.FC = () => {
       }
     };
 
-    fetchMockData();
+    fetchApplicationData();
   }, [id]);
 
   const applicantColumns = [
@@ -121,7 +85,7 @@ const ApplicationDetails: React.FC = () => {
       title: "Application Status",
       dataType: "string",
     },
-    { key: "applicationId", title: "Application ID", dataType: "string" },
+    { key: "studentId", title: "Student ID", dataType: "string" },
     { key: "disabilityStatus", title: "Disability Status", dataType: "string" },
   ];
 
@@ -201,8 +165,9 @@ const ApplicationDetails: React.FC = () => {
                 fontWeight="bold"
                 color="gray.700"
                 textAlign="left"
+                mb={0} // Removed margin-bottom to eliminate the gap
               >
-                Applicant Info & Supporting Documents
+                Applicant Info
               </Text>
 
               {/* Two Column Layout for ApplicationInfo and DocumentList */}
@@ -213,14 +178,28 @@ const ApplicationDetails: React.FC = () => {
                 justify="space-between"
                 width="full"
               >
+                {/* Applicant Info - Full Width */}
                 {applicant && (
-                  <Box flex={{ base: "1 1 100%", md: "1 1 48%" }}>
+                  <Box flex="1 1 100%" mb={0}> {/* Removed margin-bottom to eliminate the gap */}
                     <ApplicationInfo details={applicant} />
                   </Box>
                 )}
 
-                <Box flex={{ base: "1 1 100%", md: "1 1 48%" }}>
-                  <DocumentList documents={documents} />
+                {/* Supporting Documents - Below Applicant Info */}
+                <Box flex="1 1 100%">
+                  <Text
+                    fontSize="2xl"
+                    fontWeight="bold"
+                    color="gray.700"
+                    textAlign="left"
+                    mt={8}
+                    mb={4} // Added margin-bottom for spacing
+                  >
+                    Supporting Documents
+                  </Text>
+                  <Box flex="1 1 100%">
+                    <DocumentList documents={documents} />
+                  </Box>
                 </Box>
               </HStack>
             </>

@@ -79,7 +79,7 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
                 {/* Icon based on document status */}
                 {doc.status === "Accepted" && <CheckIcon color="green.500" />}
                 {doc.status === "Rejected" && <CloseIcon color="red.500" />}
-                {doc.status === "Pending" && (
+                {(doc.status === "Pending" || !doc.status) && (
                   <InfoOutlineIcon color="yellow.500" />
                 )}
 

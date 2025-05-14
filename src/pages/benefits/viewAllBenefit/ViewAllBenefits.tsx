@@ -43,7 +43,7 @@ const ActionCell = ({ rowData }: ICellTextProps) => {
     <HStack>
       <IconButton
         onClick={() => {
-          navigate(`/applicants_list/${rowData?.id}`);
+          navigate(`/applicants_list/${rowData?.documentId}`);
         }}
         aria-label="Show Details"
         icon={<ArrowForwardIcon />}
