@@ -1,11 +1,8 @@
 import React from "react";
-import { SearchIcon, ChevronDownIcon } from "@chakra-ui/icons";
+import { ChevronDownIcon } from "@chakra-ui/icons";
 import {
   Box,
   HStack,
-  Input,
-  InputGroup,
-  InputRightElement,
   Menu,
   MenuButton,
   MenuItem,
@@ -15,7 +12,7 @@ import {
 } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
 import Logo from "../../assets/Images/logo.png";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface HeaderProps {
   showMenu?: boolean;
@@ -45,7 +42,7 @@ const Header: React.FC<HeaderProps> = ({
   // Array of menu names
   const menuNames = [
     {
-      label: "Dashboard",
+      label: "Benefit List",
       onClick: () => {
         navigate("/");
       },
@@ -121,10 +118,11 @@ interface HeaderRightSectionProps {
 
 const HeaderRightSection: React.FC<HeaderRightSectionProps> = ({
   showMenu,
-  showSearchBar,
+  // showSearchBar,
   showLanguage,
   menuNames,
 }) => {
+  const location = useLocation(); // Get the current route
   return (
     //@ts-ignore
     <HStack align="center" spacing={6}>
@@ -137,9 +135,18 @@ const HeaderRightSection: React.FC<HeaderRightSectionProps> = ({
             ) : (
               <Text
                 fontSize="16px"
-                fontWeight={400}
+                fontWeight={
+                  location.pathname === "/" && menu.label === "Benefit List"
+                    ? "bold"
+                    : 400
+                } // Bold if active
                 cursor="pointer"
                 onClick={menu?.onClick}
+                color={
+                  location.pathname === "/" && menu.label === "Benefit List"
+                    ? "blue.500"
+                    : "black"
+                } // Highlight if on Benefit List
               >
                 {menu?.label}
               </Text>
@@ -148,7 +155,7 @@ const HeaderRightSection: React.FC<HeaderRightSectionProps> = ({
         ))}
 
       {/* Search Bar */}
-      {showSearchBar && <SearchBar />}
+      {/* {showSearchBar && <SearchBar />} */}
 
       {/* Language Dropdown */}
       {showLanguage && <LanguageDropdown />}
@@ -189,7 +196,7 @@ const DropdownMenu: React.FC<{ menu: any }> = ({ menu }) => (
     </MenuList>
   </Menu>
 );
-
+/*
 const SearchBar: React.FC = () => (
   <HStack align="center">
     <InputGroup maxWidth="300px" rounded={"full"} size="lg">
@@ -200,6 +207,7 @@ const SearchBar: React.FC = () => (
     </InputGroup>
   </HStack>
 );
+*/
 
 const LanguageDropdown: React.FC = () => (
   <Select borderRadius="8" size="sm" width="100px">

@@ -1,8 +1,5 @@
+import apiClient from "../utils/apiClient";
 import { generateUUID } from "../utils/dataJSON/helper/helper";
-
-import axios from "axios";
-const apiUrl = import.meta.env.VITE_PROVIDER_BASE_URL;
-const schemaAPI = import.meta.env.VITE_BENEFIT_SCHEMA_API;
 
 interface BenefitRequestInfo {
   apiId: string;
@@ -97,7 +94,7 @@ interface PrefillData {
 }
 export const createBenefitForm = async (payload: BenefitPayload) => {
   try {
-    const response = await axios.post(`${apiUrl}/benefits/v1/_create`, payload);
+    const response = await apiClient.post(`/benefits/v1/_create`, payload);
     console.log(response.data);
     return response?.data;
   } catch (error) {
@@ -111,7 +108,7 @@ export const updateForm = async (
     | BenefitTermsAndCondition
 ) => {
   try {
-    const response = await axios.post(`${apiUrl}/benefits/v1/_update`, payload);
+    const response = await apiClient.post(`/benefits/v1/_update`, payload);
     console.log(response.data);
     return response?.data;
   } catch (error) {
@@ -121,7 +118,7 @@ export const updateForm = async (
 
 export const viewAllBenefitsData = async (payload: ViewAllBenefits) => {
   try {
-    const response = await axios.post(`${apiUrl}/benefits/v1/_search`, payload);
+    const response = await apiClient.post(`/benefits/v1/_search`, payload);
     return response?.data;
   } catch (error) {
     console.log(error);
@@ -130,16 +127,12 @@ export const viewAllBenefitsData = async (payload: ViewAllBenefits) => {
 
 export const viewAllApplicationByBenefitId = async (id: string) => {
   try {
-    const payload = {
-      benefitId: id,
-    };
-    const response = await axios.post(
-      `${apiUrl}/benefits/v1/getApplicationsByBenefitId`,
-      payload
-    );
+    const response = await apiClient.get(`/applications`, {
+      params: { benefitId: id }, // Pass benefitId as a query parameter
+    });
     return response?.data;
   } catch (error) {
-    console.log(error);
+    console.error("Error fetching applications by benefit ID:", error);
   }
 };
 
@@ -148,8 +141,8 @@ export const viewApplicationByApplicationId = async (id: string) => {
     const payload = {
       applicationId: id,
     };
-    const response = await axios.post(
-      `${apiUrl}/application/v1/getByApplicationId`,
+    const response = await apiClient.post(
+      `/application/v1/getByApplicationId`,
       payload
     );
     return response?.data;
@@ -160,7 +153,7 @@ export const viewApplicationByApplicationId = async (id: string) => {
 
 export const submitForm = async (payload: PrefillData) => {
   try {
-    const response = await axios.post(`${apiUrl}/applications`, payload);
+    const response = await apiClient.post(`/applications`, payload);
     return response?.data;
   } catch (error) {
     console.log(error);
@@ -195,9 +188,41 @@ export const getSchema = async (id: string) => {
     },
   };
   try {
-    const response = await axios.post(`${schemaAPI}/api/select`, payload);
+    const response = await apiClient.post(
+      `${import.meta.env.VITE_BENEFIT_SCHEMA_API}/api/select`,
+      payload
+    );
     return response?.data;
   } catch (error) {
     console.log(error);
+  }
+};
+
+export const getBenefitList = async () => {
+  try {
+    const payload = {};
+    const response = await apiClient.post(`/benefits/search`, payload);
+    console.log(response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching benefits:", error);
+    throw error;
+  }
+};
+
+export const updateApplicationStatus = async (
+  id: string | undefined,
+  status: string,
+  remark: string
+) => {
+  try {
+    const response = await apiClient.patch(`/applications/${id}/status`, {
+      status,
+      remark,
+    });
+    return response?.data;
+  } catch (error) {
+    console.error("Failed to update application status:", error);
+    throw error;
   }
 };

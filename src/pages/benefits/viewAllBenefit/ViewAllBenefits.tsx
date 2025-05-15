@@ -1,6 +1,5 @@
 import {
   ArrowForwardIcon,
-  ChevronDownIcon,
   SearchIcon,
 } from "@chakra-ui/icons";
 import {
@@ -9,27 +8,28 @@ import {
   Input,
   InputGroup,
   InputRightElement,
-  Select,
   Text,
   VStack,
+  Select,
 } from "@chakra-ui/react";
-import Tab from "../../../components/common/Tab";
+
 import Table from "../../../components/common/table/Table";
 import { DataType } from "ka-table/enums";
 import { ICellTextProps } from "ka-table/props";
-import React, { useEffect, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { viewAllBenefitsData } from "../../../services/benefits";
+import { useEffect, useState } from "react";
 import Layout from "../../../components/layout/Layout";
-import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import PaginationList from "./PaginationList";
+import { getBenefitList } from "../../../services/benefits";
+
 const columns = [
-  { key: "name", title: "Name", dataType: DataType.String },
-  { key: "applicants", title: "Applicants", dataType: DataType.Number },
-  { key: "deadline", title: "Deadline", dataType: DataType.String },
+  { key: "title", title: "Benefit Name", dataType: DataType.String },
+  { key: "applications_count", title: "Total Applications", dataType: DataType.Number },
+  { key: "pending_applications_count", title: "Pending Applications", dataType: DataType.Number },
+  { key: "approved_applications_count", title: "Approved Applications", dataType: DataType.Number },
+  { key: "rejected_applications_count", title: "Rejected Applications", dataType: DataType.Number },
+  { key: "applicationCloseDate", title: "Close Date", dataType: DataType.String },
   {
     key: "actions",
     title: "Actions",
@@ -37,37 +37,13 @@ const columns = [
   },
 ];
 
-interface Benefit {
-  name: string;
-  id: string | number;
-  applicants: number;
-  deadline: string;
-}
-const DeadLineCell = (prop: ICellTextProps) => {
-  return (
-    <HStack>
-      <Text fontSize="16px" fontWeight="400">
-        {prop?.value
-          ? new Date(prop.value).toLocaleString("en-GB", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            })
-          : ""}
-        <sup style={{ color: "blue" }}>+3</sup>
-      </Text>
-    </HStack>
-  );
-};
-
 const ActionCell = ({ rowData }: ICellTextProps) => {
   const navigate = useNavigate();
   return (
     <HStack>
-      <IconButton aria-label="Edit" icon={<ChevronDownIcon />} size="lg" />
       <IconButton
         onClick={() => {
-          navigate(`/${rowData?.rowData?.id}/applicants_list`);
+          navigate(`/applicants_list/${rowData?.documentId}`);
         }}
         aria-label="Show Details"
         icon={<ArrowForwardIcon />}
@@ -77,88 +53,79 @@ const ActionCell = ({ rowData }: ICellTextProps) => {
   );
 };
 
+const customCellText = (props: ICellTextProps) => {
+  switch (props.column.key) {
+    case "actions":
+      return <ActionCell {...(props as any)} rowData={props.rowData} />;
+    default:
+      return props.value;
+  }
+};
+
 const ViewAllBenefits = () => {
-  const [activeTab, setActiveTab] = useState(0);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [validTill, setValidTill] = useState<string | null>("");
-  const [createdAt, setCreatedAt] = useState<string | null>("");
-  const [sortOrder, setSortOrder] = useState<string>("asc");
   const [data, setData] = useState([]);
-  const { t } = useTranslation();
-  const datePickerRef = useRef<DatePicker | null>(null);
-  const datePickerCreatedRef = useRef<DatePicker | null>(null);
-  const [pageIndex, setPageIndex] = useState(0);
+  const [filteredData, setFilteredData] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null);
   const PAGE_SIZE = 10;
-  const fetchBenefitsData = async () => {
-    const statusValues = {
-      0: "ACTIVE",
-      1: "CLOSED",
-      2: "DRAFT",
-    };
+  const [pageIndex, setPageIndex] = useState(0);
 
-    const payload = {
-      name: searchTerm.toLowerCase() || null,
-      valid_till: validTill ?? null,
-      created_start: createdAt ?? null,
-      created_end: createdAt ?? null,
-      status: statusValues[activeTab as 0 | 1 | 2],
-      page_no: pageIndex,
-      page_size: PAGE_SIZE,
-      sort_by: "benefit_name",
-      sort_order: sortOrder,
-    };
-
-    const response = await viewAllBenefitsData(payload);
-
-    if (response) {
-      setData(response);
+  const fetchAllBenefits = async () => {
+    try {
+      const response = await getBenefitList();
+      console.log("Response from API:", response);
+      if (response?.results) {
+        const mappedData = response.results.map((benefit: any) => ({
+          ...benefit,
+          applications_count: benefit.application_details?.applications_count || 0,
+          pending_applications_count: benefit.application_details?.pending_applications_count || 0,
+          approved_applications_count: benefit.application_details?.approved_applications_count || 0,
+          rejected_applications_count: benefit.application_details?.rejected_applications_count || 0,
+        }));
+        setData(mappedData);
+        setFilteredData(mappedData);
+      }
+    } catch (error) {
+      console.error("Error fetching all benefits:", error);
     }
   };
 
   useEffect(() => {
-    fetchBenefitsData();
-  }, [activeTab, searchTerm, validTill, createdAt, sortOrder]);
+    fetchAllBenefits();
+  }, []);
 
-  const handleTabClick = (tab: string) => {
-    setActiveTab(parseInt(tab, 10));
-  };
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-    setPageIndex(0);
-  };
-
-  const handleValidTillChange = (date: Date | null) => {
-    if (date) {
-      setValidTill(format(date, "yyyy-MM-dd"));
-    } else {
-      setValidTill(null);
+  useEffect(() => {
+    if (sortOrder) {
+      const sorted = [...filteredData].sort((a: any, b: any) => {
+        if (sortOrder === "asc") {
+          return a.title.localeCompare(b.title);
+        } else {
+          return b.title.localeCompare(a.title);
+        }
+      });
+      setFilteredData(sorted);
     }
+  }, [sortOrder, filteredData]);
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value.toLowerCase();
+    setSearchQuery(query);
+    const filtered = data.filter((benefit: any) =>
+      benefit.title.toLowerCase().includes(query)
+    );
+    setFilteredData(filtered);
+    setPageIndex(0); // Reset to the first page
   };
 
-  const handleCreatedAtChange = (date: Date | null) => {
-    if (date) {
-      setCreatedAt(format(date, "yyyy-MM-dd"));
-    } else {
-      setCreatedAt(null);
-    }
-    setPageIndex(0);
-  };
-
-  const handleSortOrderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSortOrder(e.target.value);
-    setPageIndex(0);
-  };
-  const handlePageChange = (newPageIndex: number) => {
-    setPageIndex(newPageIndex);
-  };
-  const filteredData = data?.filter((item: Benefit) =>
-    item?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
   const paginatedData = filteredData?.slice(
     pageIndex * PAGE_SIZE,
     pageIndex * PAGE_SIZE + PAGE_SIZE
   );
+
+  const handlePageChange = (newPageIndex: number) => {
+    setPageIndex(newPageIndex);
+  };
+
   return (
     <Layout
       _titleBar={{
@@ -168,127 +135,35 @@ const ViewAllBenefits = () => {
       showSearchBar={true}
       showLanguage={false}
     >
-      <VStack spacing="50px" p={"20px"} align="stretch">
+      <VStack spacing="20px" p={"20px"} align="stretch">
+        {/* Search and Sort Controls */}
         <HStack spacing={4}>
           <InputGroup maxWidth="300px" rounded={"full"} size="lg">
             <Input
-              placeholder="Search by name.."
+              placeholder="Search by Benefit Name"
               rounded={"full"}
               bg="#E9E7EF"
-              value={searchTerm}
-              onChange={handleSearchChange}
+              value={searchQuery}
+              onChange={handleSearch}
             />
             <InputRightElement>
               <SearchIcon color="gray.500" />
             </InputRightElement>
           </InputGroup>
 
-          <HStack align="stretch" w="auto" spacing={2}>
-            <InputGroup
-              size="lg"
-              borderWidth="2px"
-              borderRadius="lg"
-              borderColor="gray.300"
-            >
-              <DatePicker
-                ref={datePickerRef}
-                selected={validTill ? new Date(validTill) : null}
-                onChange={handleValidTillChange}
-                minDate={new Date()}
-                dateFormat="yyyy-MM-dd"
-                placeholderText="Select Valid Till"
-                showYearDropdown
-                id="validTill"
-                customInput={
-                  <Input
-                    id="validTill"
-                    isDisabled={false}
-                    value={validTill ? format(validTill, "yyyy-MM-dd") : ""}
-                    readOnly={true}
-                  />
-                }
-              />
-              <InputRightElement display="flex" alignItems="center" pb={2}>
-                <IconButton
-                  aria-label="Arrow Drop Down"
-                  icon={<ChevronDownIcon />}
-                  onClick={() => {
-                    if (datePickerRef.current) {
-                      datePickerRef.current.setOpen(true);
-                    }
-                  }}
-                  variant="ghost"
-                  size="sm"
-                  color="gray.500"
-                />
-              </InputRightElement>
-            </InputGroup>
-          </HStack>
-
-          <HStack align="stretch" w="auto" spacing={2}>
-            <InputGroup
-              size="lg"
-              borderWidth="2px"
-              borderRadius="lg"
-              borderColor="gray.300"
-            >
-              <DatePicker
-                ref={datePickerCreatedRef}
-                selected={createdAt ? new Date(createdAt) : null}
-                onChange={handleCreatedAtChange}
-                dateFormat="yyyy-MM-dd"
-                placeholderText="Select Created At"
-                showYearDropdown
-                customInput={
-                  <Input
-                    id="validTill"
-                    isDisabled={false}
-                    value={validTill ? format(validTill, "yyyy-MM-dd") : ""}
-                    readOnly={true}
-                  />
-                }
-              />
-              <InputRightElement display="flex" alignItems="center" pb={2}>
-                <IconButton
-                  aria-label="Arrow Drop Down"
-                  icon={<ChevronDownIcon />}
-                  onClick={() => {
-                    if (datePickerCreatedRef.current) {
-                      datePickerCreatedRef.current.setOpen(true);
-                    }
-                  }}
-                  variant="ghost"
-                  size="sm"
-                  color="gray.500"
-                />
-              </InputRightElement>
-            </InputGroup>
-          </HStack>
-
           <Select
             placeholder="Sort Order"
-            onChange={handleSortOrderChange}
-            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
+            value={sortOrder || ""}
             maxWidth="150px"
           >
             <option value="asc">Ascending</option>
             <option value="desc">Descending</option>
           </Select>
         </HStack>
-        <HStack justifyContent="space-between">
-          <Tab
-            activeIndex={activeTab}
-            handleTabClick={(index: number) =>
-              handleTabClick(index.toString() as "0" | "1" | "2")
-            }
-            tabs={[
-              { label: "Active", value: "0" },
-              { label: "Closed", value: "1" },
-              { label: "Drafts", value: "2" },
-            ]}
-          />
-        </HStack>
-        {data?.length > 0 ? (
+
+        {/* Table and Pagination */}
+        {filteredData?.length > 0 ? (
           <Table
             columns={columns}
             data={paginatedData}
@@ -301,11 +176,11 @@ const ViewAllBenefits = () => {
           />
         ) : (
           <Text fontSize="lg" textAlign="center" color="gray.500">
-            {t("BENEFIT_LIST_TABLE_NO_DATA_MESSAGE")}
+            No data available
           </Text>
         )}
         <PaginationList
-          total={data?.length}
+          total={filteredData?.length}
           pageSize={PAGE_SIZE}
           currentPage={pageIndex}
           onPageChange={handlePageChange}
@@ -316,14 +191,3 @@ const ViewAllBenefits = () => {
 };
 
 export default ViewAllBenefits;
-
-const customCellText = (props: ICellTextProps) => {
-  switch (props.column.key) {
-    case "deadline":
-      return <DeadLineCell {...props} />;
-    case "actions":
-      return <ActionCell {...(props as any)} rowData={props} />;
-    default:
-      return props.value;
-  }
-};

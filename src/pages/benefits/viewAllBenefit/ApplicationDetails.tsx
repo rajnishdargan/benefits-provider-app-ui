@@ -1,137 +1,373 @@
+import { useState, useEffect } from "react";
 import {
-  FormControl,
-  FormLabel,
-  HStack,
-  Input,
-  InputGroup,
-  InputLeftElement,
   Text,
   VStack,
+  Center,
+  Button,
+  HStack,
+  Box,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  ModalCloseButton,
+  useDisclosure,
+  Textarea,
+  useToast,
 } from "@chakra-ui/react";
-import React, { useEffect, useState } from "react";
+import { CheckIcon, CloseIcon } from "@chakra-ui/icons";
 import Layout from "../../../components/layout/Layout";
-import "react-datepicker/dist/react-datepicker.css";
 import { useParams } from "react-router-dom";
-import { viewApplicationByApplicationId } from "../../../services/benefits";
 import Loading from "../../../components/common/Loading";
-import { getPreviewDetails } from "../../../utils/dataJSON/helper/helper";
+import Table from "../../../components/common/table/Table";
+import ApplicationInfo from "../../../components/ApplicationInfo";
+import DocumentList from "../../../components/DocumentList";
+import { getApplicationDetails } from "../../../services/applicationService";
+import { updateApplicationStatus } from "../../../services/benefits";
+
+// Types
 interface ApplicantData {
   id: number;
-  label: string;
-  value: string;
-  length?: number;
+  name: string;
+  applicationStatus: string;
+  studentId: string;
+  disabilityStatus: string;
 }
-interface DocumentData {
-  id: string;
-  documentType: string;
-  fileStoreId: string;
+
+interface Document {
+  id: number;
+  type: string;
+  title: string;
+  content: Record<string, any>;
+  status: string;
+  fileContent: string;
 }
 
 const ApplicationDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const [applicantData, setApplicantData] = useState<ApplicantData[] | null>(
-    null
-  );
-  const [loading, setLoading] = useState(false);
-  const [documentData, setDocumentData] = useState<DocumentData[]>([]);
-  const [status, setStatus] = useState<any[]>([]);
-  useEffect(() => {
-    const fetchApplicationData = async () => {
-      if (id) {
-        setLoading(true);
-        try {
-          const applicantionDataResponse = await viewApplicationByApplicationId(
-            id
-          );
-          setStatus(applicantionDataResponse?.status || "N/A");
-          setLoading(false);
+  const [applicantData, setApplicantData] = useState<ApplicantData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [applicant, setApplicant] = useState<Record<string, any> | null>(null);
+  const [benefitName, setBenefitName] = useState<string>("");
+  const [comment, setComment] = useState<string>("");
+  const [showActionButtons, setShowActionButtons] = useState<boolean>(true); // To hide action buttons after
+  //confirmation
+  const toast = useToast();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [selectedStatus, setSelectedStatus] = useState<
+    "approved" | "rejected"
+  >();
 
-          const data = getPreviewDetails(applicantionDataResponse?.applicant);
-          if (Array.isArray(data) && data.length > 0) {
-            setApplicantData(data as ApplicantData[]);
-          } else {
-            setApplicantData(null);
-          }
-          setDocumentData(applicantionDataResponse?.documents || []);
-        } catch (error) {
-          setLoading(false);
-          console.error(error);
-        }
+  const openConfirmationModal = (status: "approved" | "rejected") => {
+    setSelectedStatus(status);
+    onOpen();
+  };
+
+  const confirmStatusChange = async () => {
+    if (!selectedStatus) {
+      toast({
+        title: "Missing status ",
+        description: "Please select a status before submitting.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+    if (!id) {
+      toast({
+        title: "Invalid action",
+        description: "Application ID is missing.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+    try {
+      setLoading(true);
+
+      const response = await updateApplicationStatus(
+        id,
+        selectedStatus,
+        comment
+      );
+
+      if (response.status === "success") {
+        toast({
+          title: "Success",
+          description: "Status updated successfully.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+        fetchApplicationData();
+        setComment("");
+        onClose(); // or navigate away
       } else {
-        setLoading(false);
-        console.error("id is undefined");
+        toast({
+          title: "Update failed",
+          description: "Could not update status. Try again.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
       }
-    };
+    } catch (error) {
+      toast({
+        title: "Unexpected Error",
+        description: `${error}` || "Something went wrong.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  const fetchApplicationData = async () => {
+    if (!id) return;
+
+    try {
+      setLoading(true);
+      const applicationData = await getApplicationDetails(id);
+      if (applicationData?.benefit?.title) {
+        setBenefitName(applicationData?.benefit?.title);
+      }
+      const applicantDetails = applicationData.applicationData;
+
+      setApplicant(applicantDetails);
+      if (applicationData.status !== "pending") {
+        setShowActionButtons(false); // Hide action buttons if status is not pending
+      }
+      setApplicantData([
+        {
+          id: 1,
+          name: `${applicantDetails.firstName} ${applicantDetails.middleName} ${applicantDetails.lastName}`,
+          applicationStatus: applicationData.status,
+          studentId: applicantDetails.studentId,
+          disabilityStatus: applicantDetails.disabilityType ? "Yes" : "No",
+        },
+      ]);
+
+      const documents = applicationData.applicationFiles.map((file: any) => ({
+        id: file.id,
+        type: "Document",
+        title: file.filePath.split("/").pop(),
+        content: file,
+        fileContent: file.fileContent,
+        status: file?.verificationStatus?.status,
+      }));
+
+      setDocuments(documents);
+    } catch (err) {
+      console.error("Error fetching application data:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
     fetchApplicationData();
   }, [id]);
 
-  if (!applicantData) {
-    return <Loading />;
-  }
+  const applicantColumns = [
+    { key: "name", title: "Name", dataType: "string" },
+    {
+      key: "applicationStatus",
+      title: "Application Status",
+      dataType: "string",
+    },
+    { key: "studentId", title: "Student ID", dataType: "string" },
+    { key: "disabilityStatus", title: "Disability Status", dataType: "string" },
+  ];
+
+  const customCellText = (props: any) => {
+    switch (props.column.key) {
+      case "applicationStatus": {
+        let statusColor =
+          props.value === "Pending"
+            ? "yellow.400"
+            : props.value === "Rejected"
+            ? "red.500"
+            : props.value === "Accepted"
+            ? "green.500"
+            : "gray.500";
+
+        return (
+          <Text color={statusColor} fontWeight="bold">
+            {props.value}
+          </Text>
+        );
+      }
+      case "disabilityStatus":
+        return props.value === "Yes" ? (
+          <CheckIcon color="green.500" />
+        ) : (
+          <CloseIcon color="red.500" />
+        );
+      default:
+        return props.value || "N/A";
+    }
+  };
+
+  if (loading) return <Loading />;
+
   return (
     <Layout
-      _titleBar={{
-        title: `Applicant Details : ${id}`,
-      }}
+      _titleBar={{ title: `Application Detail For : ${benefitName}` }}
       showMenu={true}
       showSearchBar={true}
       showLanguage={false}
     >
-      {loading && <Loading />}
-      <VStack spacing="50px" p={"20px"} align="stretch">
-        <VStack align="start" spacing={4} p={2} bg="gray.50">
-          <HStack spacing={8} w="100%" p="2" borderRadius="md" bg="white">
-            <Text fontWeight="bold" w="30%">
-              Status:
-            </Text>
-            <Text w="70%">{status ? status.toString() : "N/A"}</Text>
-          </HStack>
-          {applicantData?.map((item) => (
-            <HStack
-              key={item?.id}
-              spacing={8}
-              w="100%"
-              p="2"
-              borderRadius="md"
-              bg="white"
-            >
-              <Text fontWeight="bold" w="30%">
-                {item.label}:
-              </Text>
-              <Text w="70%">
-                {item.value !== null ? item.value.toString() : "N/A"}
-              </Text>
-            </HStack>
-          ))}
-          <Text fontWeight="bold" fontSize={"24px"}>
-            Supporting Documents
+      <Center p="20px">
+        <VStack spacing="50px" align="stretch" width="full" maxWidth="1200px">
+          <Text
+            fontSize="2xl"
+            fontWeight="bold"
+            color="gray.700"
+            textAlign="left"
+          >
+            Application Details
           </Text>
-          {documentData.map((doc) => (
-            <VStack
-              key={doc.id}
-              spacing={4}
-              w="100%"
-              p="2"
-              borderRadius="md"
-              bg="white"
+
+          {applicantData.length > 0 ? (
+            <>
+              <Table
+                columns={applicantColumns}
+                data={applicantData}
+                rowKeyField="id"
+                childComponents={{
+                  cellText: {
+                    content: (props: any) => customCellText(props),
+                  },
+                }}
+                rowStyle={{ textAlign: "center" }}
+                columnStyle={{ textAlign: "center" }}
+              />
+
+              <Text
+                fontSize="2xl"
+                fontWeight="bold"
+                color="gray.700"
+                textAlign="left"
+                mb={0}
+              >
+                Applicant Info
+              </Text>
+
+              <HStack
+                align="flex-start"
+                spacing={8}
+                wrap="wrap"
+                justify="space-between"
+                width="full"
+              >
+                {applicant && (
+                  <Box flex="1 1 100%" mb={0}>
+                    <ApplicationInfo details={applicant} />
+                  </Box>
+                )}
+
+                <Box flex="1 1 100%">
+                  <Text
+                    fontSize="2xl"
+                    fontWeight="bold"
+                    color="gray.700"
+                    textAlign="left"
+                    mt={8}
+                    mb={4}
+                  >
+                    Supporting Documents
+                  </Text>
+                  <Box flex="1 1 100%">
+                    <DocumentList documents={documents} />
+                  </Box>
+                </Box>
+              </HStack>
+            </>
+          ) : (
+            <Text fontSize="lg" textAlign="center" color="gray.500">
+              No applicant data available
+            </Text>
+          )}
+
+          {/* Display the status message after confirmation */}
+          {!showActionButtons && (
+            <Text
+              fontSize="s"
+              fontWeight="bold"
+              color="green.500"
+              textAlign="center"
             >
-              <FormControl key={doc.id}>
-                <FormLabel>{doc?.documentType?.replace(/_/g, " ")}</FormLabel>
-                <InputGroup>
-                  <InputLeftElement pointerEvents="none"></InputLeftElement>
-                  <Input
-                    color={"#0037B9"}
-                    value={`File: ${doc.fileStoreId}`}
-                    isReadOnly
-                    variant="unstyled"
-                    pl="2.5rem"
-                  />
-                </InputGroup>
-              </FormControl>
-            </VStack>
-          ))}
+              Application status is {applicantData[0]?.applicationStatus}!
+            </Text>
+          )}
+
+          {/* Show action buttons only if no status has been set */}
+          {showActionButtons && (
+            <HStack justify="center" spacing={4}>
+              <Button
+                colorScheme="red"
+                variant="outline"
+                leftIcon={<CloseIcon color="red.500" />}
+                color="red.500"
+                borderColor="red.500"
+                borderRadius="50px"
+                width="200px"
+                onClick={() => openConfirmationModal("rejected")}
+              >
+                Reject
+              </Button>
+
+              <Button
+                bg="#3C5FDD"
+                color="white"
+                width="200px"
+                onClick={() => openConfirmationModal("approved")}
+                borderRadius="50px"
+                _hover={{
+                  bg: "#3C5FDD",
+                  transform: "none",
+                  boxShadow: "none",
+                }}
+              >
+                Accept
+              </Button>
+            </HStack>
+          )}
         </VStack>
-      </VStack>
+      </Center>
+
+      {/* Confirmation Modal */}
+      <Modal isOpen={isOpen} onClose={onClose} isCentered>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Confirm</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            You want to procees with changing status for this application?
+            <Text mt={3}>Please provide a comment:</Text>
+            <Textarea
+              placeholder="Enter Comment for Status Change: "
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              mt={3}
+              size="sm"
+            />
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={onClose}>
+              No
+            </Button>
+            <Button colorScheme="blue" onClick={confirmStatusChange}>
+              Yes
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Layout>
   );
 };

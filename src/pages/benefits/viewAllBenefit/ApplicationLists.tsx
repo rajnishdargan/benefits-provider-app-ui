@@ -7,6 +7,7 @@ import {
   InputRightElement,
   Select,
   VStack,
+  Text,
 } from "@chakra-ui/react";
 import Table from "../../../components/common/table/Table";
 import { DataType } from "ka-table/enums";
@@ -21,19 +22,8 @@ import { viewAllApplicationByBenefitId } from "../../../services/benefits";
 const columns = [
   { key: "studentName", title: "Name", dataType: DataType.String },
   { key: "applicationId", title: "Application ID", dataType: DataType.Number },
-  {
-    key: "orderId",
-    title: "Order ID (Beneficiary)",
-    dataType: DataType.Number,
-  },
-
   { key: "status", title: "Status", dataType: DataType.String },
-
-  {
-    key: "actions",
-    title: "Actions",
-    dataType: DataType.String,
-  },
+  { key: "actions", title: "Actions", dataType: DataType.String },
 ];
 
 const DetailsButton = ({ rowData }: ICellTextProps) => {
@@ -51,24 +41,32 @@ const DetailsButton = ({ rowData }: ICellTextProps) => {
     </HStack>
   );
 };
-const ApplicantDetails: React.FC = () => {
+
+const ApplicationLists: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState<string>("asc");
   const { id } = useParams<{ id: string }>();
   const [applicationData, setApplicationData] = useState<any[]>([]);
   const [pageIndex, setPageIndex] = useState(0);
   const pageSize = 10;
+  const [benefitName, setBenefitName] = useState<string>("");
   useEffect(() => {
     const fetchApplicationData = async () => {
       if (id) {
         try {
-          const applicantionDataResponse = await viewAllApplicationByBenefitId(
-            id
-          );
-          const processedData = applicantionDataResponse?.map((item: any) => ({
-            studentName: item?.applicant?.studentName || "N/A",
-            applicationId: item?.applicant?.applicationId || "N/A",
-            orderId: item?.order_id || "N/A",
+          const applicantionDataResponse = await viewAllApplicationByBenefitId(id);
+          console.log("applicantionDataResponse", applicantionDataResponse);
+          setBenefitName(applicantionDataResponse?.benefit?.title || "");
+          if (!applicantionDataResponse?.applications || !Array.isArray(applicantionDataResponse?.applications)) {
+            console.error("Invalid response format from API");
+            setApplicationData([]);
+            return;
+          }
+          const processedData = applicantionDataResponse?.applications?.map((item: any) => ({
+            studentName: `${item?.applicationData?.firstName || "N/A"} ${
+              item?.applicationData?.middleName || ""
+            } ${item?.applicationData?.lastName || "N/A"}`.trim(),
+            applicationId: item?.id || "N/A",
             status: item?.status || "N/A",
           }));
           setApplicationData(processedData);
@@ -81,17 +79,21 @@ const ApplicantDetails: React.FC = () => {
     };
     fetchApplicationData();
   }, [id]);
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value.toLowerCase());
     setPageIndex(0);
   };
+
   const handleSortOrderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSortOrder(e.target.value);
     setPageIndex(0);
   };
+
   const handlePageChange = (newPageIndex: number) => {
     setPageIndex(newPageIndex);
   };
+
   const filteredData = applicationData?.filter((item) =>
     item?.studentName.toLowerCase().includes(searchTerm)
   );
@@ -109,10 +111,11 @@ const ApplicantDetails: React.FC = () => {
     pageIndex * pageSize,
     pageIndex * pageSize + pageSize
   );
+
   return (
     <Layout
       _titleBar={{
-        title: `Application List: ${id}`,
+        title: `Application List For: ${benefitName}`,
       }}
       showMenu={true}
       showSearchBar={true}
@@ -146,7 +149,6 @@ const ApplicantDetails: React.FC = () => {
         <Table
           columns={columns}
           data={paginatedData}
-          detailsRows={[1]}
           rowKeyField={"applicationId"}
           childComponents={{
             cellText: {
@@ -165,11 +167,36 @@ const ApplicantDetails: React.FC = () => {
   );
 };
 
-export default ApplicantDetails;
+export default ApplicationLists;
 
 const CellTextContent = (props: ICellTextProps) => {
   if (props.column.key === "actions") {
     return <DetailsButton {...props} />;
   }
+
+  if (props.column.key === "status") {
+    const status = props.value?.toLowerCase();
+    let color = "gray.500"; // Default color
+
+    if (status === "pending") {
+      color = "orange.500";
+    } else if (status === "approved") {
+      color = "green.500";
+    } else if (status === "rejected") {
+      color = "red.500";
+    }
+
+    // Convert status to title case
+    const titleCaseStatus = status
+      ? status.charAt(0).toUpperCase() + status.slice(1)
+      : "";
+
+    return (
+      <Text color={color} fontWeight="bold">
+        {titleCaseStatus}
+      </Text>
+    );
+  }
+
   return props.value;
 };
