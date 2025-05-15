@@ -1,17 +1,33 @@
-import React, { useState, useEffect } from "react";
-import { Text, VStack, Center, Button, HStack, Box } from "@chakra-ui/react";
+import { useState, useEffect } from "react";
+import {
+  Text,
+  VStack,
+  Center,
+  Button,
+  HStack,
+  Box,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  ModalCloseButton,
+  useDisclosure,
+  Textarea,
+  useToast,
+} from "@chakra-ui/react";
+import { CheckIcon, CloseIcon } from "@chakra-ui/icons";
 import Layout from "../../../components/layout/Layout";
 import { useParams } from "react-router-dom";
 import Loading from "../../../components/common/Loading";
 import Table from "../../../components/common/table/Table";
-// import { ICellTextProps } from "ka-table";
-import { CheckIcon, CloseIcon } from "@chakra-ui/icons";
 import ApplicationInfo from "../../../components/ApplicationInfo";
 import DocumentList from "../../../components/DocumentList";
 import { getApplicationDetails } from "../../../services/applicationService";
+import { updateApplicationStatus } from "../../../services/benefits";
 
 // Types
-
 interface ApplicantData {
   id: number;
   name: string;
@@ -32,54 +48,128 @@ interface Document {
 const ApplicationDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [applicantData, setApplicantData] = useState<ApplicantData[]>([]);
-  const [loading, setLoading] = useState(true); // Default to true to show loading initially
+  const [loading, setLoading] = useState(true);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [applicant, setApplicant] = useState<Record<string, any> | null>(null);
   const [benefitName, setBenefitName] = useState<string>("");
+  const [comment, setComment] = useState<string>("");
+  const [showActionButtons, setShowActionButtons] = useState<boolean>(true); // To hide action buttons after
+  //confirmation
+  const toast = useToast();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [selectedStatus, setSelectedStatus] = useState<
+    "approved" | "rejected"
+  >();
 
-  useEffect(() => {
-    const fetchApplicationData = async () => {
-      if (!id) return;
+  const openConfirmationModal = (status: "approved" | "rejected") => {
+    setSelectedStatus(status);
+    onOpen();
+  };
 
-      try {
-        setLoading(true); // Set loading to true before fetching data
-        const applicationData = await getApplicationDetails(id);
-        if (applicationData?.benefit?.title) {
-          setBenefitName(applicationData?.benefit?.title);
-        }
-        // Extract applicant details from the nested structure
-        const applicantDetails = applicationData.applicationData;
+  const confirmStatusChange = async () => {
+    if (!selectedStatus) {
+      toast({
+        title: "Missing status ",
+        description: "Please select a status before submitting.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+    if (!id) {
+      toast({
+        title: "Invalid action",
+        description: "Application ID is missing.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+    try {
+      setLoading(true);
 
-        setApplicant(applicantDetails);
+      const response = await updateApplicationStatus(
+        id,
+        selectedStatus,
+        comment
+      );
 
-        setApplicantData([
-          {
-            id: 1,
-            name: `${applicantDetails.firstName} ${applicantDetails.middleName} ${applicantDetails.lastName}`,
-            applicationStatus: applicationData.status,
-            studentId: applicantDetails.studentId,
-            disabilityStatus: applicantDetails.disabilityType ? "Yes" : "No",
-          },
-        ]);
-
-        // Map documents from applicationFiles
-        const documents = applicationData.applicationFiles.map((file: any) => ({
-          id: file.id,
-          type: "Document", // You can adjust this if there's a specific type
-          title: file.filePath.split("/").pop(), // Extract file name from path
-          content: file,
-          fileContent: file.fileContent,
-          status: file?.verificationStatus?.status,
-        }));
-
-        setDocuments(documents);
-      } catch (err) {
-        console.error("Error fetching application data:", err);
-      } finally {
-        setLoading(false); // Ensure loading is set to false after fetching data
+      if (response.status === "success") {
+        toast({
+          title: "Success",
+          description: "Status updated successfully.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+        fetchApplicationData();
+        setComment("");
+        onClose(); // or navigate away
+      } else {
+        toast({
+          title: "Update failed",
+          description: "Could not update status. Try again.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
       }
-    };
+    } catch (error) {
+      toast({
+        title: "Unexpected Error",
+        description: `${error}` || "Something went wrong.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  const fetchApplicationData = async () => {
+    if (!id) return;
 
+    try {
+      setLoading(true);
+      const applicationData = await getApplicationDetails(id);
+      if (applicationData?.benefit?.title) {
+        setBenefitName(applicationData?.benefit?.title);
+      }
+      const applicantDetails = applicationData.applicationData;
+
+      setApplicant(applicantDetails);
+      if (applicationData.status !== "pending") {
+        setShowActionButtons(false); // Hide action buttons if status is not pending
+      }
+      setApplicantData([
+        {
+          id: 1,
+          name: `${applicantDetails.firstName} ${applicantDetails.middleName} ${applicantDetails.lastName}`,
+          applicationStatus: applicationData.status,
+          studentId: applicantDetails.studentId,
+          disabilityStatus: applicantDetails.disabilityType ? "Yes" : "No",
+        },
+      ]);
+
+      const documents = applicationData.applicationFiles.map((file: any) => ({
+        id: file.id,
+        type: "Document",
+        title: file.filePath.split("/").pop(),
+        content: file,
+        fileContent: file.fileContent,
+        status: file?.verificationStatus?.status,
+      }));
+
+      setDocuments(documents);
+    } catch (err) {
+      console.error("Error fetching application data:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
     fetchApplicationData();
   }, [id]);
 
@@ -112,22 +202,15 @@ const ApplicationDetails: React.FC = () => {
           </Text>
         );
       }
-
       case "disabilityStatus":
         return props.value === "Yes" ? (
           <CheckIcon color="green.500" />
         ) : (
           <CloseIcon color="red.500" />
         );
-
       default:
         return props.value || "N/A";
     }
-  };
-
-  const handleApplicationStatus = (status: string) => {
-    console.log(`${status} application`);
-    // Make API call if needed
   };
 
   if (loading) return <Loading />;
@@ -141,6 +224,15 @@ const ApplicationDetails: React.FC = () => {
     >
       <Center p="20px">
         <VStack spacing="50px" align="stretch" width="full" maxWidth="1200px">
+          <Text
+            fontSize="2xl"
+            fontWeight="bold"
+            color="gray.700"
+            textAlign="left"
+          >
+            Application Details
+          </Text>
+
           {applicantData.length > 0 ? (
             <>
               <Table
@@ -161,12 +253,11 @@ const ApplicationDetails: React.FC = () => {
                 fontWeight="bold"
                 color="gray.700"
                 textAlign="left"
-                mb={0} // Removed margin-bottom to eliminate the gap
+                mb={0}
               >
                 Applicant Info
               </Text>
 
-              {/* Two Column Layout for ApplicationInfo and DocumentList */}
               <HStack
                 align="flex-start"
                 spacing={8}
@@ -174,14 +265,12 @@ const ApplicationDetails: React.FC = () => {
                 justify="space-between"
                 width="full"
               >
-                {/* Applicant Info - Full Width */}
                 {applicant && (
                   <Box flex="1 1 100%" mb={0}>
                     <ApplicationInfo details={applicant} />
                   </Box>
                 )}
 
-                {/* Supporting Documents - Below Applicant Info */}
                 <Box flex="1 1 100%">
                   <Text
                     fontSize="2xl"
@@ -189,7 +278,7 @@ const ApplicationDetails: React.FC = () => {
                     color="gray.700"
                     textAlign="left"
                     mt={8}
-                    mb={4} // Added margin-bottom for spacing
+                    mb={4}
                   >
                     Supporting Documents
                   </Text>
@@ -205,60 +294,80 @@ const ApplicationDetails: React.FC = () => {
             </Text>
           )}
 
-          {/* Accept and Reject Buttons */}
-          <HStack justify="center" spacing={4}>
-            <Button
-              colorScheme="red"
-              variant="outline"
-              leftIcon={<CloseIcon color="red.500" />}
-              color="red.500"
-              borderColor="red.500"
-              borderRadius="50px"
-              width="200px"
-              _hover={{
-                backgroundColor: "transparent",
-                borderColor: "red.600",
-              }}
-              onClick={() => handleApplicationStatus("Rejected")}
-              sx={{
-                fontFamily: "Poppins",
-                fontWeight: 500,
-                fontSize: "14px",
-                lineHeight: "20px",
-                letterSpacing: "0.1px",
-                textAlign: "center",
-                verticalAlign: "middle",
-              }}
+          {/* Display the status message after confirmation */}
+          {!showActionButtons && (
+            <Text
+              fontSize="s"
+              fontWeight="bold"
+              color="green.500"
+              textAlign="center"
             >
-              Reject
-            </Button>
+              Application status is {applicantData[0]?.applicationStatus}!
+            </Text>
+          )}
 
-            <Button
-              bg="#3C5FDD"
-              color="white"
-              width="200px"
-              onClick={() => handleApplicationStatus("Accepted")}
-              borderRadius="50px"
-              _hover={{
-                bg: "#3C5FDD",
-                transform: "none",
-                boxShadow: "none",
-              }}
-              sx={{
-                fontFamily: "Poppins",
-                fontWeight: 500,
-                fontSize: "14px",
-                lineHeight: "20px",
-                letterSpacing: "0.1px",
-                textAlign: "center",
-                verticalAlign: "middle",
-              }}
-            >
-              Accept
-            </Button>
-          </HStack>
+          {/* Show action buttons only if no status has been set */}
+          {showActionButtons && (
+            <HStack justify="center" spacing={4}>
+              <Button
+                colorScheme="red"
+                variant="outline"
+                leftIcon={<CloseIcon color="red.500" />}
+                color="red.500"
+                borderColor="red.500"
+                borderRadius="50px"
+                width="200px"
+                onClick={() => openConfirmationModal("rejected")}
+              >
+                Reject
+              </Button>
+
+              <Button
+                bg="#3C5FDD"
+                color="white"
+                width="200px"
+                onClick={() => openConfirmationModal("approved")}
+                borderRadius="50px"
+                _hover={{
+                  bg: "#3C5FDD",
+                  transform: "none",
+                  boxShadow: "none",
+                }}
+              >
+                Accept
+              </Button>
+            </HStack>
+          )}
         </VStack>
       </Center>
+
+      {/* Confirmation Modal */}
+      <Modal isOpen={isOpen} onClose={onClose} isCentered>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Confirm</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            You want to procees with changing status for this application?
+            <Text mt={3}>Please provide a comment:</Text>
+            <Textarea
+              placeholder="Enter Comment for Status Change: "
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              mt={3}
+              size="sm"
+            />
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={onClose}>
+              No
+            </Button>
+            <Button colorScheme="blue" onClick={confirmStatusChange}>
+              Yes
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Layout>
   );
 };

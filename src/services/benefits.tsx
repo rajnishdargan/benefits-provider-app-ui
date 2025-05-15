@@ -127,12 +127,9 @@ export const viewAllBenefitsData = async (payload: ViewAllBenefits) => {
 
 export const viewAllApplicationByBenefitId = async (id: string) => {
   try {
-    const response = await apiClient.get(
-      `/applications`,
-      {
-        params: { benefitId: id }, // Pass benefitId as a query parameter
-      }
-    );
+    const response = await apiClient.get(`/applications`, {
+      params: { benefitId: id }, // Pass benefitId as a query parameter
+    });
     return response?.data;
   } catch (error) {
     console.error("Error fetching applications by benefit ID:", error);
@@ -209,6 +206,23 @@ export const getBenefitList = async () => {
     return response.data;
   } catch (error) {
     console.error("Error fetching benefits:", error);
+    throw error;
+  }
+};
+
+export const updateApplicationStatus = async (
+  id: string | undefined,
+  status: string,
+  remark: string
+) => {
+  try {
+    const response = await apiClient.patch(`/applications/${id}/status`, {
+      status,
+      remark,
+    });
+    return response?.data;
+  } catch (error) {
+    console.error("Failed to update application status:", error);
     throw error;
   }
 };
