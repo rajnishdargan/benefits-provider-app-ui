@@ -1,3 +1,5 @@
+import { isString } from "lodash";
+
 export const decodeBase64ToJson = (input: string) => {
   try {
     // Step 1: Base64 decode
@@ -17,6 +19,21 @@ export const decodeBase64ToJson = (input: string) => {
 };
 
 export const isBase64 = (str: string) => {
-    const base64Pattern = /^([A-Za-z0-9+/=]|\r|\n)+$/;
-    return base64Pattern.test(str);
-  }
+  const base64Pattern = /^([A-Za-z0-9+/=]|\r|\n)+$/;
+  return base64Pattern.test(str);
+}
+
+export const isDateString = (value: any): boolean => {
+  if (!isString(value)) return false;
+
+  const date = new Date(value);
+  return !isNaN(date.getTime()) && value.includes('GMT');
+};
+
+export const formatDate = (value: string) => {
+  return new Date(value).toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};

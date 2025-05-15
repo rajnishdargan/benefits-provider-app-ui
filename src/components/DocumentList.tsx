@@ -18,9 +18,19 @@ import {
   Tooltip,
   useToast,
 } from "@chakra-ui/react";
-import { CheckIcon, CloseIcon, InfoOutlineIcon, ViewIcon } from "@chakra-ui/icons";
-import Table from "./common/table/Table";
-import { decodeBase64ToJson, isBase64 } from "../services/helperService"
+import {
+  CheckIcon,
+  CloseIcon,
+  InfoOutlineIcon,
+  ViewIcon,
+} from "@chakra-ui/icons";
+import PreviewTable from "./common/previewTable/previewTable";
+import {
+  decodeBase64ToJson,
+  isBase64,
+  isDateString,
+  formatDate,
+} from "../services/helperService";
 import { omit } from "lodash";
 
 export interface Document {
@@ -64,9 +74,13 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
           "@context",
           "original_vc",
           "originalvc",
+          "original_vc1",
+          "originalvc1",
+          "issuingauthoritysignature",
           "id",
         ]);
         decodedContent = filteredData;
+        console.log("Decoded Content:", decodedContent);
       } else {
         decodedContent = {};
       }
@@ -91,7 +105,8 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
 
     // Retrieve the base64 image content and mimetype from the decoded data
     const ImageBase64 = decodedData?.credentialSubject?.originalvc?.content;
-    const mimeType = decodedData?.credentialSubject?.originalvc?.mimetype || "image/png"; // Default to PNG if mimetype is missing
+    const mimeType =
+      decodedData?.credentialSubject?.originalvc?.mimetype || "image/png"; // Default to PNG if mimetype is missing
     console.log("Image Base64:", ImageBase64);
     console.log("MIME Type:", mimeType);
 
@@ -127,38 +142,45 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
             <Text fontWeight="bold" mb={2}>
               {doc.type}
             </Text>
-            <HStack spacing={2} align="center" width="100%" justify="space-between">
-            {/* Status icon */}
-            {doc.status === "Accepted" && <CheckIcon color="green.500" />}
-            {doc.status === "Rejected" && <CloseIcon color="red.500" />}
-            {(doc.status === "Pending" || !doc.status) && <InfoOutlineIcon color="yellow.500" />}
+            <HStack
+              spacing={2}
+              align="center"
+              width="100%"
+              justify="space-between"
+            >
+              {/* Status icon */}
+              {doc.status === "Verified" && <CheckIcon color="green.500" />}
+              {doc.status === "Unverified" && <CloseIcon color="red.500" />}
+              {(doc.status === "Pending" || !doc.status) && (
+                <InfoOutlineIcon color="yellow.500" />
+              )}
 
-            {/* Title with truncation from the right */}
-            <Tooltip label={doc.title} hasArrow>
-              <Box maxW="250px" isTruncated>
-                <Button
-                  variant="link"
-                  colorScheme="blue"
-                  onClick={() => handlePreview(doc)}
-                  whiteSpace="nowrap"
-                  overflow="hidden"
-                  textOverflow="ellipsis"
-                >
-                  {doc.title}
-                </Button>
-              </Box>
-            </Tooltip>
+              {/* Title with truncation from the right */}
+              <Tooltip label={doc.title} hasArrow>
+                <Box maxW="250px" isTruncated>
+                  <Button
+                    variant="link"
+                    colorScheme="blue"
+                    onClick={() => handlePreview(doc)}
+                    whiteSpace="nowrap"
+                    overflow="hidden"
+                    textOverflow="ellipsis"
+                  >
+                    {doc.title}
+                  </Button>
+                </Box>
+              </Tooltip>
 
-            {/* Eye icon to preview document image */}
-            <IconButton
-              icon={<ViewIcon />}
-              aria-label="Preview image"
-              size="sm"
-              variant="ghost"
-              onClick={() => handleImagePreview(doc)}
-              ml="auto" // This pushes the button to the right
-            />
-          </HStack>
+              {/* Eye icon to preview document image */}
+              <IconButton
+                icon={<ViewIcon />}
+                aria-label="Preview image"
+                size="sm"
+                variant="ghost"
+                onClick={() => handleImagePreview(doc)}
+                ml="auto" // This pushes the button to the right
+              />
+            </HStack>
           </Box>
         ))}
       </SimpleGrid>
@@ -201,7 +223,7 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
           <ModalBody overflowY="auto">
             {selectedDocument?.content &&
             Object.keys(selectedDocument.content).length > 0 ? (
-              <Table
+              <PreviewTable
                 rowKeyField="name"
                 data={Object.entries(selectedDocument.content).map(
                   ([key, value]) => ({
@@ -210,8 +232,24 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
                   })
                 )}
                 columns={[
-                  { key: "name", title: "Field" },
-                  { key: "value", title: "Value" },
+                  {
+                    key: "name",
+                    title: "Field",
+                    dataKey: "name",
+                    render: (name: any) => <strong>{name}</strong>,
+                  },
+                  {
+                    key: "value",
+                    title: "Value",
+                    dataKey: "value",
+                    render: (value: any) => (
+                      <span>
+                        {isDateString(value)
+                          ? formatDate(value)
+                          : String(value)}
+                      </span>
+                    ),
+                  },
                 ]}
               />
             ) : (
