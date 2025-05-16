@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   VStack,
   Text,
@@ -32,7 +32,6 @@ import {
   formatDate,
 } from "../services/helperService";
 import { omit } from "lodash";
-
 export interface Document {
   id: number;
   type: string;
@@ -64,6 +63,10 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
   const [docList, setDocList] = useState<Document[]>(documents);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
 
+  useEffect(() => {
+    // Update the document list whenever the documents prop changes
+    setDocList(documents);
+  }, [documents]);
   const handlePreview = (doc: Document) => {
     let decodedContent;
 
@@ -88,14 +91,6 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
 
     setSelectedDocument({ content: decodedContent });
     onPreviewOpen();
-  };
-
-  const handleVerifyAll = () => {
-    const updatedDocs = docList.map((doc) => ({
-      ...doc,
-      status: "Accepted",
-    }));
-    setDocList(updatedDocs);
   };
 
   const handleImagePreview = (doc: Document) => {
@@ -126,6 +121,7 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
       });
     }
   };
+
 
   return (
     <VStack spacing={6} align="center" p="20px" width="full">
@@ -184,30 +180,6 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
           </Box>
         ))}
       </SimpleGrid>
-
-      <Button
-        bg="teal.500"
-        color="white"
-        width="200px"
-        onClick={handleVerifyAll}
-        borderRadius="50px"
-        _hover={{
-          bg: "teal.600",
-          transform: "none",
-          boxShadow: "none",
-        }}
-        sx={{
-          fontFamily: "Poppins",
-          fontWeight: 500,
-          fontSize: "14px",
-          lineHeight: "20px",
-          letterSpacing: "0.1px",
-          textAlign: "center",
-          verticalAlign: "middle",
-        }}
-      >
-        Verify All Documents
-      </Button>
 
       {/* JSON Preview Modal */}
       <Modal

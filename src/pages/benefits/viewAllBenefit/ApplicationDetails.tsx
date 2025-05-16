@@ -24,9 +24,8 @@ import Loading from "../../../components/common/Loading";
 import Table from "../../../components/common/table/Table";
 import ApplicationInfo from "../../../components/ApplicationInfo";
 import DocumentList from "../../../components/DocumentList";
-import { getApplicationDetails } from "../../../services/applicationService";
+import { getApplicationDetails, verifyAllDocuments } from "../../../services/applicationService";
 import { updateApplicationStatus } from "../../../services/benefits";
-
 // Types
 interface ApplicantData {
   id: number;
@@ -54,6 +53,8 @@ const ApplicationDetails: React.FC = () => {
   const [benefitName, setBenefitName] = useState<string>("");
   const [comment, setComment] = useState<string>("");
   const [showActionButtons, setShowActionButtons] = useState<boolean>(true); // To hide action buttons after
+  const [isVerifyButtonVisible, setIsVerifyButtonVisible] = useState(true); // State to control button visibility
+  const [isVerifyLoading, setIsVerifyLoading] = useState(false); // Add a state for button loading
   //confirmation
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -128,14 +129,57 @@ const ApplicationDetails: React.FC = () => {
       setLoading(false);
     }
   };
+
+  const handleVerifyAll = async () => {
+    try {
+      if (!id) {
+        toast({
+          title: "Invalid action",
+          description: "Application ID is missing.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      setIsVerifyLoading(true); // Show loader
+      const response = await verifyAllDocuments(id);
+      console.log("Response from verifyAllDocuments:", response);
+
+      if (response?.response) {
+        setIsVerifyButtonVisible(false);
+        toast({
+          title: "Verification Completed",
+          description: "All documents verification have been completed.",
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+        });
+        fetchApplicationData();
+      }
+    } catch (error) {
+      console.error("Error verifying documents:", error);
+      toast({
+        title: "Verification Failed",
+        description: "An error occurred while verifying the documents.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsVerifyLoading(false); // Hide loader
+    }
+  };
+
   const fetchApplicationData = async () => {
     if (!id) return;
 
     try {
       setLoading(true);
       const applicationData = await getApplicationDetails(id);
-      if (applicationData?.benefit?.title) {
-        setBenefitName(applicationData?.benefit?.title);
+      if (applicationData?.benefitDetails?.title) {
+        setBenefitName(applicationData?.benefitDetails?.title);
       }
       const applicantDetails = applicationData.applicationData;
 
@@ -146,7 +190,7 @@ const ApplicationDetails: React.FC = () => {
       setApplicantData([
         {
           id: 1,
-          name: `${applicantDetails.firstName} ${applicantDetails.middleName} ${applicantDetails.lastName}`,
+          name: `${applicantDetails.firstName || ""} ${applicantDetails.middleName ? applicantDetails.middleName + " " : ""}${applicantDetails.lastName || ""}`.trim(),
           applicationStatus: applicationData.status,
           studentId: applicantDetails.studentId,
           disabilityStatus: applicantDetails.disabilityType ? "Yes" : "No",
@@ -163,6 +207,9 @@ const ApplicationDetails: React.FC = () => {
       }));
 
       setDocuments(documents);
+      if (documents.length > 0 && documents[0].status) {
+        setIsVerifyButtonVisible(false);
+      }
     } catch (err) {
       console.error("Error fetching application data:", err);
     } finally {
@@ -188,16 +235,16 @@ const ApplicationDetails: React.FC = () => {
     switch (props.column.key) {
       case "applicationStatus": {
         let statusColor =
-          props.value === "Pending"
+          props.value === "pending"
             ? "yellow.400"
-            : props.value === "Rejected"
+            : props.value === "rejected"
             ? "red.500"
-            : props.value === "Accepted"
+            : props.value === "approved"
             ? "green.500"
             : "gray.500";
 
         return (
-          <Text color={statusColor} fontWeight="bold">
+          <Text color={statusColor} fontWeight="bold" textTransform="capitalize">
             {props.value}
           </Text>
         );
@@ -209,7 +256,7 @@ const ApplicationDetails: React.FC = () => {
           <CloseIcon color="red.500" />
         );
       default:
-        return props.value || "N/A";
+        return props.value || "-";
     }
   };
 
@@ -294,15 +341,54 @@ const ApplicationDetails: React.FC = () => {
             </Text>
           )}
 
+          {/* Add the Verify All Documents button */}
+          {showActionButtons && isVerifyButtonVisible && (
+            <HStack justify="center" spacing={4}>
+              <Button
+                bg="teal.500"
+                color="white"
+                width="200px"
+                onClick={handleVerifyAll}
+                borderRadius="50px"
+                isLoading={isVerifyLoading} // Add this to show the spinner
+                loadingText="Verifying..." // Optional: Text to show while loading
+                _hover={{
+                  bg: "teal.600",
+                  transform: "none",
+                  boxShadow: "none",
+                }}
+                sx={{
+                  fontFamily: "Poppins",
+                  fontWeight: 500,
+                  fontSize: "14px",
+                  lineHeight: "20px",
+                  letterSpacing: "0.1px",
+                  textAlign: "center",
+                  verticalAlign: "middle",
+                }}
+              >
+                Verify All Documents
+              </Button>
+            </HStack>
+          )}
+
           {/* Display the status message after confirmation */}
           {!showActionButtons && (
             <Text
               fontSize="s"
               fontWeight="bold"
-              color="green.500"
+              color={
+                applicantData[0]?.applicationStatus === "pending"
+                  ? "orange.500"
+                  : applicantData[0]?.applicationStatus === "rejected"
+                  ? "red.500"
+                  : applicantData[0]?.applicationStatus === "approved"
+                  ? "green.500"
+                  : "gray.500" // Default color
+              }
               textAlign="center"
             >
-              Application status is {applicantData[0]?.applicationStatus}!
+              Application is {applicantData[0]?.applicationStatus}!
             </Text>
           )}
 
