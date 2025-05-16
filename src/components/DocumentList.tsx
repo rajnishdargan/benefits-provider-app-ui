@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   VStack,
   Text,
@@ -139,6 +140,7 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
     }
   };
 
+
   return (
     <VStack spacing={6} align="center" p="20px" width="full">
       <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6} width="80%">
@@ -167,7 +169,7 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
                   <CheckIcon color="green.500" />
                 </Tooltip>
               )}
-              {doc.status === "Unverified" && (
+              {doc?.status === "Unverified" && (
                 <Tooltip
                   label={doc.verificationErrors.join(", ")}
                   hasArrow
