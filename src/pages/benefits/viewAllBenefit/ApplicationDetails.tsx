@@ -204,6 +204,7 @@ const ApplicationDetails: React.FC = () => {
         content: file,
         fileContent: file.fileContent,
         status: file?.verificationStatus?.status,
+        verificationErrors: file?.verificationStatus?.verificationErrors || ["Some error occurred in verification"],
       }));
 
       setDocuments(documents);
