@@ -22,6 +22,7 @@ import { viewAllApplicationByBenefitId } from "../../../services/benefits";
 const columns = [
   { key: "studentName", title: "Name", dataType: DataType.String },
   { key: "applicationId", title: "Application ID", dataType: DataType.Number },
+  { key: "orderId", title: "Order ID", dataType: DataType.String },
   { key: "status", title: "Status", dataType: DataType.String },
   { key: "actions", title: "Actions", dataType: DataType.String },
 ];
@@ -66,8 +67,9 @@ const ApplicationLists: React.FC = () => {
             studentName: `${item?.applicationData?.firstName || "N/A"} ${
               item?.applicationData?.middleName || ""
             } ${item?.applicationData?.lastName || "N/A"}`.trim(),
-            applicationId: item?.id || "N/A",
-            status: item?.status || "N/A",
+            applicationId: item?.id || "-",
+            orderId: item?.orderId || "-",
+            status: item?.status || "-",
           }));
           setApplicationData(processedData);
         } catch (error) {
