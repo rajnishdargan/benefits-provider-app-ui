@@ -44,6 +44,7 @@ interface Document {
   title: string;
   content: Record<string, any>;
   status: string;
+  verificationErrors: string[];
   fileContent: string;
 }
 
@@ -340,7 +341,12 @@ const ApplicationDetails: React.FC = () => {
                     Supporting Documents
                   </Text>
                   <Box flex="1 1 100%">
-                    <DocumentList documents={documents} />
+                    <DocumentList
+                      documents={documents.map((doc) => ({
+                        ...doc,
+                        verificationErrors: doc?.verificationErrors || [],
+                      }))}
+                    />
                   </Box>
                 </Box>
               </HStack>
