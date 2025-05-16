@@ -38,6 +38,7 @@ export interface Document {
   title: string;
   content: any;
   status: string;
+  verificationErrors: string[];
   fileContent: string; // assuming this might be base64 image or structured content
 }
 
@@ -60,7 +61,7 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
   const toast = useToast();
 
   const [selectedDocument, setSelectedDocument] = useState<any | null>(null);
-  const [docList, setDocList] = useState<Document[]>(documents);
+  const [docList, setDocList] = useState<Document[]>(documents || []);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
 
   useEffect(() => {
@@ -71,7 +72,21 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
     let decodedContent;
 
     if (doc?.fileContent) {
-      const decoded = decodeBase64ToJson(doc.fileContent);
+      let decoded;
+      try {
+        decoded = decodeBase64ToJson(doc.fileContent);
+      } catch (e) {
+        console.error("Failed to decode base64 content:", e);
+        toast({
+          title: "Decoding Error",
+          description: "Failed to decode document content.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+        return;
+      }
+
       if (decoded?.credentialSubject) {
         const filteredData = omit(decoded.credentialSubject, [
           "@context",
@@ -99,7 +114,9 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
     console.log("Decoded Data:", decodedData);
 
     // Retrieve the base64 image content and mimetype from the decoded data
-    const ImageBase64 = decodedData?.credentialSubject?.originalvc?.content;
+    const ImageBase64 =
+      decodedData?.credentialSubject?.originalvc?.content ||
+      decodedData?.credentialSubject?.original_vc?.content;
     const mimeType =
       decodedData?.credentialSubject?.originalvc?.mimetype || "image/png"; // Default to PNG if mimetype is missing
     console.log("Image Base64:", ImageBase64);
@@ -145,14 +162,31 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
               justify="space-between"
             >
               {/* Status icon */}
-              {doc.status === "Verified" && <CheckIcon color="green.500" />}
-              {doc.status === "Unverified" && <CloseIcon color="red.500" />}
+              {doc.status === "Verified" && (
+                <Tooltip label="Document is verified" hasArrow
+                bg="green.500" color="white">
+                  <CheckIcon color="green.500" />
+                </Tooltip>
+              )}
+              {doc?.status === "Unverified" && (
+                <Tooltip
+                  label={doc.verificationErrors.join(", ")}
+                  hasArrow
+                  bg="red.500"
+                  color="white"
+                >
+                  <CloseIcon color="red.500" />
+                </Tooltip>
+              )}
               {(doc.status === "Pending" || !doc.status) && (
-                <InfoOutlineIcon color="yellow.500" />
+                <Tooltip label="Document is not verified" hasArrow
+                bg="yellow.500" color="white">
+                  <InfoOutlineIcon color="yellow.500" />
+                </Tooltip>
               )}
 
               {/* Title with truncation from the right */}
-              <Tooltip label={doc.title} hasArrow>
+              <Tooltip label={doc?.title} hasArrow>
                 <Box maxW="250px" isTruncated>
                   <Button
                     variant="link"
