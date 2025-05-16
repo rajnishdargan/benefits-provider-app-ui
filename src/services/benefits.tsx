@@ -226,3 +226,32 @@ export const updateApplicationStatus = async (
     throw error;
   }
 };
+
+interface ExportCsvParams {
+  benefitId: string;
+  type: string;
+}
+
+export const exportApplicationsCsv = async ({
+  benefitId,
+  type,
+}: ExportCsvParams) => {
+  try {
+    const token = localStorage.getItem("token");
+    const response = await apiClient.get("/applications/reports/csvexport", {
+      params: {
+        benefitId,
+        type,
+      },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      responseType: "blob", // important if you expect a CSV file as blob
+    });
+
+    return response.data; // this will be the CSV file blob
+  } catch (error) {
+    console.error("Failed to export applications CSV:", error);
+    throw error;
+  }
+};
