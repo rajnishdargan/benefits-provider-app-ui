@@ -18,6 +18,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { useNavigate, useParams } from "react-router-dom";
 import PaginationList from "./PaginationList";
 import { viewAllApplicationByBenefitId } from "../../../services/benefits";
+import DownloadCSV from "../../../components/DownloadCSV";
 
 const columns = [
   { key: "studentName", title: "Name", dataType: DataType.String },
@@ -55,22 +56,29 @@ const ApplicationLists: React.FC = () => {
     const fetchApplicationData = async () => {
       if (id) {
         try {
-          const applicantionDataResponse = await viewAllApplicationByBenefitId(id);
+          const applicantionDataResponse = await viewAllApplicationByBenefitId(
+            id
+          );
           console.log("applicantionDataResponse", applicantionDataResponse);
           setBenefitName(applicantionDataResponse?.benefit?.title || "");
-          if (!applicantionDataResponse?.applications || !Array.isArray(applicantionDataResponse?.applications)) {
+          if (
+            !applicantionDataResponse?.applications ||
+            !Array.isArray(applicantionDataResponse?.applications)
+          ) {
             console.error("Invalid response format from API");
             setApplicationData([]);
             return;
           }
-          const processedData = applicantionDataResponse?.applications?.map((item: any) => ({
-            studentName: `${item?.applicationData?.firstName || "N/A"} ${
-              item?.applicationData?.middleName || ""
-            } ${item?.applicationData?.lastName || "N/A"}`.trim(),
-            applicationId: item?.id || "-",
-            orderId: item?.orderId || "-",
-            status: item?.status || "-",
-          }));
+          const processedData = applicantionDataResponse?.applications?.map(
+            (item: any) => ({
+              studentName: `${item?.applicationData?.firstName || "N/A"} ${
+                item?.applicationData?.middleName || ""
+              } ${item?.applicationData?.lastName || "N/A"}`.trim(),
+              applicationId: item?.id || "-",
+              orderId: item?.orderId || "-",
+              status: item?.status || "-",
+            })
+          );
           setApplicationData(processedData);
         } catch (error) {
           console.error(error);
@@ -147,6 +155,7 @@ const ApplicationLists: React.FC = () => {
             <option value="asc">Ascending</option>
             <option value="desc">Descending</option>
           </Select>
+          {id && <DownloadCSV benefitId={id} benefitName={benefitName} />}
         </HStack>
         <Table
           columns={columns}

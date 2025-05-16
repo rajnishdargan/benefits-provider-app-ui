@@ -24,7 +24,10 @@ import Loading from "../../../components/common/Loading";
 import Table from "../../../components/common/table/Table";
 import ApplicationInfo from "../../../components/ApplicationInfo";
 import DocumentList from "../../../components/DocumentList";
-import { getApplicationDetails, verifyAllDocuments } from "../../../services/applicationService";
+import {
+  getApplicationDetails,
+  verifyAllDocuments,
+} from "../../../services/applicationService";
 import { updateApplicationStatus } from "../../../services/benefits";
 // Types
 interface ApplicantData {
@@ -190,7 +193,9 @@ const ApplicationDetails: React.FC = () => {
       setApplicantData([
         {
           id: 1,
-          name: `${applicantDetails.firstName || ""} ${applicantDetails.middleName ? applicantDetails.middleName + " " : ""}${applicantDetails.lastName || ""}`.trim(),
+          name: `${applicantDetails.firstName || ""} ${
+            applicantDetails.middleName ? applicantDetails.middleName + " " : ""
+          }${applicantDetails.lastName || ""}`.trim(),
           applicationStatus: applicationData.status,
           studentId: applicantDetails.studentId,
           disabilityStatus: applicantDetails.disabilityType ? "Yes" : "No",
@@ -244,7 +249,11 @@ const ApplicationDetails: React.FC = () => {
             : "gray.500";
 
         return (
-          <Text color={statusColor} fontWeight="bold" textTransform="capitalize">
+          <Text
+            color={statusColor}
+            fontWeight="bold"
+            textTransform="capitalize"
+          >
             {props.value}
           </Text>
         );
