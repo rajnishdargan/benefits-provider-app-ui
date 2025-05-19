@@ -22,6 +22,9 @@ interface DownloadCSVProps {
 const options = [
   { label: "SBI to SBI", value: "sbiToSbi" },
   { label: "SBI to Other Bank", value: "sbiToOtherBanks" },
+  { label: "All Application Data Fields", value: "allApplicationDataFields" },
+  { label: "De Duplication NSP", value: "de_duplication_nsp" },
+  { label: "De Duplication Alimco", value: "de_duplication_alimco" },
 ];
 
 const DownloadCSV: React.FC<DownloadCSVProps> = ({
