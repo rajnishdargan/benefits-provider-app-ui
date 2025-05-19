@@ -1,4 +1,4 @@
-import { isString } from "lodash";
+import _ from "lodash";
 
 export const decodeBase64ToJson = (input: string) => {
   try {
@@ -24,7 +24,7 @@ export const isBase64 = (str: string) => {
 }
 
 export const isDateString = (value: any): boolean => {
-  if (!isString(value)) return false;
+  if (!_.isString(value)) return false;
 
   const date = new Date(value);
   return !isNaN(date.getTime()) && value.includes('GMT');
@@ -37,3 +37,44 @@ export const formatDate = (value: string) => {
     year: "numeric",
   });
 };
+
+export const convertKeysToTitleCase = (obj: Record<string, any>): Record<string, any> => {
+  if (!obj || typeof obj !== "object") return obj;
+
+  const customKeyMappings: Record<string, string> = {
+    issuedby: "Attested By",
+    issuerauthority: "Attestor Authority",
+    issueddate: "Date of Attestation",
+    issued_date: "Date of Attestation",
+  };
+
+  const toTitleCase = (str: string): string =>
+    str
+      .replace(/_/g, " ") // Replace underscores with spaces
+      .split(" ")
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
+
+  return Object.entries(obj).reduce((acc, [key, value]) => {
+    const normalizedKey = key.toLowerCase();
+    const titleCaseKey = customKeyMappings[normalizedKey] || customKeyMappings[key] || toTitleCase(key);
+    acc[titleCaseKey] = value;
+    return acc;
+  }, {} as Record<string, any>);
+};
+
+
+export const formatTitle = (title: string): string => {
+  if (!title) return "";
+  // Remove numbers, underscores, and .json
+  const cleanedTitle = title.replace(/[\d_]+|\.json/g, "");
+  // Convert to capital case
+  const formattedTitle = cleanedTitle
+    .split(/(?=[A-Z])|(?=[a-z])/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join("");
+
+  // Add space before "CERTIFICATE" and capitalize it
+  return formattedTitle.replace(/Certificate/i, " CERTIFICATE");
+};
+

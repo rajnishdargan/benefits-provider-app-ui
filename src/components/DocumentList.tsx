@@ -1,22 +1,25 @@
 import React, { useEffect, useState } from "react";
 import {
   VStack,
-  Text,
-  Button,
-  SimpleGrid,
-  Box,
-  useDisclosure,
+  HStack,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  Tooltip,
   Modal,
   ModalOverlay,
   ModalContent,
   ModalHeader,
   ModalCloseButton,
   ModalBody,
-  HStack,
-  IconButton,
-  Image,
-  Tooltip,
+  Text,
+  useDisclosure,
   useToast,
+  Image,
+  Button,
 } from "@chakra-ui/react";
 import {
   CheckIcon,
@@ -30,8 +33,11 @@ import {
   isBase64,
   isDateString,
   formatDate,
+  convertKeysToTitleCase,
+  formatTitle,
 } from "../services/helperService";
 import { omit } from "lodash";
+
 export interface Document {
   id: number;
   type: string;
@@ -39,7 +45,7 @@ export interface Document {
   content: any;
   status: string;
   verificationErrors: string[];
-  fileContent: string; // assuming this might be base64 image or structured content
+  fileContent: string;
 }
 
 interface DocumentListProps {
@@ -57,17 +63,16 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
     onOpen: onImageOpen,
     onClose: onImageClose,
   } = useDisclosure();
-
   const toast = useToast();
 
   const [selectedDocument, setSelectedDocument] = useState<any | null>(null);
   const [docList, setDocList] = useState<Document[]>(documents || []);
-  const [imageSrc, setImageSrc] = useState<string | null>(null);
+  const [imageSrc, setImageSrc] = useState<string[] | null>(null);
 
   useEffect(() => {
-    // Update the document list whenever the documents prop changes
     setDocList(documents);
   }, [documents]);
+
   const handlePreview = (doc: Document) => {
     let decodedContent;
 
@@ -75,6 +80,7 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
       let decoded;
       try {
         decoded = decodeBase64ToJson(doc.fileContent);
+        console.log("Decoded Document:", decoded);
       } catch (e) {
         console.error("Failed to decode base64 content:", e);
         toast({
@@ -97,7 +103,7 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
           "issuingauthoritysignature",
           "id",
         ]);
-        decodedContent = filteredData;
+        decodedContent = convertKeysToTitleCase(filteredData);
         console.log("Decoded Content:", decodedContent);
       } else {
         decodedContent = {};
@@ -109,28 +115,33 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
   };
 
   const handleImagePreview = (doc: Document) => {
-    // Decode the base64 content (if present) into a JSON object
     const decodedData = decodeBase64ToJson(doc.fileContent);
-    console.log("Decoded Data:", decodedData);
+    console.log("Decoded Document for Image:", decodedData);
 
-    // Retrieve the base64 image content and mimetype from the decoded data
-    const ImageBase64 =
-      decodedData?.credentialSubject?.originalvc?.content ||
-      decodedData?.credentialSubject?.original_vc?.content;
-    const mimeType =
-      decodedData?.credentialSubject?.originalvc?.mimetype || "image/png"; // Default to PNG if mimetype is missing
-    console.log("Image Base64:", ImageBase64);
-    console.log("MIME Type:", mimeType);
+    const images: string[] = []; // Explicitly define the type as string[]
+    const possibleKeys = [
+      "originalvc",
+      "original_vc",
+      "originalvc1",
+      "original_vc1",
+    ];
 
-    // Check if the content is a valid base64 string
-    if (ImageBase64 && isBase64(ImageBase64)) {
-      // If it's base64, create a data URI with the correct MIME type and set it as the image source
-      setImageSrc(`data:${mimeType};base64,${ImageBase64}`);
-      onImageOpen(); // Open the image preview
+    possibleKeys.forEach((key) => {
+      const content = decodedData?.credentialSubject?.[key]?.content;
+      const mimeType =
+        decodedData?.credentialSubject?.[key]?.mimetype || "image/png";
+
+      if (content && isBase64(content)) {
+        images.push(`data:${mimeType};base64,${content}`);
+      }
+    });
+
+    if (images.length > 0) {
+      setImageSrc(images);
+      onImageOpen();
     } else {
-      // Show a toast message if the content is invalid
       toast({
-        title: "Unable to Preview Image",
+        title: "Unable to Preview Images",
         description: "The image content is either missing or invalid.",
         status: "error",
         duration: 5000,
@@ -139,81 +150,100 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
     }
   };
 
-
   return (
     <VStack spacing={6} align="center" p="20px" width="full">
-      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6} width="80%">
-        {docList.map((doc) => (
-          <Box
-            key={doc.id}
-            p={4}
-            borderWidth="1px"
-            borderRadius="md"
-            boxShadow="sm"
-            overflow="hidden"
-          >
-            <Text fontWeight="bold" mb={2}>
-              {doc.type}
-            </Text>
-            <HStack
-              spacing={2}
-              align="center"
-              width="100%"
-              justify="space-between"
-            >
-              {/* Status icon */}
-              {doc.status === "Verified" && (
-                <Tooltip label="Document is verified" hasArrow
-                bg="green.500" color="white">
-                  <CheckIcon color="green.500" />
+      <Table variant="simple" width="100%">
+        <Thead>
+          <Tr>
+            <Th>Id</Th>
+            <Th>Document Name</Th>
+            <Th>Document Details</Th>
+            <Th>Original Document</Th>
+            <Th>Verification Status</Th>
+          </Tr>
+        </Thead>
+        <Tbody>
+          {docList.map((doc) => (
+            <Tr key={doc.id}>
+              <Td>{doc.id}</Td>
+              <Td>
+                <Tooltip label={formatTitle(doc?.title)} hasArrow>
+                  <Text isTruncated maxW="200px">
+                    {formatTitle(doc.title)}
+                  </Text>
                 </Tooltip>
-              )}
-              {doc?.status === "Unverified" && (
-                <Tooltip
-                  label={doc.verificationErrors.join(", ")}
-                  hasArrow
-                  bg="red.500"
-                  color="white"
+              </Td>
+              <Td>
+                <Button
+                  leftIcon={<ViewIcon />}
+                  aria-label="Preview Details"
+                  size="sm"
+                  onClick={() => handlePreview(doc)}
                 >
-                  <CloseIcon color="red.500" />
-                </Tooltip>
-              )}
-              {(doc.status === "Pending" || !doc.status) && (
-                <Tooltip label="Document is not verified" hasArrow
-                bg="yellow.500" color="white">
-                  <InfoOutlineIcon color="yellow.500" />
-                </Tooltip>
-              )}
-
-              {/* Title with truncation from the right */}
-              <Tooltip label={doc?.title} hasArrow>
-                <Box maxW="250px" isTruncated>
-                  <Button
-                    variant="link"
-                    colorScheme="blue"
-                    onClick={() => handlePreview(doc)}
-                    whiteSpace="nowrap"
-                    overflow="hidden"
-                    textOverflow="ellipsis"
+                  View Data
+                </Button>
+              </Td>
+              <Td>
+                <Button
+                  leftIcon={<ViewIcon />}
+                  aria-label="Preview Original Document"
+                  size="sm"
+                  onClick={() => handleImagePreview(doc)}
+                >
+                  View Original Document
+                </Button>
+              </Td>
+              <Td>
+                {doc.status === "Verified" && (
+                  <Tooltip
+                    label="Document is verified"
+                    hasArrow
+                    bg="green.500"
+                    color="white"
                   >
-                    {doc.title}
-                  </Button>
-                </Box>
-              </Tooltip>
-
-              {/* Eye icon to preview document image */}
-              <IconButton
-                icon={<ViewIcon />}
-                aria-label="Preview image"
-                size="sm"
-                variant="ghost"
-                onClick={() => handleImagePreview(doc)}
-                ml="auto" // This pushes the button to the right
-              />
-            </HStack>
-          </Box>
-        ))}
-      </SimpleGrid>
+                    <HStack align="center" spacing={2}>
+                      <CheckIcon color="green.500" />
+                      <Text color="green.500" fontWeight="bold">
+                        Verified
+                      </Text>
+                    </HStack>
+                  </Tooltip>
+                )}
+                {doc.status === "Unverified" && (
+                  <Tooltip
+                    label={doc.verificationErrors.join(", ")}
+                    hasArrow
+                    bg="red.500"
+                    color="white"
+                  >
+                    <HStack align="center" spacing={2}>
+                      <CloseIcon color="red.500" />
+                      <Text color="red.500" fontWeight="bold">
+                        Unverified
+                      </Text>
+                    </HStack>
+                  </Tooltip>
+                )}
+                {(doc.status === "Pending" || !doc.status) && (
+                  <Tooltip
+                    label="Document is not verified"
+                    hasArrow
+                    bg="yellow.500"
+                    color="white"
+                  >
+                    <HStack align="center" spacing={2}>
+                      <InfoOutlineIcon color="yellow.500" />
+                      <Text color="yellow.500" fontWeight="bold">
+                        Pending
+                      </Text>
+                    </HStack>
+                  </Tooltip>
+                )}
+              </Td>
+            </Tr>
+          ))}
+        </Tbody>
+      </Table>
 
       {/* JSON Preview Modal */}
       <Modal
@@ -224,7 +254,7 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
       >
         <ModalOverlay />
         <ModalContent maxHeight="80vh" overflowY="auto">
-          <ModalHeader>Preview Data</ModalHeader>
+          <ModalHeader>Document Data</ModalHeader>
           <ModalCloseButton />
           <ModalBody overflowY="auto">
             {selectedDocument?.content &&
@@ -274,19 +304,29 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
       >
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Document Image</ModalHeader>
+          <ModalHeader>Document Images</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            {imageSrc ? (
-              <Image
-                src={imageSrc}
-                alt="Document Image"
-                width="100%"
-                objectFit="contain" // Ensure the image is not stretched
-                style={{ imageRendering: "auto" }} // Prevent blurring
-              />
+            {imageSrc && imageSrc.length > 0 ? (
+              <VStack spacing={4}>
+                {imageSrc.map((src, index) => (
+                  <Image
+                    key={index}
+                    src={src}
+                    alt={`Document Image ${index + 1}`}
+                    width="100%"
+                    objectFit="contain"
+                    style={{
+                      imageRendering: "auto",
+                      border: "2px solid #ccc", // Add a border
+                      borderRadius: "8px", // Optional: Add rounded corners
+                      padding: "4px", // Optional: Add padding inside the border
+                    }}
+                  />
+                ))}
+              </VStack>
             ) : (
-              <Text>No image available.</Text>
+              <Text>No images available.</Text>
             )}
           </ModalBody>
         </ModalContent>
