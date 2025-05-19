@@ -210,7 +210,9 @@ const ApplicationDetails: React.FC = () => {
         content: file,
         fileContent: file.fileContent,
         status: file?.verificationStatus?.status,
-        verificationErrors: file?.verificationStatus?.verificationErrors || ["Some error occurred in verification"],
+        verificationErrors: file?.verificationStatus?.verificationErrors || [
+          "Some error occurred in verification",
+        ],
       }));
 
       setDocuments(documents);
@@ -436,7 +438,7 @@ const ApplicationDetails: React.FC = () => {
                   boxShadow: "none",
                 }}
               >
-                Accept
+                Approve
               </Button>
             </HStack>
           )}
