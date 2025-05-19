@@ -167,11 +167,9 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
             <Tr key={doc.id}>
               <Td>{doc.id}</Td>
               <Td>
-                <Tooltip label={formatTitle(doc?.title)} hasArrow>
-                  <Text isTruncated maxW="200px">
-                    {formatTitle(doc.title)}
-                  </Text>
-                </Tooltip>
+                <Text isTruncated maxW="200px">
+                  {formatTitle(doc.title)}
+                </Text>
               </Td>
               <Td>
                 <Button
@@ -195,49 +193,49 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
               </Td>
               <Td>
                 {doc.status === "Verified" && (
-                  <Tooltip
-                    label="Document is verified"
-                    hasArrow
-                    bg="green.500"
-                    color="white"
-                  >
-                    <HStack align="center" spacing={2}>
+                  <HStack align="center" spacing={2}>
+                    <Tooltip
+                      label="Document is verified"
+                      hasArrow
+                      bg="green.500"
+                      color="white"
+                    >
                       <CheckIcon color="green.500" />
-                      <Text color="green.500" fontWeight="bold">
-                        Verified
-                      </Text>
-                    </HStack>
-                  </Tooltip>
+                    </Tooltip>
+                    <Text color="green.500" fontWeight="bold">
+                      Verified
+                    </Text>
+                  </HStack>
                 )}
                 {doc.status === "Unverified" && (
-                  <Tooltip
-                    label={doc.verificationErrors.join(", ")}
-                    hasArrow
-                    bg="red.500"
-                    color="white"
-                  >
-                    <HStack align="center" spacing={2}>
+                  <HStack align="center" spacing={2}>
+                    <Tooltip
+                      label={doc.verificationErrors.join(", ")}
+                      hasArrow
+                      bg="red.500"
+                      color="white"
+                    >
                       <CloseIcon color="red.500" />
-                      <Text color="red.500" fontWeight="bold">
-                        Unverified
-                      </Text>
-                    </HStack>
-                  </Tooltip>
+                    </Tooltip>
+                    <Text color="red.500" fontWeight="bold">
+                      Unverified
+                    </Text>
+                  </HStack>
                 )}
                 {(doc.status === "Pending" || !doc.status) && (
-                  <Tooltip
-                    label="Document is not verified"
-                    hasArrow
-                    bg="yellow.500"
-                    color="white"
-                  >
-                    <HStack align="center" spacing={2}>
+                  <HStack align="center" spacing={2}>
+                    <Tooltip
+                      label="Document is not verified"
+                      hasArrow
+                      bg="yellow.500"
+                      color="white"
+                    >
                       <InfoOutlineIcon color="yellow.500" />
-                      <Text color="yellow.500" fontWeight="bold">
-                        Pending
-                      </Text>
-                    </HStack>
-                  </Tooltip>
+                    </Tooltip>
+                    <Text color="yellow.500" fontWeight="bold">
+                      Pending
+                    </Text>
+                  </HStack>
                 )}
               </Td>
             </Tr>
@@ -304,7 +302,7 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
       >
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Document Images</ModalHeader>
+          <ModalHeader>Document Image</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             {imageSrc && imageSrc.length > 0 ? (
