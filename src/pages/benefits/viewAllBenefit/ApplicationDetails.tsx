@@ -17,9 +17,9 @@ import {
   Textarea,
   useToast,
 } from "@chakra-ui/react";
-import { CheckIcon, CloseIcon } from "@chakra-ui/icons";
+import { CheckIcon, CloseIcon, ArrowBackIcon } from "@chakra-ui/icons";
 import Layout from "../../../components/layout/Layout";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import Loading from "../../../components/common/Loading";
 import Table from "../../../components/common/table/Table";
 import ApplicationInfo from "../../../components/ApplicationInfo";
@@ -49,6 +49,7 @@ interface Document {
 }
 
 const ApplicationDetails: React.FC = () => {
+  const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [applicantData, setApplicantData] = useState<ApplicantData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -225,7 +226,7 @@ const ApplicationDetails: React.FC = () => {
         content: file,
         fileContent: file.fileContent,
         status: file?.verificationStatus?.status,
-        verificationErrors: file?.verificationStatus?.verificationErrors || [
+        verificationErrors: file?.verificationStatus?.verificationErrors ?? [
           "Some error occurred in verification",
         ],
       }));
@@ -292,7 +293,21 @@ const ApplicationDetails: React.FC = () => {
 
   return (
     <Layout
-      _titleBar={{ title: `Application Detail For : ${benefitName}` }}
+      _titleBar={{
+        title: (
+          <HStack spacing={4}>
+            <ArrowBackIcon
+              w={6}
+              h={6}
+              cursor="pointer"
+              onClick={() => navigate(-1)}
+              color="white"
+              fontWeight="bold"
+            />
+            <Text fontWeight="bold">Application Detail For: {benefitName}</Text>
+          </HStack>
+        ),
+      }}
       showMenu={true}
       showSearchBar={true}
       showLanguage={false}

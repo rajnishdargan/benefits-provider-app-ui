@@ -163,9 +163,9 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
           </Tr>
         </Thead>
         <Tbody>
-          {docList.map((doc) => (
+          {docList.map((doc, index) => (
             <Tr key={doc.id}>
-              <Td>{doc.id}</Td>
+              <Td>{index + 1}</Td>
               <Td>
                 <Text isTruncated maxW="200px">
                   {formatTitle(doc.title)}

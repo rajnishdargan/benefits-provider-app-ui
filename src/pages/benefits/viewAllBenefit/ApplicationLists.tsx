@@ -1,4 +1,4 @@
-import { SearchIcon, ArrowForwardIcon } from "@chakra-ui/icons";
+import { ArrowBackIcon, SearchIcon, ArrowForwardIcon } from "@chakra-ui/icons";
 import {
   HStack,
   IconButton,
@@ -52,6 +52,8 @@ const ApplicationLists: React.FC = () => {
   const [pageIndex, setPageIndex] = useState(0);
   const pageSize = 10;
   const [benefitName, setBenefitName] = useState<string>("");
+  const navigate = useNavigate();
+
   useEffect(() => {
     const fetchApplicationData = async () => {
       if (id) {
@@ -125,7 +127,19 @@ const ApplicationLists: React.FC = () => {
   return (
     <Layout
       _titleBar={{
-        title: `Application List For: ${benefitName}`,
+        title: (
+          <HStack spacing={4}>
+            <ArrowBackIcon
+              w={6}
+              h={6}
+              cursor="pointer"
+              onClick={() => navigate(-1)}
+              color="white"
+              fontWeight="bold"
+            />
+            <Text fontWeight="bold">Application List For: {benefitName}</Text>
+          </HStack>
+        ),
       }}
       showMenu={true}
       showSearchBar={true}
