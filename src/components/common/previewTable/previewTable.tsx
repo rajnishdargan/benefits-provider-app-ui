@@ -37,8 +37,8 @@ const PreviewTable: React.FC<TableProps> = ({ columns, data, rowKeyField }) => {
             {columns.map((column) => (
               <Td key={column.key}>
                 {column.render
-                  ? column.render(row[column.dataKey || column.key], row)
-                  : row[column.dataKey || column.key]}
+                  ? column.render(row[column.dataKey ?? column.key], row)
+                  : row[column.dataKey ?? column.key]}
               </Td>
             ))}
           </Tr>

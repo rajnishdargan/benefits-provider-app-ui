@@ -24,7 +24,7 @@ export default function OTP() {
   const [timer, setTimer] = React.useState(300);
   const otpArray = Array(6).fill("");
   const [isLoading, setIsLoading] = React.useState(false);
-  const fromPage = location?.state?.fromPage || "login";
+  const fromPage = location?.state?.fromPage ?? "login";
   const handleChange = (element: any) => {
     setOtp(element);
     setIsSubmitDisabled(element.length !== 6);

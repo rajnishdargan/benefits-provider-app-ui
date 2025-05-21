@@ -20,17 +20,17 @@ const ApplicationInfo: React.FC<ApplicationInfoProps> = ({
 }) => {
   const entries = Object.entries(details).map(([key, value]) => ({
     name: key.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase()),
-    value: value?.toString() || "N/A",
+    value: value?.toString() ?? "N/A",
   }));
 
   const groupedEntries: Row[] = [];
 
   if (showAmount) {
     // Each row has only one field-value pair
-    for (let i = 0; i < entries.length; i++) {
+    for (const entry of entries) {
       groupedEntries.push({
-        name1: entries[i]?.name,
-        value1: entries[i]?.value,
+        name1: entry.name,
+        value1: entry.value,
       });
     }
   } else {
@@ -95,12 +95,7 @@ const ApplicationInfo: React.FC<ApplicationInfoProps> = ({
               }),
             },
             cellText: {
-              content: ({ column, value }) => {
-                if (column.key?.toString().startsWith("name")) {
-                  return <strong>{value}</strong>;
-                }
-                return value;
-              },
+              content: CustomCellContentWrapper,
             },
           }}
         />
@@ -120,6 +115,26 @@ const ApplicationInfo: React.FC<ApplicationInfoProps> = ({
       </div>
     </div>
   );
+};
+export interface CustomCellContentProps {
+  column: { key: string };
+  value: string;
+}
+
+export const CustomCellContent: React.FC<CustomCellContentProps> = ({ column, value }) => {
+  if (column.key?.toString().startsWith("name")) {
+    return <strong>{value}</strong>;
+  }
+  return <>{value}</>;
+};
+
+interface CustomCellContentWrapperProps {
+  column: { key: string };
+  value: string;
+}
+
+const CustomCellContentWrapper: React.FC<CustomCellContentWrapperProps> = ({ column, value }) => {
+  return <CustomCellContent column={column} value={value} />;
 };
 
 export default ApplicationInfo;

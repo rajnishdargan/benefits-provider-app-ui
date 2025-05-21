@@ -63,7 +63,7 @@ const ActionCell = ({
   const fetchRowDetails = async (id: string) => {
     try {
       const response = await detailViewRow(id);
-      setDetailData(response?.benefit || null);
+      setDetailData(response?.benefit ?? null);
       console.log("Fetched row details:", response);
     } catch (error) {
       console.error("Error fetching row details:", error);

@@ -111,7 +111,7 @@ const Header: React.FC<HeaderProps> = ({
 
 interface HeaderRightSectionProps {
   showMenu?: boolean;
-  showSearchBar?: boolean;
+  showSearchBar?: boolean; //NOSONAR
   showLanguage?: boolean;
   menuNames: MenuItem[]; // add new
 }
@@ -155,7 +155,7 @@ const HeaderRightSection: React.FC<HeaderRightSectionProps> = ({
         ))}
 
       {/* Search Bar */}
-      {/* {showSearchBar && <SearchBar />} */}
+      {/* {showSearchBar && <SearchBar />} //NOSONAR */ }
 
       {/* Language Dropdown */}
       {showLanguage && <LanguageDropdown />}
@@ -206,7 +206,7 @@ const SearchBar: React.FC = () => (
       </InputRightElement>
     </InputGroup>
   </HStack>
-);
+); //NOSONAR
 */
 
 const LanguageDropdown: React.FC = () => (

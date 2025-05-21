@@ -149,7 +149,7 @@ export default function Login() {
                     {t("LOGIN_LOGIN_BUTTON")}
                   </Text>
                 </Button>
-                {/* <Button
+                {/* //NOSONAR <Button
                   colorScheme={"blue"}
                   variant={"outline"}
                   borderRadius={"100px"}

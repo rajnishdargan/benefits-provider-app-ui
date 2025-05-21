@@ -14,7 +14,7 @@ const DatePickerWidget: React.FC<WidgetProps> = ({
       <FormLabel>{label}</FormLabel>
       <Input
         type="date"
-        value={value || ""}
+        value={value ?? ""}
         onChange={(event) => onChange(event.target.value)}
       />
     </FormControl>

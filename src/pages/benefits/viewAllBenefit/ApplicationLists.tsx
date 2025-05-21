@@ -62,7 +62,7 @@ const ApplicationLists: React.FC = () => {
             id
           );
           console.log("applicantionDataResponse", applicantionDataResponse);
-          setBenefitName(applicantionDataResponse?.benefit?.title || "");
+          setBenefitName(applicantionDataResponse?.benefit?.title ?? "");
           if (
             !applicantionDataResponse?.applications ||
             !Array.isArray(applicantionDataResponse?.applications)
@@ -73,12 +73,12 @@ const ApplicationLists: React.FC = () => {
           }
           const processedData = applicantionDataResponse?.applications?.map(
             (item: any) => ({
-              studentName: `${item?.applicationData?.firstName || "N/A"} ${
-                item?.applicationData?.middleName || ""
-              } ${item?.applicationData?.lastName || "N/A"}`.trim(),
-              applicationId: item?.id || "-",
-              orderId: item?.orderId || "-",
-              status: item?.status || "-",
+              studentName: `${item?.applicationData?.firstName ?? "N/A"} ${
+                item?.applicationData?.middleName ?? ""
+              } ${item?.applicationData?.lastName ?? ""}`.trim(),
+              applicationId: item?.id ?? "-",
+              orderId: item?.orderId ?? "-",
+              status: item?.status ?? "-",
             })
           );
           setApplicationData(processedData);

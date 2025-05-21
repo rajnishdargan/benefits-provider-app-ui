@@ -76,15 +76,15 @@ export const convertDocumentFields = (
       if (!groupedByAllowedProofs[proof]) {
         groupedByAllowedProofs[proof] = {
           name: proof,
-          isRequired: Boolean(item.isRequired || item?.criteria?.name || false),
+          isRequired: Boolean(item.isRequired ?? item?.criteria?.name ?? false),
           schema: [],
         };
       } else {
         groupedByAllowedProofs[proof] = {
           ...groupedByAllowedProofs[proof],
           isRequired: Boolean(
-            item.isRequired ||
-              item?.criteria?.name ||
+            item.isRequired ??
+              item?.criteria?.name ??
               groupedByAllowedProofs[proof]?.isRequired
           ),
         };
@@ -110,7 +110,7 @@ export const convertDocumentFields = (
 
     const fieldLabel = `Choose ${field.name} for ${field.schema
       .map((e: any) =>
-        e.documentType ? e.documentType : e?.criteria?.name || ""
+        e.documentType ?? e?.criteria?.name ?? ""
       )
       .join(", ")}`;
     let enumValuesToUse: string[] = [];
@@ -127,7 +127,7 @@ export const convertDocumentFields = (
       required: field.isRequired,
       enum: enumValuesToUse,
       enumNames: (enumNames as string[]) || [],
-      default: enumValues[0] || "",
+      default: enumValues[0] ?? "",
     };
   });
 
