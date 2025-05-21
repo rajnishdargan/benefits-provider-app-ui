@@ -66,6 +66,9 @@ const ApplicationDetails: React.FC = () => {
     "approved" | "rejected"
   >();
 
+  const [amountDetail, setAmountDetail] = useState<Record<string, any> | null>(
+    null
+  );
   const openConfirmationModal = (status: "approved" | "rejected") => {
     setSelectedStatus(status);
     onOpen();
@@ -186,6 +189,18 @@ const ApplicationDetails: React.FC = () => {
         setBenefitName(applicationData?.benefitDetails?.title);
       }
       const applicantDetails = applicationData.applicationData;
+      if (applicationData?.calculatedAmount) {
+        ///Moves "Total Payout" to the end, without affecting anything else.
+        const { ["totalPayout"]: totalPayout, ...rest } =
+          applicationData.calculatedAmount;
+
+        const reorderedAmount =
+          totalPayout !== undefined
+            ? { ...rest, "Total Payout": totalPayout }
+            : { ...rest };
+
+        setAmountDetail(reorderedAmount);
+      }
 
       setApplicant(applicantDetails);
       if (applicationData.status !== "pending") {
@@ -351,6 +366,21 @@ const ApplicationDetails: React.FC = () => {
                     />
                   </Box>
                 </Box>
+                {amountDetail && (
+                  <Box flex="1 1 100%" mb={0}>
+                    <Text
+                      fontSize="2xl"
+                      fontWeight="bold"
+                      color="gray.700"
+                      textAlign="left"
+                      mt={8}
+                      mb={4}
+                    >
+                      Amount
+                    </Text>
+                    <ApplicationInfo details={amountDetail} showAmount={true} />
+                  </Box>
+                )}
               </HStack>
             </>
           ) : (
