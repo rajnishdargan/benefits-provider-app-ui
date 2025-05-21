@@ -22,6 +22,10 @@ interface DownloadCSVProps {
 const options = [
   { label: "SBI to SBI", value: "sbiToSbi" },
   { label: "SBI to Other Bank", value: "sbiToOtherBanks" },
+  { label: "All Application Data Fields", value: "allApplicationDataFields" },
+  { label: "De Duplication NSP", value: "de_duplication_nsp" },
+  { label: "De Duplication Alimco", value: "de_duplication_alimco" },
+  { label: "Benefit Amounts", value: "benefit_amounts" },
 ];
 
 const DownloadCSV: React.FC<DownloadCSVProps> = ({
@@ -39,10 +43,19 @@ const DownloadCSV: React.FC<DownloadCSVProps> = ({
         type: selectedOption,
       });
 
-      const blob = new Blob([data], {
+      // Sanitize file name for Windows - Remove or replace any characters not allowed in Windows file names (\ / : * ? " < > |).
+      const sanitizeFileName = (name: string) =>
+        name.replace(/[\\/:*?"<>|]/g, "_");
+      const safeBenefitName = sanitizeFileName(benefitName);
+      const safeOption = sanitizeFileName(selectedOption);
+      const fileName = `${safeBenefitName}-${safeOption}.csv`;
+
+      // Add UTF-8 BOM for Excel compatibility
+      const BOM = "\uFEFF";
+      const blob = new Blob([BOM + data], {
         type: "text/csv;charset=utf-8;",
       });
-      saveAs(blob, `${benefitName}-${selectedOption}.csv`);
+      saveAs(blob, fileName);
 
       toast({
         title: "CSV downloaded successfully",
