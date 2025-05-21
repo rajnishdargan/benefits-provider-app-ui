@@ -25,6 +25,7 @@ const options = [
   { label: "All Application Data Fields", value: "allApplicationDataFields" },
   { label: "De Duplication NSP", value: "de_duplication_nsp" },
   { label: "De Duplication Alimco", value: "de_duplication_alimco" },
+  { label: "Benefit Amounts", value: "benefit_amounts" },
 ];
 
 const DownloadCSV: React.FC<DownloadCSVProps> = ({
