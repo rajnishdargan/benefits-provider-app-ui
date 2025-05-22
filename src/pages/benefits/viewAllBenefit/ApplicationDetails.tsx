@@ -28,7 +28,10 @@ import {
   getApplicationDetails,
   verifyAllDocuments,
 } from "../../../services/applicationService";
-import { updateApplicationStatus } from "../../../services/benefits";
+import {
+  calculateBenefitAmount,
+  updateApplicationStatus,
+} from "../../../services/benefits";
 // Types
 interface ApplicantData {
   id: number;
@@ -61,6 +64,9 @@ const ApplicationDetails: React.FC = () => {
   const [isVerifyButtonVisible, setIsVerifyButtonVisible] = useState(true); // State to control button visibility
   const [isVerifyLoading, setIsVerifyLoading] = useState(false); // Add a state for button loading
   //confirmation
+  const [amountDetail, setAmountDetail] = useState<Record<string, any> | null>(
+    null
+  );
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedStatus, setSelectedStatus] = useState<
@@ -189,6 +195,10 @@ const ApplicationDetails: React.FC = () => {
       if (applicationData?.benefitDetails?.title) {
         setBenefitName(applicationData?.benefitDetails?.title);
       }
+      const finalAmount = await calculateBenefitAmount(id);
+
+      console.log("final Amount", finalAmount);
+      setAmountDetail(finalAmount);
       const applicantDetails = applicationData.applicationData;
       if (applicationData?.calculatedAmount) {
         ///Moves "Total Payout" to the end, without affecting anything else.
@@ -379,6 +389,22 @@ const ApplicationDetails: React.FC = () => {
                         verificationErrors: doc?.verificationErrors || [],
                       }))}
                     />
+                    <Box flex="1 1 100%" mb={0}>
+                      <Text
+                        fontSize="2xl"
+                        fontWeight="bold"
+                        color="gray.700"
+                        textAlign="left"
+                        mt={8}
+                        mb={4}
+                      >
+                        Amount
+                      </Text>
+                      <ApplicationInfo
+                        details={amountDetail}
+                        showAmount={true}
+                      />
+                    </Box>
                   </Box>
                 </Box>
                 {amountDetail && (
