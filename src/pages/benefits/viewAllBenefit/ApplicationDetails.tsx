@@ -61,15 +61,15 @@ const ApplicationDetails: React.FC = () => {
   const [isVerifyButtonVisible, setIsVerifyButtonVisible] = useState(true); // State to control button visibility
   const [isVerifyLoading, setIsVerifyLoading] = useState(false); // Add a state for button loading
   //confirmation
+  const [amountDetail, setAmountDetail] = useState<Record<string, any> | null>(
+    null
+  );
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedStatus, setSelectedStatus] = useState<
     "approved" | "rejected"
   >();
 
-  const [amountDetail, setAmountDetail] = useState<Record<string, any> | null>(
-    null
-  );
   const openConfirmationModal = (status: "approved" | "rejected") => {
     setSelectedStatus(status);
     onOpen();
