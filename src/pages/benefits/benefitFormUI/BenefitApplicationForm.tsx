@@ -12,6 +12,7 @@ import { getSchema, submitForm } from "../../../services/benefits";
 import {
   convertApplicationFormFields,
   convertDocumentFields,
+  extractUserDataForSchema,
 } from "./ConvertToRJSF";
 
 const Form = withTheme(ChakraTheme);
@@ -67,8 +68,10 @@ const BenefitApplicationForm: React.FC = () => {
             };
           }
         });
-
-        setFormData(receivedData);
+        /// extract user data fields maching to scheme fields
+        const userData = extractUserDataForSchema(receivedData, prop);
+        /// send user data fields maching to scheme fields
+        setFormData(userData);
         // Process eligibility and document schema
         getEligibilitySchemaData(receivedData, documentTag, eligibilityTag, {
           ...applicationFormSchema,

@@ -376,3 +376,18 @@ export const convertDocumentFields = (
 
   return schema;
 };
+
+export const extractUserDataForSchema = (
+  formData: Record<string, any>,
+  properties: Record<string, any>
+): Record<string, string> => {
+  const result: Record<string, string> = {};
+
+  for (const key of Object.keys(properties)) {
+    if (Object.prototype.hasOwnProperty.call(formData, key)) {
+      result[key] = String(formData[key]);
+    }
+  }
+
+  return result;
+};
