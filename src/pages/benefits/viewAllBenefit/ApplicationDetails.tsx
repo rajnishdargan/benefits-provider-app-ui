@@ -232,9 +232,11 @@ const ApplicationDetails: React.FC = () => {
       }));
 
       setDocuments(documents);
-      if (documents.length > 0 && documents[0].status) {
-        setIsVerifyButtonVisible(false);
-      }
+
+      const anyDocumentNotVerified =
+        documents.length > 0 && documents.some((doc: any) => doc.status == null || doc.status == "Unverified");
+      console.log("Any document not verified:", anyDocumentNotVerified);
+      setIsVerifyButtonVisible(anyDocumentNotVerified);
     } catch (err) {
       console.error("Error fetching application data:", err);
     } finally {
