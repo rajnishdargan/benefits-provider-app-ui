@@ -234,7 +234,7 @@ const ApplicationDetails: React.FC = () => {
       setDocuments(documents);
 
       const anyDocumentNotVerified =
-        documents.length > 0 && documents.some((doc: any) => doc.status == null);
+        documents.length > 0 && documents.some((doc: any) => doc.status == null || doc.status == "Unverified");
       console.log("Any document not verified:", anyDocumentNotVerified);
       setIsVerifyButtonVisible(anyDocumentNotVerified);
     } catch (err) {
