@@ -46,6 +46,7 @@ export interface Document {
   status: string;
   verificationErrors: string[];
   fileContent: string;
+  newTitle?: string; // Added newTitle property
 }
 
 interface DocumentListProps {
@@ -65,14 +66,46 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
   } = useDisclosure();
   const toast = useToast();
 
-  const [selectedDocument, setSelectedDocument] = useState<{
-    content: Record<string, any>;
-  } | null>(null);
-  const [docList, setDocList] = useState<Document[]>(documents || []);
+  const [selectedDocument, setSelectedDocument] = useState<any | null>(null);
+  const [docList, setDocList] = useState<Document[]>([]);
   const [imageSrc, setImageSrc] = useState<string[] | null>(null);
 
   useEffect(() => {
-    setDocList(documents);
+    if (documents && documents.length > 0) {
+      // Process documents to extract newTitle and remove duplicates
+      const processedDocs = documents.map((doc) => {
+        let newTitle = "";
+
+        if (doc.fileContent) {
+          try {
+            const decodedContent = decodeBase64ToJson(doc.fileContent);
+            const fullTitle = decodedContent?.credentialSchema?.title || "";
+            // Extract string before colon (:)
+            newTitle = fullTitle.includes(":")
+              ? fullTitle.split(":")[0].trim()
+              : fullTitle;
+          } catch (error) {
+            console.error(
+              "Failed to decode fileContent for document:",
+              doc.id,
+              error
+            );
+            newTitle = "";
+          }
+        }
+
+        return {
+          ...doc,
+          newTitle: newTitle,
+        };
+      });
+
+      console.log("Processed documents with newTitle:", processedDocs);
+
+      setDocList(processedDocs);
+    } else {
+      setDocList([]);
+    }
   }, [documents]);
 
   const handlePreview = (doc: Document) => {
@@ -160,6 +193,7 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
           <Tr>
             <Th>Id</Th>
             <Th>Document Name</Th>
+
             <Th>Document Details</Th>
             <Th>Original Document</Th>
             <Th>Verification Status</Th>
@@ -169,9 +203,9 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
           {docList.map((doc, index) => (
             <Tr key={doc.id}>
               <Td>{index + 1}</Td>
-              <Td>
-                <Text isTruncated maxW="200px">
-                  {formatTitle(doc.title)}
+              <Td maxW="400px">
+                <Text maxW="400px" whiteSpace="normal" wordBreak="break-word">
+                  {doc.newTitle} ({formatTitle(doc.title)})
                 </Text>
               </Td>
               <Td>

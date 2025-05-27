@@ -27,12 +27,11 @@ export const isBase64 = (str: string): boolean => {
   return basicBase64Pattern.test(str.trim());
 };
 
-
 export const isDateString = (value: any): boolean => {
   if (!_.isString(value)) return false;
 
   const date = new Date(value);
-  return !isNaN(date.getTime()) && value.includes('GMT');
+  return !isNaN(date.getTime()) && value.includes("GMT");
 };
 
 export const formatDate = (value: string) => {
@@ -43,7 +42,9 @@ export const formatDate = (value: string) => {
   });
 };
 
-export const convertKeysToTitleCase = (obj: Record<string, any>): Record<string, any> => {
+export const convertKeysToTitleCase = (
+  obj: Record<string, any>
+): Record<string, any> => {
   if (!obj || typeof obj !== "object") return obj;
 
   const customKeyMappings: Record<string, string> = {
@@ -57,29 +58,36 @@ export const convertKeysToTitleCase = (obj: Record<string, any>): Record<string,
     str
       .replace(/_/g, " ") // Replace underscores with spaces
       .split(" ")
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(" ");
 
   return Object.entries(obj).reduce((acc, [key, value]) => {
     const normalizedKey = key.toLowerCase();
-    const titleCaseKey = customKeyMappings[normalizedKey] || customKeyMappings[key] || toTitleCase(key);
+    const titleCaseKey =
+      customKeyMappings[normalizedKey] ||
+      customKeyMappings[key] ||
+      toTitleCase(key);
     acc[titleCaseKey] = value;
     return acc;
   }, {} as Record<string, any>);
 };
 
-
 export const formatTitle = (title: string): string => {
   if (!title) return "";
-  // Remove numbers, underscores, and .json
-  const cleanedTitle = title.replace(/[\d_]+|\.json/g, "");
-  // Convert to capital case
-  const formattedTitle = cleanedTitle
-    .split(/(?=[A-Z])|(?=[a-z])/)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join("");
 
-  // Add space before "CERTIFICATE" and capitalize it
-  return formattedTitle.replace(/Certificate/i, " CERTIFICATE");
+  // Remove .json extension
+  let cleanedTitle = title.replace(/\.json$/g, "");
+
+  // Remove leading numbers and underscore (e.g., "102_")
+  cleanedTitle = cleanedTitle.replace(/^\d+_/, "");
+
+  // Remove trailing timestamp and hash patterns (e.g., "_1747986806292_4e689e5c")
+  cleanedTitle = cleanedTitle.replace(/_\d+_[a-f0-9]+$/, "");
+
+  // Replace underscores with spaces
+  cleanedTitle = cleanedTitle.replace(/_/g, " ");
+
+  console.log("title", cleanedTitle);
+
+  return cleanedTitle.toLowerCase();
 };
-
