@@ -66,7 +66,9 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
   } = useDisclosure();
   const toast = useToast();
 
-  const [selectedDocument, setSelectedDocument] = useState<any | null>(null);
+  const [selectedDocument, setSelectedDocument] = useState<{
+    content: Record<string, unknown>;
+  } | null>(null);
   const [docList, setDocList] = useState<Document[]>([]);
   const [imageSrc, setImageSrc] = useState<string[] | null>(null);
 
@@ -79,7 +81,7 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
         if (doc.fileContent) {
           try {
             const decodedContent = decodeBase64ToJson(doc.fileContent);
-            const fullTitle = decodedContent?.credentialSchema?.title || "";
+            const fullTitle = decodedContent?.credentialSchema?.title ?? "";
             // Extract string before colon (:)
             newTitle = fullTitle.includes(":")
               ? fullTitle.split(":")[0].trim()
@@ -186,7 +188,6 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
   };
 
   return (
-    
     <VStack spacing={6} align="center" p="20px" width="full">
       <Table variant="simple" width="100%">
         <Thead>
