@@ -380,7 +380,7 @@ const ApplicationDetails: React.FC = () => {
                         ...doc,
                         verificationErrors: doc?.verificationErrors || [],
                       }))}
-                      benefitName={benefitName} // Pass benefitName here
+                      benefitName={benefitName}
                     />
                   </Box>
                 </Box>
