@@ -51,9 +51,10 @@ export interface Document {
 
 interface DocumentListProps {
   documents: Document[];
+  benefitName?: string;
 }
 
-const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
+const DocumentList: React.FC<DocumentListProps> = ({ documents, benefitName }) => {
   const {
     isOpen: isPreviewOpen,
     onOpen: onPreviewOpen,
@@ -204,7 +205,14 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
               <Td>{index + 1}</Td>
               <Td maxW="400px">
                 <Text maxW="400px" whiteSpace="normal" wordBreak="break-word">
-                  {doc.newTitle} ({formatTitle(doc.title)})
+                  {benefitName?.includes("RVY-HQ")
+                    ? doc.newTitle === "OTR Credential"
+                      ? "Proof of Age & Identity"
+                      : doc.newTitle === "BPL Card"
+                      ? "Proof of Economic Need"
+                      : doc.newTitle
+                    : doc.newTitle}
+                  {!benefitName?.includes("RVY-HQ") && ` (${formatTitle(doc.title)})`}
                 </Text>
               </Td>
               <Td>
