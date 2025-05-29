@@ -222,7 +222,7 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents, benefitName }) =
                   size="sm"
                   onClick={() => handlePreview(doc)}
                 >
-                  View Data
+                  View Details
                 </Button>
               </Td>
               <Td>
