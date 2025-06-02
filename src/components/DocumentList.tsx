@@ -51,9 +51,13 @@ export interface Document {
 
 interface DocumentListProps {
   documents: Document[];
+  benefitName?: string;
 }
 
-const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
+const DocumentList: React.FC<DocumentListProps> = ({
+  documents,
+  benefitName,
+}) => {
   const {
     isOpen: isPreviewOpen,
     onOpen: onPreviewOpen,
@@ -66,11 +70,10 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
   } = useDisclosure();
   const toast = useToast();
 
-  const [selectedDocument, setSelectedDocument] = useState<{
-    content: Record<string, unknown>;
-  } | null>(null);
+  const [selectedDocument, setSelectedDocument] = useState<any | null>(null);
   const [docList, setDocList] = useState<Document[]>([]);
   const [imageSrc, setImageSrc] = useState<string[] | null>(null);
+  const [errorModalDoc, setErrorModalDoc] = useState<Document | null>(null);
 
   useEffect(() => {
     if (documents && documents.length > 0) {
@@ -81,7 +84,7 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
         if (doc.fileContent) {
           try {
             const decodedContent = decodeBase64ToJson(doc.fileContent);
-            const fullTitle = decodedContent?.credentialSchema?.title ?? "";
+            const fullTitle = decodedContent?.credentialSchema?.title || "";
             // Extract string before colon (:)
             newTitle = fullTitle.includes(":")
               ? fullTitle.split(":")[0].trim()
@@ -147,7 +150,7 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
       }
     }
 
-    setSelectedDocument({ content: decodedContent || {} });
+    setSelectedDocument({ content: decodedContent });
     onPreviewOpen();
   };
 
@@ -166,7 +169,7 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
     possibleKeys.forEach((key) => {
       const content = decodedData?.credentialSubject?.[key]?.content;
       const mimeType =
-        decodedData?.credentialSubject?.[key]?.mimetype ?? "image/png";
+        decodedData?.credentialSubject?.[key]?.mimetype || "image/png";
 
       if (content && isBase64(content)) {
         images.push(`data:${mimeType};base64,${content}`);
@@ -194,7 +197,6 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
           <Tr>
             <Th>Id</Th>
             <Th>Document Name</Th>
-
             <Th>Document Details</Th>
             <Th>Original Document</Th>
             <Th>Verification Status</Th>
@@ -206,7 +208,15 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
               <Td>{index + 1}</Td>
               <Td maxW="400px">
                 <Text maxW="400px" whiteSpace="normal" wordBreak="break-word">
-                  {doc.newTitle} ({formatTitle(doc.title)})
+                  {benefitName?.includes("RVY-HQ")
+                    ? doc.newTitle === "OTR Credential"
+                      ? "Proof of Age & Identity"
+                      : doc.newTitle === "BPL Card"
+                      ? "Proof of Economic Need"
+                      : doc.newTitle
+                    : doc.newTitle}
+                  {!benefitName?.includes("RVY-HQ") &&
+                    ` (${formatTitle(doc.title)})`}
                 </Text>
               </Td>
               <Td>
@@ -248,19 +258,24 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
                 {doc.status === "Unverified" && (
                   <HStack align="center" spacing={2}>
                     <Tooltip
-                      label={doc.verificationErrors.join(", ")}
+                      label="Click to view verification errors"
                       hasArrow
                       bg="red.500"
                       color="white"
                     >
-                      <CloseIcon color="red.500" />
+                      <Button
+                        leftIcon={<CloseIcon color="red.500" />}
+                        size="sm"
+                        variant="ghost"
+                        color="red.500"
+                        onClick={() => setErrorModalDoc(doc)}
+                      >
+                        Unverified
+                      </Button>
                     </Tooltip>
-                    <Text color="red.500" fontWeight="bold">
-                      Unverified
-                    </Text>
                   </HStack>
                 )}
-                {(doc?.status === "Pending" || !doc.status) && (
+                {(doc.status === "Pending" || !doc.status) && (
                   <HStack align="center" spacing={2}>
                     <Tooltip
                       label="Document is not verified"
@@ -363,6 +378,47 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
               </VStack>
             ) : (
               <Text>No images available.</Text>
+            )}
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+
+      {/* Error Details Modal */}
+      <Modal
+        isOpen={!!errorModalDoc}
+        onClose={() => setErrorModalDoc(null)}
+        size="lg"
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Verification Errors</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {errorModalDoc?.verificationErrors &&
+            errorModalDoc.verificationErrors.length > 0 ? (
+              <VStack align="start" spacing={4}>
+                {errorModalDoc.verificationErrors.map(
+                  (err: any, idx: number) => (
+                    <VStack
+                      key={idx}
+                      align="start"
+                      spacing={1}
+                      p={3}
+                      borderBottom="1px solid #eee"
+                      w="100%"
+                    >
+                      <Text fontWeight="bold" color="red.600" fontSize="md">
+                        {err.raw}
+                      </Text>
+                      <Text color="gray.800" fontSize="sm">
+                        {err.error}
+                      </Text>
+                    </VStack>
+                  )
+                )}
+              </VStack>
+            ) : (
+              <Text>No errors found.</Text>
             )}
           </ModalBody>
         </ModalContent>

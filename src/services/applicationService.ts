@@ -23,3 +23,19 @@ export const verifyAllDocuments = async (applicationId: string) => {
     throw error;
   }
 };
+
+export const verifySelectedDocuments = async (
+  applicationId: string,
+  applicationFileIds: number[]
+) => {
+  try {
+    const response = await apiClient.post("/verification/verify-vcs", {
+      applicationId,
+      applicationFileIds,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error verifying selected documents:", error);
+    throw error;
+  }
+};
