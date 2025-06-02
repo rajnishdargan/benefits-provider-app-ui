@@ -1,0 +1,63 @@
+name: Deploy to UBA-DEV
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    environment: UBA-DEV  
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.17.0'
+
+      - name: Install dependencies and build
+        run: |
+          echo '${{ secrets.ENV_UBA_DEV  }}' > .env
+          yarn install
+          yarn run build
+
+      - name: Show working directory and contents
+        run: |
+          echo "PWD: $(pwd)"
+          echo "Root directory contents:"
+          ls -lhtr
+          echo "dist/ directory contents:"
+          ls -lhtr dist || echo "dist/ directory not found!"
+
+      - name: Install AWS CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl unzip
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install --update
+          aws --version
+
+      - name: Configure AWS credentials
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID_UBA_DEV }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY_UBA_DEV }}
+          aws configure set default.region ${{ secrets.AWS_S3_BUCKET_REGION_UBA_DEV  }}
+
+      - name: Sync dist folder to S3 and invalidate CloudFront
+        run: |
+          if [ -d dist ]; then
+            aws s3 sync dist s3://${{ secrets.AWS_S3_BUCKET_UBA_DEV  }}/
+            aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_UBA_DEV  }} --paths "/*"
+          else
+            echo "dist directory not found!"
+            exit 1
+          fi
+
+      - name: Post job cleanup
+        if: always()
+        run: |
+          echo "Cleanup done."
