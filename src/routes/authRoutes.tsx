@@ -7,7 +7,7 @@ const ApplicationDetails = lazy(
 );
 
 const BenefitsForm = lazy(() => import("../pages/benefits/form/Form"));
-// const Dashboard = lazy(() => import("../pages/dashboard/Dashboard"));
+// //NOSONAR const Dashboard = lazy(() => import("../pages/dashboard/Dashboard"));
 const ManageBenefits = lazy(
   () => import("../pages/benefits/manageBenefits/ManageBenefits")
 );

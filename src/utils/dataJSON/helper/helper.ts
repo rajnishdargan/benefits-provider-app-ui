@@ -7,7 +7,7 @@ interface UserData {
 export const transformErrors = (errors: any, schema: any, t: any) => {
   console.log(errors);
   const getTitle = (schemaItem: any) =>
-    schemaItem?.label || schemaItem?.title || "";
+    schemaItem?.label ?? schemaItem?.title ?? "";
 
   const getMessage = (error: any) => {
     const schemaItem = schema?.properties?.[error?.property?.replace(".", "")];

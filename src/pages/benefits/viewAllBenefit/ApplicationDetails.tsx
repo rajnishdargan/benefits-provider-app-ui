@@ -210,9 +210,9 @@ const ApplicationDetails: React.FC = () => {
       setApplicantData([
         {
           id: 1,
-          name: `${applicantDetails.firstName || ""} ${
+          name: `${applicantDetails.firstName ?? ""} ${
             applicantDetails.middleName ? applicantDetails.middleName + " " : ""
-          }${applicantDetails.lastName || ""}`.trim(),
+          }${applicantDetails.lastName ?? ""}`.trim(),
           applicationStatus: applicationData.status,
           studentId: applicantDetails.studentId,
           disabilityStatus: applicantDetails.disabilityType ? "Yes" : "No",
@@ -261,14 +261,14 @@ const ApplicationDetails: React.FC = () => {
   const customCellText = (props: any) => {
     switch (props.column.key) {
       case "applicationStatus": {
-        let statusColor =
-          props.value === "pending"
-            ? "yellow.400"
-            : props.value === "rejected"
-            ? "red.500"
-            : props.value === "approved"
-            ? "green.500"
-            : "gray.500";
+        const getStatusColor = (status: string) => {
+          if (status === "pending") return "yellow.400";
+          if (status === "rejected") return "red.500";
+          if (status === "approved") return "green.500";
+          return "gray.500";
+        };
+
+        let statusColor = getStatusColor(props.value);
 
         return (
           <Text
@@ -287,7 +287,7 @@ const ApplicationDetails: React.FC = () => {
           <CloseIcon color="red.500" />
         );
       default:
-        return props.value || "-";
+        return props.value ?? "-";
     }
   };
 
@@ -442,15 +442,13 @@ const ApplicationDetails: React.FC = () => {
             <Text
               fontSize="s"
               fontWeight="bold"
-              color={
-                applicantData[0]?.applicationStatus === "pending"
-                  ? "orange.500"
-                  : applicantData[0]?.applicationStatus === "rejected"
-                  ? "red.500"
-                  : applicantData[0]?.applicationStatus === "approved"
-                  ? "green.500"
-                  : "gray.500" // Default color
-              }
+              color={(function getStatusColor() {
+                const status = applicantData[0]?.applicationStatus;
+                if (status === "pending") return "orange.500";
+                if (status === "rejected") return "red.500";
+                if (status === "approved") return "green.500";
+                return "gray.500"; // Default color
+              })()}
               textAlign="center"
             >
               Application is {applicantData[0]?.applicationStatus}!

@@ -74,6 +74,7 @@ const DownloadCSV: React.FC<DownloadCSVProps> = ({
         isClosable: true,
       });
     } catch (err) {
+      console.error("Error downloading CSV:", err);
       toast({
         title: "Failed to download CSV",
         status: "error",

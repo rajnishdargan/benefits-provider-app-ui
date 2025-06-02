@@ -54,12 +54,11 @@ const ActionCell = ({ rowData }: ICellTextProps) => {
 };
 
 const customCellText = (props: ICellTextProps) => {
-  switch (props.column.key) {
-    case "actions":
-      return <ActionCell {...(props as any)} rowData={props.rowData} />;
-    default:
-      return props.value;
+  if (props.column.key === "actions") {
+    return <ActionCell {...(props as any)} rowData={props.rowData} />;
   }
+
+  return props.value;
 };
 
 const ViewAllBenefits = () => {
@@ -77,10 +76,10 @@ const ViewAllBenefits = () => {
       if (response?.results) {
         const mappedData = response.results.map((benefit: any) => ({
           ...benefit,
-          applications_count: benefit.application_details?.applications_count || 0,
-          pending_applications_count: benefit.application_details?.pending_applications_count || 0,
-          approved_applications_count: benefit.application_details?.approved_applications_count || 0,
-          rejected_applications_count: benefit.application_details?.rejected_applications_count || 0,
+          applications_count: benefit.application_details?.applications_count ?? 0,
+          pending_applications_count: benefit.application_details?.pending_applications_count ?? 0,
+          approved_applications_count: benefit.application_details?.approved_applications_count ?? 0,
+          rejected_applications_count: benefit.application_details?.rejected_applications_count ?? 0,
         }));
         setData(mappedData);
         setFilteredData(mappedData);
@@ -154,7 +153,7 @@ const ViewAllBenefits = () => {
           <Select
             placeholder="Sort Order"
             onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
-            value={sortOrder || ""}
+            value={sortOrder ?? ""}
             maxWidth="150px"
           >
             <option value="asc">Ascending</option>

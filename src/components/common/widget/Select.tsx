@@ -17,7 +17,7 @@ const SelectWidget: React.FC<WidgetProps> = ({
       <FormLabel>{label}</FormLabel>
       <Select
         placeholder="Select an option"
-        value={value || ""}
+        value={value ?? ""}
         onChange={(event) => onChange(event.target.value)}
         _placeholder={{ color: "blue.400", fontSize: "10px" }}
       >

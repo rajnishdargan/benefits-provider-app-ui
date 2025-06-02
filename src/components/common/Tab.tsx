@@ -38,7 +38,7 @@ const CustomTab: React.FC<CustomTabProps> = ({
 
           return (
             <Tab
-              key={tab.value || index}
+              key={tab.value ?? index}
               pb={2}
               _hover={{ outline: "none", borderColor: "white" }}
               _focus={{ outline: "none", borderColor: "blue.500" }}

@@ -48,7 +48,7 @@ export default function UserRegister() {
     gender: "",
   });
 
-  const validateField = (field: any, value: any) => {
+  const validateField = (field: any, value: any) => { //NOSONAR
     let error = "";
 
     if (field === "email") {

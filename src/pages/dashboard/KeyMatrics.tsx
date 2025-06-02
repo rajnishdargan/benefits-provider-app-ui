@@ -76,7 +76,7 @@ const KeyMetrics: React.FC<KeyMetricsProps> = ({
                 <StatBox
                   key={item.id}
                   number={item.number}
-                  label={item.label}
+                  label={item?.label}
                 />
               ))
             ) : (
@@ -126,7 +126,7 @@ const KeyMetrics: React.FC<KeyMetricsProps> = ({
 
           <VStack spacing={"35px"} align="stretch">
             {popularBenefit?.map((item, index) => (
-              <CommonCard key={item?.id || index} {...(item || {})} />
+              <CommonCard key={item?.id ?? index} {...(item ?? {})} />
             ))}
           </VStack>
         </VStack>

@@ -136,7 +136,7 @@ const BenefitApplicationForm: React.FC = () => {
             item?.descriptor?.code === "mandatory-doc" ||
             item?.descriptor?.code === "optional-doc"
         )
-        ?.map((item: any) => JSON.parse(item.value)) || [];
+        ?.map((item: any) => JSON.parse(item.value)) ?? [];
 
     const docSchemaArr = [...eligSchemaStatic, ...docSchemaStatic];
 
@@ -147,7 +147,7 @@ const BenefitApplicationForm: React.FC = () => {
 
     // Merge application and document schemas
     const properties = {
-      ...(applicationFormSchema?.properties || {}),
+      ...(applicationFormSchema?.properties ?? {}),
       ...(docSchemaData?.properties || {}),
     };
     console.log("properties", properties);
@@ -207,7 +207,7 @@ const BenefitApplicationForm: React.FC = () => {
     delete formDataNew.docs;
 
     // Encode document fields to base64
-    Object.keys(docSchema?.properties || {}).forEach((e: any) => {
+    Object.keys(docSchema?.properties ?? {}).forEach((e: any) => {
       if (formDataNew[e]) {
         formDataNew[e] = encodeToBase64(formDataNew?.[e]);
       } else {
@@ -260,7 +260,7 @@ const BenefitApplicationForm: React.FC = () => {
         isDisabled={disableSubmit}
         onClick={() => {
           let error: any = {};
-          Object.keys(docSchema?.properties || {}).forEach((e: any) => {
+          Object.keys(docSchema?.properties ?? {}).forEach((e: any) => {
             const field = docSchema?.properties[e];
             if (field?.enum && field.enum.length === 0) {
               error[e] = {

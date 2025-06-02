@@ -66,7 +66,9 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
   } = useDisclosure();
   const toast = useToast();
 
-  const [selectedDocument, setSelectedDocument] = useState<any | null>(null);
+  const [selectedDocument, setSelectedDocument] = useState<{
+    content: Record<string, unknown>;
+  } | null>(null);
   const [docList, setDocList] = useState<Document[]>([]);
   const [imageSrc, setImageSrc] = useState<string[] | null>(null);
 
@@ -79,7 +81,7 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
         if (doc.fileContent) {
           try {
             const decodedContent = decodeBase64ToJson(doc.fileContent);
-            const fullTitle = decodedContent?.credentialSchema?.title || "";
+            const fullTitle = decodedContent?.credentialSchema?.title ?? "";
             // Extract string before colon (:)
             newTitle = fullTitle.includes(":")
               ? fullTitle.split(":")[0].trim()
@@ -145,7 +147,7 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
       }
     }
 
-    setSelectedDocument({ content: decodedContent });
+    setSelectedDocument({ content: decodedContent || {} });
     onPreviewOpen();
   };
 
@@ -164,7 +166,7 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
     possibleKeys.forEach((key) => {
       const content = decodedData?.credentialSubject?.[key]?.content;
       const mimeType =
-        decodedData?.credentialSubject?.[key]?.mimetype || "image/png";
+        decodedData?.credentialSubject?.[key]?.mimetype ?? "image/png";
 
       if (content && isBase64(content)) {
         images.push(`data:${mimeType};base64,${content}`);
@@ -258,7 +260,7 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
                     </Text>
                   </HStack>
                 )}
-                {(doc.status === "Pending" || !doc.status) && (
+                {(doc?.status === "Pending" || !doc.status) && (
                   <HStack align="center" spacing={2}>
                     <Tooltip
                       label="Document is not verified"
