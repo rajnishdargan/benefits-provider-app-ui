@@ -27,7 +27,7 @@ import DocumentList from "../../../components/DocumentList";
 import {
   getApplicationDetails,
   verifyAllDocuments,
-  verifySelectedDocuments, // <-- import this
+  verifySelectedDocuments,
 } from "../../../services/applicationService";
 import { updateApplicationStatus, getBenefitById } from "../../../services/benefits";
 // Types
@@ -137,6 +137,58 @@ const ApplicationDetails: React.FC = () => {
     }
   };
 
+  const showVerificationToast = (
+    toast: ReturnType<typeof useToast>,
+    status: string,
+    context: "verify" | "reverify"
+  ) => {
+    if (status === "partially_verified") {
+      toast({
+        title: "Partially Verified",
+        description:
+          context === "verify"
+            ? "Some documents could not be verified."
+            : "Some failed documents could not be re-verified.",
+        status: "warning",
+        duration: 5000,
+        isClosable: true,
+      });
+    } else if (status === "unverified") {
+      toast({
+        title: "Unverified",
+        description:
+          context === "verify"
+            ? "All documents are unverified."
+            : "Document(s) still unverified.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    } else if (status === "verified") {
+      toast({
+        title: "Verified",
+        description:
+          context === "verify"
+            ? "All documents are verified."
+            : "All failed documents are now verified.",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
+    } else {
+      toast({
+        title: context === "verify" ? "Verification Completed" : "Re-verification Completed",
+        description:
+          context === "verify"
+            ? "All documents verification have been completed."
+            : "Failed documents have been re-verified.",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
+
   const handleVerifyAll = async () => {
     try {
       if (!id) {
@@ -155,41 +207,7 @@ const ApplicationDetails: React.FC = () => {
 
       if (response?.response) {
         setIsVerifyButtonVisible(false);
-
-        if (response.response.status === "partially_verified") {
-          toast({
-            title: "Partially Verified",
-            description: "Some documents could not be verified.",
-            status: "warning",
-            duration: 5000,
-            isClosable: true,
-          });
-        } else if (response.response.status === "unverified") {
-          toast({
-            title: "Unverified",
-            description: "All documents are unverified.",
-            status: "error",
-            duration: 5000,
-            isClosable: true,
-          });
-        } else if (response.response.status === "verified") {
-          toast({
-            title: "Verified",
-            description: "All documents are verified.",
-            status: "success",
-            duration: 5000,
-            isClosable: true,
-          });
-        } else {
-          toast({
-            title: "Verification Completed",
-            description: "All documents verification have been completed.",
-            status: "success",
-            duration: 5000,
-            isClosable: true,
-          });
-        }
-
+        showVerificationToast(toast, response.response.status, "verify");
         fetchApplicationData();
       }
     } catch (error) {
@@ -240,41 +258,7 @@ const ApplicationDetails: React.FC = () => {
 
       if (response?.response) {
         setIsReverifyButtonVisible(false);
-
-        if (response.response.status === "partially_verified") {
-          toast({
-            title: "Partially Verified",
-            description: "Some failed documents could not be re-verified.",
-            status: "warning",
-            duration: 5000,
-            isClosable: true,
-          });
-        } else if (response.response.status === "unverified") {
-          toast({
-            title: "Unverified",
-            description: "Document(s) still unverified.",
-            status: "error",
-            duration: 5000,
-            isClosable: true,
-          });
-        } else if (response.response.status === "verified") {
-          toast({
-            title: "Verified",
-            description: "All failed documents are now verified.",
-            status: "success",
-            duration: 5000,
-            isClosable: true,
-          });
-        } else {
-          toast({
-            title: "Re-verification Completed",
-            description: "Failed documents have been re-verified.",
-            status: "success",
-            duration: 5000,
-            isClosable: true,
-          });
-        }
-
+        showVerificationToast(toast, response.response.status, "reverify");
         fetchApplicationData();
       }
     } catch (error) {
