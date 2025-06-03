@@ -2,90 +2,117 @@ import React from "react";
 import { Table, DataType } from "ka-table";
 import "ka-table/style.css";
 
+// Props interface for the component
 interface ApplicationInfoProps {
-  details: { [key: string]: any };
-  showAmount?: boolean;
-}
-
-interface Row {
-  name1?: string;
-  value1?: string;
-  name2?: string;
-  value2?: string;
+  data: { [key: string]: any };
+  mapping?: Array<{
+    name: string;
+    label: string;
+    type?: string;
+    options?: { label: string; value: any }[];
+  }>;
+  columnsLayout?: "one" | "two";
 }
 
 const ApplicationInfo: React.FC<ApplicationInfoProps> = ({
-  details,
-  showAmount,
+  data,
+  mapping,
+  columnsLayout = "one",
 }) => {
-  const entries = Object.entries(details).map(([key, value]) => ({
-    name: key.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase()),
-    value: value?.toString() ?? "N/A",
-  }));
+  // Helper: Converts camelCase to Title Case
+  const camelToTitle = (str: string): string =>
+    str.replace(/([A-Z])/g, " $1").replace(/^./, (char) => char.toUpperCase());
 
-  const groupedEntries: Row[] = [];
-
-  if (showAmount) {
-    // Each row has only one field-value pair
-    for (const entry of entries) {
-      groupedEntries.push({
-        name1: entry.name,
-        value1: entry.value,
-      });
+  // Helper: Get display value based on field type
+  const getDisplayValue = (field: any, value: any): string => {
+    if (!field) return value?.toString() ?? "N/A";
+    if (field.type === "select" && Array.isArray(field.options)) {
+      const option = field.options.find((opt) => opt.value === value);
+      return option?.label ?? value?.toString() ?? "N/A";
     }
-  } else {
-    // Default: two field-value pairs per row
-    for (let i = 0; i < entries.length; i += 2) {
-      groupedEntries.push({
-        name1: entries[i]?.name,
-        value1: entries[i]?.value,
-        name2: entries[i + 1]?.name,
-        value2: entries[i + 1]?.value,
-      });
+    if (field.type === "amount" && value !== null && value !== "") {
+      return `₹${Number(value).toFixed(2)}`;
     }
-  }
+    return value?.toString() ?? "N/A";
+  };
 
-  // Define columns dynamically based on showAmount
+  // Create a map for quick field lookup by name (if mapping provided)
+  const mappingMap = React.useMemo(() => {
+    if (!mapping) return {};
+    return Object.fromEntries(mapping.map((field) => [field.name, field]));
+  }, [mapping]);
+
+  // Prepare entries: [{ label, value }]
+  const entries = React.useMemo(() => {
+    // Use mapping order if provided, else all keys from data
+    const keys = mapping ? mapping.map((m) => m.name) : Object.keys(data);
+    return keys
+      .filter((key) => data.hasOwnProperty(key))
+      .map((key) => {
+        const field = mappingMap[key];
+        const label = field?.label ?? camelToTitle(key);
+        const displayValue = getDisplayValue(field, data[key]);
+        return { label, value: displayValue };
+      });
+  }, [data, mapping, mappingMap]);
+
+  // Group entries for one or two column layout
+  const groupedEntries =
+    columnsLayout === "two"
+      ? entries.reduce((rows: any[], item, idx) => {
+          if (idx % 2 === 0) {
+            rows.push({ col1Label: item.label, col1Value: item.value });
+          } else {
+            Object.assign(rows[rows.length - 1], {
+              col2Label: item.label,
+              col2Value: item.value,
+            });
+          }
+          return rows;
+        }, [])
+      : entries.map((item) => ({
+          col1Label: item.label,
+          col1Value: item.value,
+        }));
+
+  // Define table columns based on layout
   const columns = [
     {
-      key: "name1",
+      key: "col1Label",
       title: "Field",
       dataType: DataType.String,
-      style: { fontWeight: "bold" },
+      style: { fontWeight: "bold", width: "25%", textAlign: "left" },
     },
     {
-      key: "value1",
+      key: "col1Value",
       title: "Value",
       dataType: DataType.String,
+      style: { width: "25%", textAlign: "left" },
     },
-    ...(showAmount
-      ? []
-      : [
+    ...(columnsLayout === "two"
+      ? [
           {
-            key: "name2",
+            key: "col2Label",
             title: "Field",
             dataType: DataType.String,
-            style: { fontWeight: "bold" },
+            style: { fontWeight: "bold", width: "25%", textAlign: "left" },
           },
           {
-            key: "value2",
+            key: "col2Value",
             title: "Value",
             dataType: DataType.String,
+            style: { width: "25%", textAlign: "left" },
           },
-        ]),
+        ]
+      : []),
   ];
 
+  // Render the table with custom styles
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        marginTop: showAmount ? "24px" : "0",
-      }}
-    >
-      <div style={{ width: showAmount ? "50%" : "100%" }}>
+    <div style={{ display: "flex", justifyContent: "center", marginTop: "24px" }}>
+      <div style={{ width: columnsLayout === "two" ? "100%" : "50%" }}>
         <Table
-          rowKeyField="name1"
+          rowKeyField="col1Label"
           data={groupedEntries}
           columns={columns}
           childComponents={{
@@ -94,47 +121,25 @@ const ApplicationInfo: React.FC<ApplicationInfoProps> = ({
                 style: { width: "100%", borderCollapse: "collapse" },
               }),
             },
-            cellText: {
-              content: CustomCellContentWrapper,
-            },
           }}
         />
-
+        {/* Inline styles for table header and cells */}
         <style>
           {`
             .ka-thead-cell {
               font-weight: bold;
               background-color: #f5f5f5;
+              text-align: left !important;
             }
-  
             .ka-cell {
               padding: 8px;
+              text-align: left !important;
             }
           `}
         </style>
       </div>
     </div>
   );
-};
-export interface CustomCellContentProps {
-  column: { key: string };
-  value: string;
-}
-
-export const CustomCellContent: React.FC<CustomCellContentProps> = ({ column, value }) => {
-  if (column.key?.toString().startsWith("name")) {
-    return <strong>{value}</strong>;
-  }
-  return <>{value}</>;
-};
-
-interface CustomCellContentWrapperProps {
-  column: { key: string };
-  value: string;
-}
-
-const CustomCellContentWrapper: React.FC<CustomCellContentWrapperProps> = ({ column, value }) => {
-  return <CustomCellContent column={column} value={value} />;
 };
 
 export default ApplicationInfo;

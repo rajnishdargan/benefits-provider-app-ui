@@ -8,6 +8,7 @@ import {
   Select,
   VStack,
   Text,
+  Flex,
 } from "@chakra-ui/react";
 import Table from "../../../components/common/table/Table";
 import { DataType } from "ka-table/enums";
@@ -19,19 +20,57 @@ import { useNavigate, useParams } from "react-router-dom";
 import PaginationList from "./PaginationList";
 import { viewAllApplicationByBenefitId } from "../../../services/benefits";
 import DownloadCSV from "../../../components/DownloadCSV";
+import { formatDate } from "../../../services/helperService";
 
 const columns = [
-  { key: "studentName", title: "Name", dataType: DataType.String },
-  { key: "applicationId", title: "Application ID", dataType: DataType.Number },
-  { key: "orderId", title: "Order ID", dataType: DataType.String },
-  { key: "status", title: "Status", dataType: DataType.String },
-  { key: "actions", title: "Actions", dataType: DataType.String },
+  { 
+    key: "studentName", 
+    title: "Name", 
+    dataType: DataType.String, 
+    style: { width: "15%", minWidth: 80, whiteSpace: "nowrap" }
+  },
+  { 
+    key: "applicationId", 
+    title: "App ID",
+    dataType: DataType.Number, 
+    style: { width: "5%", minWidth: 10, whiteSpace: "nowrap", textAlign: "center" } 
+  },
+  { 
+    key: "orderId", 
+    title: "Order ID", 
+    dataType: DataType.String, 
+    style: { width: "15%", minWidth: 80, whiteSpace: "nowrap", textAlign: "center" }
+  },
+  { 
+    key: "submittedAt", 
+    title: "Submitted At", 
+    dataType: DataType.String, 
+    style: { width: "10%", minWidth: 50, whiteSpace: "nowrap", textAlign: "center" }
+  },
+  { 
+    key: "lastUpdatedAt", 
+    title: "Last Updated At", 
+    dataType: DataType.String, 
+    style: { width: "10%", minWidth: 50, whiteSpace: "nowrap", textAlign: "center" }
+  },
+  { 
+    key: "status", 
+    title: "Status", 
+    dataType: DataType.String, 
+    style: { width: "10%", minWidth: 30, whiteSpace: "nowrap", textAlign: "center" }
+  },
+  { 
+    key: "actions", 
+    title: "Actions", 
+    dataType: DataType.String, 
+    style: { width: "10%", minWidth: 30, whiteSpace: "nowrap", textAlign: "center" }
+  },
 ];
 
 const DetailsButton = ({ rowData }: ICellTextProps) => {
   const navigate = useNavigate();
   return (
-    <HStack>
+    <Flex justifyContent="center" alignItems="center" width="100%">
       <IconButton
         aria-label="View"
         icon={<ArrowForwardIcon />}
@@ -40,7 +79,7 @@ const DetailsButton = ({ rowData }: ICellTextProps) => {
           navigate(`/application_detail/${rowData?.applicationId}`);
         }}
       />
-    </HStack>
+    </Flex>
   );
 };
 
@@ -78,6 +117,8 @@ const ApplicationLists: React.FC = () => {
               } ${item?.applicationData?.lastName ?? ""}`.trim(),
               applicationId: item?.id ?? "-",
               orderId: item?.orderId ?? "-",
+              submittedAt: item?.createdAt ?? "-",
+              lastUpdatedAt: item?.updatedAt ?? "-",
               status: item?.status ?? "-",
             })
           );
@@ -201,24 +242,32 @@ const CellTextContent = (props: ICellTextProps) => {
 
   if (props.column.key === "status") {
     const status = props.value?.toLowerCase();
-    let color = "gray.500"; // Default color
-
-    if (status === "pending") {
-      color = "orange.500";
-    } else if (status === "approved") {
-      color = "green.500";
-    } else if (status === "rejected") {
-      color = "red.500";
-    }
-
-    // Convert status to title case
-    const titleCaseStatus = status
-      ? status.charAt(0).toUpperCase() + status.slice(1)
-      : "";
-
+    let color = "gray.500";
+    if (status === "pending") color = "orange.500";
+    else if (status === "approved") color = "green.500";
+    else if (status === "rejected") color = "red.500";
+    const titleCaseStatus = status ? status.charAt(0).toUpperCase() + status.slice(1) : "";
     return (
       <Text color={color} fontWeight="bold">
         {titleCaseStatus}
+      </Text>
+    );
+  }
+
+  if (
+    props.column.key === "submittedAt" ||
+    props.column.key === "lastUpdatedAt"
+  ) {
+    if (!props.value || props.value === "-") {
+      return <Text>-</Text>;
+    }
+    return (
+      <Text
+        isTruncated
+        whiteSpace="nowrap"
+        title={formatDate(props.value, { withTime: true })}
+      >
+        {formatDate(props.value)}
       </Text>
     );
   }

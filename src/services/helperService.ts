@@ -34,12 +34,28 @@ export const isDateString = (value: any): boolean => {
   return !isNaN(date.getTime()) && value.includes("GMT");
 };
 
-export const formatDate = (value: string) => {
-  return new Date(value).toLocaleDateString("en-IN", {
+export const formatDate = (
+  value: string,
+  options: { withTime?: boolean } = {}
+) => {
+  const date = new Date(value);
+  if (isNaN(date.getTime())) return "-";
+  const shortDate = date.toLocaleDateString("en-IN", {
     day: "2-digit",
     month: "short",
     year: "numeric",
   });
+  if (options.withTime) {
+    const time = date
+      .toLocaleTimeString("en-IN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      })
+      .toLowerCase();
+    return `${shortDate}, ${time}`;
+  }
+  return shortDate;
 };
 
 export const convertKeysToTitleCase = (

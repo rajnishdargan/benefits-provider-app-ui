@@ -29,7 +29,7 @@ import {
   verifyAllDocuments,
   verifySelectedDocuments, // <-- import this
 } from "../../../services/applicationService";
-import { updateApplicationStatus } from "../../../services/benefits";
+import { updateApplicationStatus, getBenefitById } from "../../../services/benefits";
 // Types
 interface ApplicantData {
   id: number;
@@ -58,20 +58,16 @@ const ApplicationDetails: React.FC = () => {
   const [applicant, setApplicant] = useState<Record<string, any> | null>(null);
   const [benefitName, setBenefitName] = useState<string>("");
   const [comment, setComment] = useState<string>("");
-  const [showActionButtons, setShowActionButtons] = useState<boolean>(true); // To hide action buttons after
-  const [isVerifyButtonVisible, setIsVerifyButtonVisible] = useState(true); // State to control button visibility
-  const [isVerifyLoading, setIsVerifyLoading] = useState(false); // Add a state for button loading
-  const [isReverifyButtonVisible, setIsReverifyButtonVisible] = useState(false); // New state for reverify button
-  const [isReverifyLoading, setIsReverifyLoading] = useState(false); // Loading state for reverify
-  //confirmation
-  const [amountDetail, setAmountDetail] = useState<Record<string, any> | null>(
-    null
-  );
+  const [showActionButtons, setShowActionButtons] = useState<boolean>(true);
+  const [isVerifyButtonVisible, setIsVerifyButtonVisible] = useState(true);
+  const [isVerifyLoading, setIsVerifyLoading] = useState(false);
+  const [isReverifyButtonVisible, setIsReverifyButtonVisible] = useState(false);
+  const [isReverifyLoading, setIsReverifyLoading] = useState(false);
+  const [amountDetail, setAmountDetail] = useState<Record<string, any> | null>(null);
+  const [applicationForm, setApplicationForm] = useState<any>(null);
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [selectedStatus, setSelectedStatus] = useState<
-    "approved" | "rejected"
-  >();
+  const [selectedStatus, setSelectedStatus] = useState<"approved" | "rejected">();
 
   const openConfirmationModal = (status: "approved" | "rejected") => {
     setSelectedStatus(status);
@@ -118,7 +114,7 @@ const ApplicationDetails: React.FC = () => {
         });
         fetchApplicationData();
         setComment("");
-        onClose(); // or navigate away
+        onClose();
       } else {
         toast({
           title: "Update failed",
@@ -160,7 +156,6 @@ const ApplicationDetails: React.FC = () => {
       if (response?.response) {
         setIsVerifyButtonVisible(false);
 
-        // Show toast based on response status
         if (response.response.status === "partially_verified") {
           toast({
             title: "Partially Verified",
@@ -246,7 +241,6 @@ const ApplicationDetails: React.FC = () => {
       if (response?.response) {
         setIsReverifyButtonVisible(false);
 
-        // Show toast based on response status
         if (response.response.status === "partially_verified") {
           toast({
             title: "Partially Verified",
@@ -307,7 +301,6 @@ const ApplicationDetails: React.FC = () => {
       }
       const applicantDetails = applicationData.applicationData;
       if (applicationData?.calculatedAmount) {
-        ///Moves "Total Payout" to the end, without affecting anything else.
         const { ["totalPayout"]: totalPayout, ...rest } =
           applicationData.calculatedAmount;
 
@@ -321,7 +314,7 @@ const ApplicationDetails: React.FC = () => {
 
       setApplicant(applicantDetails);
       if (applicationData.status !== "pending") {
-        setShowActionButtons(false); // Hide action buttons if status is not pending
+        setShowActionButtons(false);
       }
       setApplicantData([
         {
@@ -355,6 +348,17 @@ const ApplicationDetails: React.FC = () => {
 
       setIsVerifyButtonVisible(allDocsUnverified);
       setIsReverifyButtonVisible(!allDocsUnverified && anyDocFailed);
+
+      // Fetch applicationForm using benefitId
+      if (applicationData?.benefitId) {
+        try {
+          const benefitResponse = await getBenefitById(applicationData.benefitId);
+          // You may need to adjust this depending on the API response structure
+          setApplicationForm(benefitResponse?.data?.applicationForm || []);
+        } catch (err) {
+          setApplicationForm(null);
+        }
+      }
     } catch (err) {
       console.error("Error fetching application data:", err);
     } finally {
@@ -477,7 +481,7 @@ const ApplicationDetails: React.FC = () => {
               >
                 {applicant && (
                   <Box flex="1 1 100%" mb={0}>
-                    <ApplicationInfo details={applicant} />
+                    <ApplicationInfo data={applicant} mapping={applicationForm} columnsLayout="two" />
                   </Box>
                 )}
 
@@ -501,7 +505,6 @@ const ApplicationDetails: React.FC = () => {
                       benefitName={benefitName}
                     />
                   </Box>
-                  {/* Move the Verify All Documents button here */}
                   {showActionButtons && (
                     <HStack justify="center" spacing={4} mt={4}>
                       {isVerifyButtonVisible && (
@@ -573,7 +576,7 @@ const ApplicationDetails: React.FC = () => {
                     >
                       Amount
                     </Text>
-                    <ApplicationInfo details={amountDetail} showAmount={true} />
+                    <ApplicationInfo data={amountDetail} columnsLayout="one" />
                   </Box>
                 )}
               </HStack>
@@ -584,7 +587,6 @@ const ApplicationDetails: React.FC = () => {
             </Text>
           )}
 
-          {/* Display the status message after confirmation */}
           {!showActionButtons && (
             <Text
               fontSize="s"
@@ -596,7 +598,7 @@ const ApplicationDetails: React.FC = () => {
                   ? "red.500"
                   : applicantData[0]?.applicationStatus === "approved"
                   ? "green.500"
-                  : "gray.500" // Default color
+                  : "gray.500"
               }
               textAlign="center"
             >
@@ -604,7 +606,6 @@ const ApplicationDetails: React.FC = () => {
             </Text>
           )}
 
-          {/* Show action buttons only if no status has been set */}
           {showActionButtons && (
             <HStack justify="center" spacing={4}>
               <Button
@@ -639,7 +640,6 @@ const ApplicationDetails: React.FC = () => {
         </VStack>
       </Center>
 
-      {/* Confirmation Modal */}
       <Modal isOpen={isOpen} onClose={onClose} isCentered>
         <ModalOverlay />
         <ModalContent>

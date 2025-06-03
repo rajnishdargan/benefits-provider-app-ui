@@ -255,3 +255,13 @@ export const exportApplicationsCsv = async ({
     throw error;
   }
 };
+
+export const getBenefitById = async (benefitId: string) => {
+  try {
+    const response = await apiClient.get(`/benefits/getById/${benefitId}`);
+    return response?.data;
+  } catch (error) {
+    console.error("Error fetching benefit by ID:", error);
+    throw error;
+  }
+};
