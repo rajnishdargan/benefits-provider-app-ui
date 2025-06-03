@@ -27,8 +27,9 @@ import DocumentList from "../../../components/DocumentList";
 import {
   getApplicationDetails,
   verifyAllDocuments,
+  verifySelectedDocuments,
 } from "../../../services/applicationService";
-import { updateApplicationStatus } from "../../../services/benefits";
+import { updateApplicationStatus, getBenefitById } from "../../../services/benefits";
 // Types
 interface ApplicantData {
   id: number;
@@ -57,18 +58,16 @@ const ApplicationDetails: React.FC = () => {
   const [applicant, setApplicant] = useState<Record<string, any> | null>(null);
   const [benefitName, setBenefitName] = useState<string>("");
   const [comment, setComment] = useState<string>("");
-  const [showActionButtons, setShowActionButtons] = useState<boolean>(true); // To hide action buttons after
-  const [isVerifyButtonVisible, setIsVerifyButtonVisible] = useState(true); // State to control button visibility
-  const [isVerifyLoading, setIsVerifyLoading] = useState(false); // Add a state for button loading
-  //confirmation
-  const [amountDetail, setAmountDetail] = useState<Record<string, any> | null>(
-    null
-  );
+  const [showActionButtons, setShowActionButtons] = useState<boolean>(true);
+  const [isVerifyButtonVisible, setIsVerifyButtonVisible] = useState(true);
+  const [isVerifyLoading, setIsVerifyLoading] = useState(false);
+  const [isReverifyButtonVisible, setIsReverifyButtonVisible] = useState(false);
+  const [isReverifyLoading, setIsReverifyLoading] = useState(false);
+  const [amountDetail, setAmountDetail] = useState<Record<string, any> | null>(null);
+  const [applicationForm, setApplicationForm] = useState<any>(null);
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [selectedStatus, setSelectedStatus] = useState<
-    "approved" | "rejected"
-  >();
+  const [selectedStatus, setSelectedStatus] = useState<"approved" | "rejected">();
 
   const openConfirmationModal = (status: "approved" | "rejected") => {
     setSelectedStatus(status);
@@ -115,7 +114,7 @@ const ApplicationDetails: React.FC = () => {
         });
         fetchApplicationData();
         setComment("");
-        onClose(); // or navigate away
+        onClose();
       } else {
         toast({
           title: "Update failed",
@@ -126,6 +125,7 @@ const ApplicationDetails: React.FC = () => {
         });
       }
     } catch (error) {
+      console.error("Error updating application status:", error);
       toast({
         title: "Unexpected Error",
         description: `${error}` || "Something went wrong.",
@@ -135,6 +135,58 @@ const ApplicationDetails: React.FC = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const showVerificationToast = (
+    toast: ReturnType<typeof useToast>,
+    status: string,
+    context: "verify" | "reverify"
+  ) => {
+    if (status === "partially_verified") {
+      toast({
+        title: "Partially Verified",
+        description:
+          context === "verify"
+            ? "Some documents could not be verified."
+            : "Some failed documents could not be re-verified.",
+        status: "warning",
+        duration: 5000,
+        isClosable: true,
+      });
+    } else if (status === "unverified") {
+      toast({
+        title: "Unverified",
+        description:
+          context === "verify"
+            ? "All documents are unverified."
+            : "Document(s) still unverified.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    } else if (status === "verified") {
+      toast({
+        title: "Verified",
+        description:
+          context === "verify"
+            ? "All documents are verified."
+            : "All failed documents are now verified.",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
+    } else {
+      toast({
+        title: context === "verify" ? "Verification Completed" : "Re-verification Completed",
+        description:
+          context === "verify"
+            ? "All documents verification have been completed."
+            : "Failed documents have been re-verified.",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
     }
   };
 
@@ -151,19 +203,12 @@ const ApplicationDetails: React.FC = () => {
         return;
       }
 
-      setIsVerifyLoading(true); // Show loader
+      setIsVerifyLoading(true);
       const response = await verifyAllDocuments(id);
-      console.log("Response from verifyAllDocuments:", response);
 
       if (response?.response) {
         setIsVerifyButtonVisible(false);
-        toast({
-          title: "Verification Completed",
-          description: "All documents verification have been completed.",
-          status: "success",
-          duration: 5000,
-          isClosable: true,
-        });
+        showVerificationToast(toast, response.response.status, "verify");
         fetchApplicationData();
       }
     } catch (error) {
@@ -176,7 +221,58 @@ const ApplicationDetails: React.FC = () => {
         isClosable: true,
       });
     } finally {
-      setIsVerifyLoading(false); // Hide loader
+      setIsVerifyLoading(false);
+    }
+  };
+
+  const handleReverifyFailed = async () => {
+    try {
+      if (!id) {
+        toast({
+          title: "Invalid action",
+          description: "Application ID is missing.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+      setIsReverifyLoading(true);
+
+      const failedDocIds = documents
+        .filter((doc) => doc.status === "Unverified")
+        .map((doc) => doc.id);
+
+      if (failedDocIds.length === 0) {
+        toast({
+          title: "No Failed Documents",
+          description: "There are no failed documents to re-verify.",
+          status: "info",
+          duration: 3000,
+          isClosable: true,
+        });
+        setIsReverifyLoading(false);
+        return;
+      }
+
+      const response = await verifySelectedDocuments(id, failedDocIds);
+
+      if (response?.response) {
+        setIsReverifyButtonVisible(false);
+        showVerificationToast(toast, response.response.status, "reverify");
+        fetchApplicationData();
+      }
+    } catch (error) {
+      console.log('Error occured during re-verification', error);
+      toast({
+        title: "Re-verification Failed",
+        description: "An error occurred while re-verifying the documents.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsReverifyLoading(false);
     }
   };
 
@@ -191,7 +287,6 @@ const ApplicationDetails: React.FC = () => {
       }
       const applicantDetails = applicationData.applicationData;
       if (applicationData?.calculatedAmount) {
-        ///Moves "Total Payout" to the end, without affecting anything else.
         const { ["totalPayout"]: totalPayout, ...rest } =
           applicationData.calculatedAmount;
 
@@ -205,7 +300,7 @@ const ApplicationDetails: React.FC = () => {
 
       setApplicant(applicantDetails);
       if (applicationData.status !== "pending") {
-        setShowActionButtons(false); // Hide action buttons if status is not pending
+        setShowActionButtons(false);
       }
       setApplicantData([
         {
@@ -233,10 +328,19 @@ const ApplicationDetails: React.FC = () => {
 
       setDocuments(documents);
 
-      const anyDocumentNotVerified =
-        documents.length > 0 && documents.some((doc: any) => doc.status == null || doc.status == "Unverified");
-      console.log("Any document not verified:", anyDocumentNotVerified);
-      setIsVerifyButtonVisible(anyDocumentNotVerified);
+      // Button visibility logic
+      const allDocsUnverified = documents.length > 0 && documents.every((doc: any) => doc.status == null);
+      const anyDocFailed = documents.length > 0 && documents.some((doc: any) => doc.status === "Unverified");
+
+      setIsVerifyButtonVisible(allDocsUnverified);
+      setIsReverifyButtonVisible(!allDocsUnverified && anyDocFailed);
+
+      // Fetch applicationForm using benefitId
+      if (applicationData?.benefitId) {
+        const benefitResponse = await getBenefitById(applicationData.benefitId);
+        // You may need to adjust this depending on the API response structure
+        setApplicationForm(benefitResponse?.data?.applicationForm ?? []);
+      }
     } catch (err) {
       console.error("Error fetching application data:", err);
     } finally {
@@ -261,14 +365,14 @@ const ApplicationDetails: React.FC = () => {
   const customCellText = (props: any) => {
     switch (props.column.key) {
       case "applicationStatus": {
-        const getStatusColor = (status: string) => {
-          if (status === "pending") return "yellow.400";
-          if (status === "rejected") return "red.500";
-          if (status === "approved") return "green.500";
-          return "gray.500";
-        };
-
-        let statusColor = getStatusColor(props.value);
+        let statusColor = "gray.500";
+        if (props.value === "pending") {
+          statusColor = "orange.500";
+        } else if (props.value === "rejected") {
+          statusColor = "red.500";
+        } else if (props.value === "approved") {
+          statusColor = "green.500";
+        }
 
         return (
           <Text
@@ -359,7 +463,7 @@ const ApplicationDetails: React.FC = () => {
               >
                 {applicant && (
                   <Box flex="1 1 100%" mb={0}>
-                    <ApplicationInfo details={applicant} />
+                    <ApplicationInfo data={applicant} mapping={applicationForm} columnsLayout="two" />
                   </Box>
                 )}
 
@@ -380,8 +484,67 @@ const ApplicationDetails: React.FC = () => {
                         ...doc,
                         verificationErrors: doc?.verificationErrors || [],
                       }))}
+                      benefitName={benefitName}
                     />
                   </Box>
+                  {showActionButtons && (
+                    <HStack justify="center" spacing={4} mt={4}>
+                      {isVerifyButtonVisible && (
+                        <Button
+                          bg="teal.500"
+                          color="white"
+                          width="200px"
+                          onClick={handleVerifyAll}
+                          borderRadius="50px"
+                          isLoading={isVerifyLoading}
+                          loadingText="Verifying..."
+                          _hover={{
+                            bg: "teal.600",
+                            transform: "none",
+                            boxShadow: "none",
+                          }}
+                          sx={{
+                            fontFamily: "Poppins",
+                            fontWeight: 500,
+                            fontSize: "14px",
+                            lineHeight: "20px",
+                            letterSpacing: "0.1px",
+                            textAlign: "center",
+                            verticalAlign: "middle",
+                          }}
+                        >
+                          Verify All Documents
+                        </Button>
+                      )}
+                      {isReverifyButtonVisible && (
+                        <Button
+                          bg="orange.400"
+                          color="white"
+                          width="260px"
+                          onClick={handleReverifyFailed}
+                          borderRadius="50px"
+                          isLoading={isReverifyLoading}
+                          loadingText="Re-verifying..."
+                          _hover={{
+                            bg: "orange.500",
+                            transform: "none",
+                            boxShadow: "none",
+                          }}
+                          sx={{
+                            fontFamily: "Poppins",
+                            fontWeight: 500,
+                            fontSize: "14px",
+                            lineHeight: "20px",
+                            letterSpacing: "0.1px",
+                            textAlign: "center",
+                            verticalAlign: "middle",
+                          }}
+                        >
+                          Re-verify Failed Documents
+                        </Button>
+                      )}
+                    </HStack>
+                  )}
                 </Box>
                 {amountDetail && (
                   <Box flex="1 1 100%" mb={0}>
@@ -395,7 +558,7 @@ const ApplicationDetails: React.FC = () => {
                     >
                       Amount
                     </Text>
-                    <ApplicationInfo details={amountDetail} showAmount={true} />
+                    <ApplicationInfo data={amountDetail} columnsLayout="one" />
                   </Box>
                 )}
               </HStack>
@@ -406,56 +569,27 @@ const ApplicationDetails: React.FC = () => {
             </Text>
           )}
 
-          {/* Add the Verify All Documents button */}
-          {showActionButtons && isVerifyButtonVisible && (
-            <HStack justify="center" spacing={4}>
-              <Button
-                bg="teal.500"
-                color="white"
-                width="200px"
-                onClick={handleVerifyAll}
-                borderRadius="50px"
-                isLoading={isVerifyLoading} // Add this to show the spinner
-                loadingText="Verifying..." // Optional: Text to show while loading
-                _hover={{
-                  bg: "teal.600",
-                  transform: "none",
-                  boxShadow: "none",
-                }}
-                sx={{
-                  fontFamily: "Poppins",
-                  fontWeight: 500,
-                  fontSize: "14px",
-                  lineHeight: "20px",
-                  letterSpacing: "0.1px",
-                  textAlign: "center",
-                  verticalAlign: "middle",
-                }}
+          {!showActionButtons && (() => {
+            let statusColor = "gray.500";
+            if (applicantData[0]?.applicationStatus === "pending") {
+              statusColor = "orange.500";
+            } else if (applicantData[0]?.applicationStatus === "rejected") {
+              statusColor = "red.500";
+            } else if (applicantData[0]?.applicationStatus === "approved") {
+              statusColor = "green.500";
+            }
+            return (
+              <Text
+                fontSize="s"
+                fontWeight="bold"
+                color={statusColor}
+                textAlign="center"
               >
-                Verify All Documents
-              </Button>
-            </HStack>
-          )}
+                Application is {applicantData[0]?.applicationStatus}!
+              </Text>
+            );
+          })()}
 
-          {/* Display the status message after confirmation */}
-          {!showActionButtons && (
-            <Text
-              fontSize="s"
-              fontWeight="bold"
-              color={(function getStatusColor() {
-                const status = applicantData[0]?.applicationStatus;
-                if (status === "pending") return "orange.500";
-                if (status === "rejected") return "red.500";
-                if (status === "approved") return "green.500";
-                return "gray.500"; // Default color
-              })()}
-              textAlign="center"
-            >
-              Application is {applicantData[0]?.applicationStatus}!
-            </Text>
-          )}
-
-          {/* Show action buttons only if no status has been set */}
           {showActionButtons && (
             <HStack justify="center" spacing={4}>
               <Button
@@ -490,7 +624,6 @@ const ApplicationDetails: React.FC = () => {
         </VStack>
       </Center>
 
-      {/* Confirmation Modal */}
       <Modal isOpen={isOpen} onClose={onClose} isCentered>
         <ModalOverlay />
         <ModalContent>

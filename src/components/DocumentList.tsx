@@ -51,9 +51,13 @@ export interface Document {
 
 interface DocumentListProps {
   documents: Document[];
+  benefitName?: string;
 }
 
-const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
+const DocumentList: React.FC<DocumentListProps> = ({
+  documents,
+  benefitName,
+}) => {
   const {
     isOpen: isPreviewOpen,
     onOpen: onPreviewOpen,
@@ -66,11 +70,15 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
   } = useDisclosure();
   const toast = useToast();
 
-  const [selectedDocument, setSelectedDocument] = useState<{
+  // Define a type for the selected document preview content
+  type SelectedDocumentPreview = {
     content: Record<string, unknown>;
-  } | null>(null);
+  } | null;
+
+  const [selectedDocument, setSelectedDocument] = useState<SelectedDocumentPreview>(null);
   const [docList, setDocList] = useState<Document[]>([]);
   const [imageSrc, setImageSrc] = useState<string[] | null>(null);
+  const [errorModalDoc, setErrorModalDoc] = useState<Document | null>(null);
 
   useEffect(() => {
     if (documents && documents.length > 0) {
@@ -147,7 +155,7 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
       }
     }
 
-    setSelectedDocument({ content: decodedContent || {} });
+    setSelectedDocument({ content: decodedContent });
     onPreviewOpen();
   };
 
@@ -194,7 +202,6 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
           <Tr>
             <Th>Id</Th>
             <Th>Document Name</Th>
-
             <Th>Document Details</Th>
             <Th>Original Document</Th>
             <Th>Verification Status</Th>
@@ -248,19 +255,24 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
                 {doc.status === "Unverified" && (
                   <HStack align="center" spacing={2}>
                     <Tooltip
-                      label={doc.verificationErrors.join(", ")}
+                      label="Click to view verification errors"
                       hasArrow
                       bg="red.500"
                       color="white"
                     >
-                      <CloseIcon color="red.500" />
+                      <Button
+                        leftIcon={<CloseIcon color="red.500" />}
+                        size="sm"
+                        variant="ghost"
+                        color="red.500"
+                        onClick={() => setErrorModalDoc(doc)}
+                      >
+                        Unverified
+                      </Button>
                     </Tooltip>
-                    <Text color="red.500" fontWeight="bold">
-                      Unverified
-                    </Text>
                   </HStack>
                 )}
-                {(doc?.status === "Pending" || !doc.status) && (
+                {(doc.status === "Pending" || !doc.status) && (
                   <HStack align="center" spacing={2}>
                     <Tooltip
                       label="Document is not verified"
@@ -363,6 +375,47 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
               </VStack>
             ) : (
               <Text>No images available.</Text>
+            )}
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+
+      {/* Error Details Modal */}
+      <Modal
+        isOpen={!!errorModalDoc}
+        onClose={() => setErrorModalDoc(null)}
+        size="lg"
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Verification Errors</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {errorModalDoc?.verificationErrors &&
+            errorModalDoc.verificationErrors.length > 0 ? (
+              <VStack align="start" spacing={4}>
+                {errorModalDoc.verificationErrors.map(
+                  (err: any) => (
+                    <VStack
+                      key={err.raw}
+                      align="start"
+                      spacing={1}
+                      p={3}
+                      borderBottom="1px solid #eee"
+                      w="100%"
+                    >
+                      <Text fontWeight="bold" color="red.600" fontSize="md">
+                        {err.raw}
+                      </Text>
+                      <Text color="gray.800" fontSize="sm">
+                        {err.error}
+                      </Text>
+                    </VStack>
+                  )
+                )}
+              </VStack>
+            ) : (
+              <Text>No errors found.</Text>
             )}
           </ModalBody>
         </ModalContent>
