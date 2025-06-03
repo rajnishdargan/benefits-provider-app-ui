@@ -70,7 +70,12 @@ const DocumentList: React.FC<DocumentListProps> = ({
   } = useDisclosure();
   const toast = useToast();
 
-  const [selectedDocument, setSelectedDocument] = useState<any | null>(null);
+  // Define a type for the selected document preview content
+  type SelectedDocumentPreview = {
+    content: Record<string, unknown>;
+  } | null;
+
+  const [selectedDocument, setSelectedDocument] = useState<SelectedDocumentPreview>(null);
   const [docList, setDocList] = useState<Document[]>([]);
   const [imageSrc, setImageSrc] = useState<string[] | null>(null);
   const [errorModalDoc, setErrorModalDoc] = useState<Document | null>(null);
@@ -390,9 +395,9 @@ const DocumentList: React.FC<DocumentListProps> = ({
             errorModalDoc.verificationErrors.length > 0 ? (
               <VStack align="start" spacing={4}>
                 {errorModalDoc.verificationErrors.map(
-                  (err: any, idx: number) => (
+                  (err: any) => (
                     <VStack
-                      key={idx}
+                      key={err.raw}
                       align="start"
                       spacing={1}
                       p={3}
