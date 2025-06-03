@@ -84,7 +84,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
         if (doc.fileContent) {
           try {
             const decodedContent = decodeBase64ToJson(doc.fileContent);
-            const fullTitle = decodedContent?.credentialSchema?.title || "";
+            const fullTitle = decodedContent?.credentialSchema?.title ?? "";
             // Extract string before colon (:)
             newTitle = fullTitle.includes(":")
               ? fullTitle.split(":")[0].trim()
@@ -169,7 +169,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
     possibleKeys.forEach((key) => {
       const content = decodedData?.credentialSubject?.[key]?.content;
       const mimeType =
-        decodedData?.credentialSubject?.[key]?.mimetype || "image/png";
+        decodedData?.credentialSubject?.[key]?.mimetype ?? "image/png";
 
       if (content && isBase64(content)) {
         images.push(`data:${mimeType};base64,${content}`);
