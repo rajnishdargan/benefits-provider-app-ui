@@ -367,7 +367,7 @@ const ApplicationDetails: React.FC = () => {
       case "applicationStatus": {
         let statusColor = "gray.500";
         if (props.value === "pending") {
-          statusColor = "yellow.400";
+          statusColor = "orange.500";
         } else if (props.value === "rejected") {
           statusColor = "red.500";
         } else if (props.value === "approved") {

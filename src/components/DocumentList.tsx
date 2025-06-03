@@ -208,15 +208,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
               <Td>{index + 1}</Td>
               <Td maxW="400px">
                 <Text maxW="400px" whiteSpace="normal" wordBreak="break-word">
-                  {benefitName?.includes("RVY-HQ")
-                    ? doc.newTitle === "OTR Credential"
-                      ? "Proof of Age & Identity"
-                      : doc.newTitle === "BPL Card"
-                      ? "Proof of Economic Need"
-                      : doc.newTitle
-                    : doc.newTitle}
-                  {!benefitName?.includes("RVY-HQ") &&
-                    ` (${formatTitle(doc.title)})`}
+                  {doc.newTitle} ({formatTitle(doc.title)})
                 </Text>
               </Td>
               <Td>
