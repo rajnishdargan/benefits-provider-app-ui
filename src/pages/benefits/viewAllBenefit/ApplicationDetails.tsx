@@ -125,6 +125,7 @@ const ApplicationDetails: React.FC = () => {
         });
       }
     } catch (error) {
+      console.error("Error updating application status:", error);
       toast({
         title: "Unexpected Error",
         description: `${error}` || "Something went wrong.",
@@ -262,6 +263,7 @@ const ApplicationDetails: React.FC = () => {
         fetchApplicationData();
       }
     } catch (error) {
+      console.log('Error occured during re-verification', error);
       toast({
         title: "Re-verification Failed",
         description: "An error occurred while re-verifying the documents.",
@@ -303,9 +305,9 @@ const ApplicationDetails: React.FC = () => {
       setApplicantData([
         {
           id: 1,
-          name: `${applicantDetails.firstName || ""} ${
+          name: `${applicantDetails.firstName ?? ""} ${
             applicantDetails.middleName ? applicantDetails.middleName + " " : ""
-          }${applicantDetails.lastName || ""}`.trim(),
+          }${applicantDetails.lastName ?? ""}`.trim(),
           applicationStatus: applicationData.status,
           studentId: applicantDetails.studentId,
           disabilityStatus: applicantDetails.disabilityType ? "Yes" : "No",
@@ -335,13 +337,9 @@ const ApplicationDetails: React.FC = () => {
 
       // Fetch applicationForm using benefitId
       if (applicationData?.benefitId) {
-        try {
-          const benefitResponse = await getBenefitById(applicationData.benefitId);
-          // You may need to adjust this depending on the API response structure
-          setApplicationForm(benefitResponse?.data?.applicationForm || []);
-        } catch (err) {
-          setApplicationForm(null);
-        }
+        const benefitResponse = await getBenefitById(applicationData.benefitId);
+        // You may need to adjust this depending on the API response structure
+        setApplicationForm(benefitResponse?.data?.applicationForm ?? []);
       }
     } catch (err) {
       console.error("Error fetching application data:", err);
@@ -367,14 +365,14 @@ const ApplicationDetails: React.FC = () => {
   const customCellText = (props: any) => {
     switch (props.column.key) {
       case "applicationStatus": {
-        let statusColor =
-          props.value === "pending"
-            ? "yellow.400"
-            : props.value === "rejected"
-            ? "red.500"
-            : props.value === "approved"
-            ? "green.500"
-            : "gray.500";
+        let statusColor = "gray.500";
+        if (props.value === "pending") {
+          statusColor = "yellow.400";
+        } else if (props.value === "rejected") {
+          statusColor = "red.500";
+        } else if (props.value === "approved") {
+          statusColor = "green.500";
+        }
 
         return (
           <Text
@@ -393,7 +391,7 @@ const ApplicationDetails: React.FC = () => {
           <CloseIcon color="red.500" />
         );
       default:
-        return props.value || "-";
+        return props.value ?? "-";
     }
   };
 
@@ -571,24 +569,26 @@ const ApplicationDetails: React.FC = () => {
             </Text>
           )}
 
-          {!showActionButtons && (
-            <Text
-              fontSize="s"
-              fontWeight="bold"
-              color={
-                applicantData[0]?.applicationStatus === "pending"
-                  ? "orange.500"
-                  : applicantData[0]?.applicationStatus === "rejected"
-                  ? "red.500"
-                  : applicantData[0]?.applicationStatus === "approved"
-                  ? "green.500"
-                  : "gray.500"
-              }
-              textAlign="center"
-            >
-              Application is {applicantData[0]?.applicationStatus}!
-            </Text>
-          )}
+          {!showActionButtons && (() => {
+            let statusColor = "gray.500";
+            if (applicantData[0]?.applicationStatus === "pending") {
+              statusColor = "orange.500";
+            } else if (applicantData[0]?.applicationStatus === "rejected") {
+              statusColor = "red.500";
+            } else if (applicantData[0]?.applicationStatus === "approved") {
+              statusColor = "green.500";
+            }
+            return (
+              <Text
+                fontSize="s"
+                fontWeight="bold"
+                color={statusColor}
+                textAlign="center"
+              >
+                Application is {applicantData[0]?.applicationStatus}!
+              </Text>
+            );
+          })()}
 
           {showActionButtons && (
             <HStack justify="center" spacing={4}>
