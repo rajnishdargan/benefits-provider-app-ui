@@ -44,7 +44,7 @@ export interface Document {
   title: string;
   content: any;
   status: string;
-  verificationErrors: string[];
+  verificationErrors: { raw: string; error: string }[];
   fileContent: string;
   newTitle?: string; // Added newTitle property
 }
