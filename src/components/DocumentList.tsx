@@ -53,9 +53,7 @@ interface DocumentListProps {
   documents: Document[];
 }
 
-const DocumentList: React.FC<DocumentListProps> = ({
-  documents
-}) => {
+const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
   const {
     isOpen: isPreviewOpen,
     onOpen: onPreviewOpen,
@@ -73,7 +71,8 @@ const DocumentList: React.FC<DocumentListProps> = ({
     content: Record<string, unknown>;
   } | null;
 
-  const [selectedDocument, setSelectedDocument] = useState<SelectedDocumentPreview>(null);
+  const [selectedDocument, setSelectedDocument] =
+    useState<SelectedDocumentPreview>(null);
   const [docList, setDocList] = useState<Document[]>([]);
   const [imageSrc, setImageSrc] = useState<string[] | null>(null);
   const [errorModalDoc, setErrorModalDoc] = useState<Document | null>(null);
@@ -303,7 +302,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
           <ModalHeader>Document Data</ModalHeader>
           <ModalCloseButton />
           <ModalBody overflowY="auto">
-            {selectedDocument && selectedDocument.content && Object.keys(selectedDocument.content).length > 0 ? (
+            {selectedDocument?.content && Object.keys(selectedDocument.content).length > 0 ? (
               <PreviewTable
                 rowKeyField="name"
                 data={Object.entries(selectedDocument.content).map(
@@ -354,11 +353,11 @@ const DocumentList: React.FC<DocumentListProps> = ({
           <ModalBody>
             {imageSrc && imageSrc.length > 0 ? (
               <VStack spacing={4}>
-                {imageSrc.map((src, index) => (
+                {imageSrc.map((src) => (
                   <Image
-                    key={index}
+                    key={src}
                     src={src}
-                    alt={`Document Image ${index + 1}`}
+                    alt="Document Image"
                     width="100%"
                     objectFit="contain"
                     style={{
@@ -391,25 +390,23 @@ const DocumentList: React.FC<DocumentListProps> = ({
             {errorModalDoc?.verificationErrors &&
             errorModalDoc.verificationErrors.length > 0 ? (
               <VStack align="start" spacing={4}>
-                {errorModalDoc.verificationErrors.map(
-                  (err: any) => (
-                    <VStack
-                      key={err.raw}
-                      align="start"
-                      spacing={1}
-                      p={3}
-                      borderBottom="1px solid #eee"
-                      w="100%"
-                    >
-                      <Text fontWeight="bold" color="red.600" fontSize="md">
-                        {err.raw}
-                      </Text>
-                      <Text color="gray.800" fontSize="sm">
-                        {err.error}
-                      </Text>
-                    </VStack>
-                  )
-                )}
+                {errorModalDoc.verificationErrors.map((err: any) => (
+                  <VStack
+                    key={err.raw}
+                    align="start"
+                    spacing={1}
+                    p={3}
+                    borderBottom="1px solid #eee"
+                    w="100%"
+                  >
+                    <Text fontWeight="bold" color="red.600" fontSize="md">
+                      {err.raw}
+                    </Text>
+                    <Text color="gray.800" fontSize="sm">
+                      {err.error}
+                    </Text>
+                  </VStack>
+                ))}
               </VStack>
             ) : (
               <Text>No errors found.</Text>
