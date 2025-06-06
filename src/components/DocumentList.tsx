@@ -390,7 +390,7 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
             {errorModalDoc?.verificationErrors &&
             errorModalDoc.verificationErrors.length > 0 ? (
               <VStack align="start" spacing={4}>
-                {errorModalDoc.verificationErrors.map((err: any) => (
+                {errorModalDoc.verificationErrors.map((err: { raw: string; error: string }) => (
                   <VStack
                     key={err.raw}
                     align="start"
