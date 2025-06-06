@@ -484,7 +484,6 @@ const ApplicationDetails: React.FC = () => {
                         ...doc,
                         verificationErrors: doc?.verificationErrors || [],
                       }))}
-                      benefitName={benefitName}
                     />
                   </Box>
                   {showActionButtons && (
