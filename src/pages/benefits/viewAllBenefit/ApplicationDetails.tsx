@@ -45,7 +45,7 @@ interface Document {
   title: string;
   content: Record<string, any>;
   status: string;
-  verificationErrors: string[];
+  verificationErrors: { raw: string; error: string }[];
   fileContent: string;
 }
 
@@ -484,7 +484,6 @@ const ApplicationDetails: React.FC = () => {
                         ...doc,
                         verificationErrors: doc?.verificationErrors || [],
                       }))}
-                      benefitName={benefitName}
                     />
                   </Box>
                   {showActionButtons && (

@@ -27,7 +27,7 @@ const ApplicationInfo: React.FC<ApplicationInfoProps> = ({
   const getDisplayValue = (field: any, value: any): string => {
     if (!field) return value?.toString() ?? "N/A";
     if (field.type === "select" && Array.isArray(field.options)) {
-      const option = field.options.find((opt) => opt.value === value);
+      const option = field.options.find((opt: { value: string }) => opt.value === value);
       return option?.label ?? value?.toString() ?? "N/A";
     }
     if (field.type === "amount" && value !== null && value !== "") {
@@ -81,13 +81,13 @@ const ApplicationInfo: React.FC<ApplicationInfoProps> = ({
       key: "col1Label",
       title: "Field",
       dataType: DataType.String,
-      style: { fontWeight: "bold", width: "25%", textAlign: "left" },
+      style: { fontWeight: "bold", width: "25%"},
     },
     {
       key: "col1Value",
       title: "Value",
       dataType: DataType.String,
-      style: { width: "25%", textAlign: "left" },
+      style: { width: "25%"},
     },
     ...(columnsLayout === "two"
       ? [
@@ -95,13 +95,13 @@ const ApplicationInfo: React.FC<ApplicationInfoProps> = ({
             key: "col2Label",
             title: "Field",
             dataType: DataType.String,
-            style: { fontWeight: "bold", width: "25%", textAlign: "left" },
+            style: { fontWeight: "bold", width: "25%"},
           },
           {
             key: "col2Value",
             title: "Value",
             dataType: DataType.String,
-            style: { width: "25%", textAlign: "left" },
+            style: { width: "25%" },
           },
         ]
       : []),
