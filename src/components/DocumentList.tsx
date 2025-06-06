@@ -51,12 +51,10 @@ export interface Document {
 
 interface DocumentListProps {
   documents: Document[];
-  benefitName?: string;
 }
 
 const DocumentList: React.FC<DocumentListProps> = ({
-  documents,
-  benefitName,
+  documents
 }) => {
   const {
     isOpen: isPreviewOpen,
@@ -155,7 +153,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
       }
     }
 
-    setSelectedDocument({ content: decodedContent });
+    setSelectedDocument({ content: decodedContent ?? {} });
     onPreviewOpen();
   };
 
@@ -305,8 +303,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
           <ModalHeader>Document Data</ModalHeader>
           <ModalCloseButton />
           <ModalBody overflowY="auto">
-            {selectedDocument?.content &&
-            Object.keys(selectedDocument.content).length > 0 ? (
+            {selectedDocument && selectedDocument.content && Object.keys(selectedDocument.content).length > 0 ? (
               <PreviewTable
                 rowKeyField="name"
                 data={Object.entries(selectedDocument.content).map(
