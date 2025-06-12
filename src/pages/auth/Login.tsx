@@ -52,8 +52,11 @@ export default function Login() {
     setIsLoading(true);
     try {
       const loginResponse = await LoginProvider(userName, password);
-      if (loginResponse?.data?.token) {
-        localStorage.setItem("token", loginResponse?.data?.token);
+      if (loginResponse?.token) {
+        localStorage.setItem("token", loginResponse?.token);
+        if (loginResponse?.user?.s_roles?.[0]) {
+          localStorage.setItem("userRole", loginResponse.user.s_roles[0]);
+        }
         setIsLoading(false);
         setMessage("Login successfully!");
         navigate(0);
