@@ -16,6 +16,9 @@ const ViewAllBenefits = lazy(
   () => import("../pages/benefits/viewAllBenefit/ViewAllBenefits")
 );
 
+const AddProvider = lazy(() => import("../pages/admin/AddProvider"));
+const AddProviderUser = lazy(() => import("../pages/admin/AddProviderUser"));
+
 //lazy loading
 const routes = [
   {
@@ -43,6 +46,16 @@ const routes = [
   {
     path: "/manage-benefits",
     component: ManageBenefits,
+  },
+  {
+    path: "/admin/add-role",
+    component: AddProvider,
+    requireSuperAdmin: true,
+  },
+  {
+    path: "/admin/add-user",
+    component: AddProviderUser,
+    requireSuperAdmin: true,
   },
   {
     path: "*",
