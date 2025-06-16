@@ -163,9 +163,14 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
       const images: string[] = [];
 
       if (credentialSubject && typeof credentialSubject === "object") {
-        Object.values(credentialSubject).forEach((entry: any) => {
-          if (entry?.url && typeof entry.url === "string") {
-            images.push(entry.url);
+        Object.values(credentialSubject).forEach((entry) => {
+          if (
+            typeof entry === "object" &&
+            entry !== null &&
+            "url" in entry &&
+            typeof (entry as { url: unknown }).url === "string"
+          ) {
+            images.push((entry as { url: string }).url);
           }
         });
       }
