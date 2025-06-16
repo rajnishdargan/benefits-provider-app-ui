@@ -353,9 +353,9 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
           <ModalBody>
             {imageSrc && imageSrc.length > 0 ? (
               <VStack spacing={4}>
-                {imageSrc.map((src) => (
+                {imageSrc.map((src, index) => (
                   <Image
-                    // key={src}
+                    key={`${src}-${index}`}
                     src={src}
                     alt="Document Image"
                     width="100%"
