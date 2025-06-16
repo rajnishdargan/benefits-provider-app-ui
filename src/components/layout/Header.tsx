@@ -13,12 +13,14 @@ import {
 import { useTranslation } from "react-i18next";
 import Logo from "../../assets/Images/logo.png";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 interface HeaderProps {
   showMenu?: boolean;
   showSearchBar?: boolean;
   showLanguage?: boolean;
 }
+
 interface MenuOption {
   name: string;
   icon?: React.ReactElement; // icon can be a React node
@@ -39,6 +41,10 @@ const Header: React.FC<HeaderProps> = ({
   const { t } = useTranslation();
   const navigate = useNavigate();
 
+  // Get user role from local storage
+
+  const { isSuperAdmin } = useAuth();
+
   // Array of menu names
   const menuNames = [
     {
@@ -47,19 +53,23 @@ const Header: React.FC<HeaderProps> = ({
         navigate("/");
       },
     },
-    // {
-    //   label: "Quick Actions",
-    //   option: [
-    //     {
-    //       name: "Create",
-    //       icon: <AddIcon />,
-    //       onClick: () => {
-    //         navigate("/benefits/form");
-    //       },
-    //     },
-    //     { name: "Edit", icon: <EditIcon /> },
-    //   ],
-    // },
+    {
+      label: "Provider Management",
+      option: [
+        {
+          name: "Add Provider User",
+          onClick: () => {
+            navigate("/admin/add-user");
+          },
+        },
+        {
+          name: "Add Provider",
+          onClick: () => {
+            navigate("/admin/add-role");
+          },
+        },
+      ],
+    },
     {
       label: "Log out",
       onClick: () => {
@@ -69,6 +79,10 @@ const Header: React.FC<HeaderProps> = ({
       },
     },
   ];
+  // Conditionally render the Provider Management menu if userRole is "super admin"
+  const filteredMenuNames = isSuperAdmin
+    ? menuNames
+    : menuNames.filter((menu) => menu.label !== "Provider Management");
 
   return (
     <Box
@@ -102,7 +116,7 @@ const Header: React.FC<HeaderProps> = ({
           showMenu={showMenu}
           showSearchBar={showSearchBar}
           showLanguage={showLanguage}
-          menuNames={menuNames}
+          menuNames={filteredMenuNames}
         />
       </HStack>
     </Box>
@@ -131,7 +145,7 @@ const HeaderRightSection: React.FC<HeaderRightSectionProps> = ({
         menuNames.map((menu, index) => (
           <HStack key={menu?.label || index} align="center">
             {menu?.option ? (
-              <DropdownMenu menu={menu} />
+              <DropdownMenu menu={menu} currentPath={location.pathname} />
             ) : (
               <Text
                 fontSize="16px"
@@ -155,7 +169,7 @@ const HeaderRightSection: React.FC<HeaderRightSectionProps> = ({
         ))}
 
       {/* Search Bar */}
-      {/* {showSearchBar && <SearchBar />} //NOSONAR */ }
+      {/* {showSearchBar && <SearchBar />} //NOSONAR */}
 
       {/* Language Dropdown */}
       {showLanguage && <LanguageDropdown />}
@@ -163,39 +177,54 @@ const HeaderRightSection: React.FC<HeaderRightSectionProps> = ({
   );
 };
 
-const DropdownMenu: React.FC<{ menu: any }> = ({ menu }) => (
-  <Menu>
-    <MenuButton
-      as={Text as any}
-      fontWeight="bold"
-      cursor="pointer"
-      display="flex"
-      alignItems="center"
-      justifyContent="space-between"
-    >
-      <HStack spacing={1}>
-        {menu?.label && (
-          <Text fontSize={"16px"} fontWeight={400}>
-            {menu?.label}
-          </Text>
-        )}
-        <ChevronDownIcon />
-      </HStack>
-    </MenuButton>
-    <MenuList>
-      {menu?.option.map((submenuItem: MenuOption, subIndex: number) => (
-        <MenuItem
-          key={submenuItem.name || subIndex}
-          icon={submenuItem.icon}
-          cursor="pointer"
-          onClick={submenuItem.onClick}
-        >
-          {submenuItem.name}
-        </MenuItem>
-      ))}
-    </MenuList>
-  </Menu>
-);
+interface DropdownMenuProps {
+  menu: MenuItem;
+  currentPath: string;
+}
+
+const DropdownMenu: React.FC<DropdownMenuProps> = ({ menu, currentPath }) => {
+  // Define the paths for Provider Management routes
+  const providerPaths = ["/admin/add-user", "/admin/add-role"];
+
+  // Determine if the current path matches any provider path to highlight the dropdown label
+  const isActive =
+    menu.label === "Provider Management" && providerPaths.includes(currentPath);
+
+  return (
+    <Menu>
+      <MenuButton
+        as={Text as any}
+        fontWeight={isActive ? "bold" : "normal"}
+        cursor="pointer"
+        display="flex"
+        alignItems="center"
+        justifyContent="space-between"
+        color={isActive ? "blue.500" : "black"}
+        fontSize="16px"
+      >
+        <HStack spacing={1}>
+          {menu?.label && (
+            <Text fontWeight={isActive ? "bold" : 400}>{menu?.label}</Text>
+          )}
+          <ChevronDownIcon />
+        </HStack>
+      </MenuButton>
+      <MenuList>
+        {menu?.option?.map((submenuItem: MenuOption, subIndex: number) => (
+          <MenuItem
+            key={submenuItem.name || subIndex}
+            icon={submenuItem.icon}
+            cursor="pointer"
+            onClick={submenuItem.onClick}
+          >
+            {submenuItem.name}
+          </MenuItem>
+        ))}
+      </MenuList>
+    </Menu>
+  );
+};
+
 /*
 const SearchBar: React.FC = () => (
   <HStack align="center">
