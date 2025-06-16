@@ -18,15 +18,6 @@ export const decodeBase64ToJson = (input: string) => {
   }
 };
 
-export const isBase64 = (str: string): boolean => {
-  if (!str || typeof str !== "string") return false;
-
-  // Basic check for only base64-allowed characters
-  const basicBase64Pattern = /^[A-Za-z0-9+/=\r\n]+$/;
-
-  return basicBase64Pattern.test(str.trim());
-};
-
 export const isDateString = (value: any): boolean => {
   if (!_.isString(value)) return false;
 
