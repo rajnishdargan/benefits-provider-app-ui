@@ -18,7 +18,6 @@ import {
   Text,
   useDisclosure,
   useToast,
-  Image,
   Button,
 } from "@chakra-ui/react";
 import {
@@ -36,6 +35,7 @@ import {
   formatTitle,
 } from "../services/helperService";
 import { omit } from "lodash";
+import ImagePreview from "./ImagePreview";
 
 export interface Document {
   id: number;
@@ -58,11 +58,6 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
     onOpen: onPreviewOpen,
     onClose: onPreviewClose,
   } = useDisclosure();
-  const {
-    isOpen: isImageOpen,
-    onOpen: onImageOpen,
-    onClose: onImageClose,
-  } = useDisclosure();
   const toast = useToast();
 
   // Define a type for the selected document preview content
@@ -73,8 +68,16 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
   const [selectedDocument, setSelectedDocument] =
     useState<SelectedDocumentPreview>(null);
   const [docList, setDocList] = useState<Document[]>([]);
-  const [imageSrc, setImageSrc] = useState<string[] | null>(null);
   const [errorModalDoc, setErrorModalDoc] = useState<Document | null>(null);
+  const [selectedImageSrc, setSelectedImageSrc] = useState<string[] | null>(
+    null
+  );
+  const [selectedImageTitle, setSelectedImageTitle] = useState<string | null>(null);
+  const {
+    isOpen: isZoomOpen,
+    onOpen: onZoomOpen,
+    onClose: onZoomClose,
+  } = useDisclosure();
 
   useEffect(() => {
     if (documents && documents.length > 0) {
@@ -157,6 +160,10 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
 
   const handleImagePreview = (_doc: Document) => {
     try {
+      console.log("Handling image preview for document:", _doc);
+      if (_doc.newTitle) {
+        setSelectedImageTitle(_doc.newTitle);
+      }
       const decodedData = decodeBase64ToJson(_doc.fileContent);
       const credentialSubject = decodedData?.credentialSubject;
 
@@ -176,8 +183,8 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
       }
 
       if (images.length > 0) {
-        setImageSrc(images);
-        onImageOpen();
+        setSelectedImageSrc(images);
+        onZoomOpen();
       } else {
         toast({
           title: "No images found in uploaded document",
@@ -197,7 +204,21 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
   };
 
   return (
+
     <VStack spacing={6} align="center" p="20px" width="full">
+      {selectedImageSrc && selectedImageTitle && (
+        <ImagePreview
+          imageSrc={selectedImageSrc}
+          isOpen={isZoomOpen}
+          docType={selectedImageTitle}
+          onClose={() => {
+            setSelectedImageSrc(null);
+            onZoomClose();
+          }}
+        />
+      )}
+
+
       <Table variant="simple" width="100%">
         <Thead>
           <Tr>
@@ -339,43 +360,6 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
               />
             ) : (
               <Text>No content available for preview.</Text>
-            )}
-          </ModalBody>
-        </ModalContent>
-      </Modal>
-
-      {/* Image Modal */}
-      <Modal
-        isOpen={isImageOpen}
-        onClose={onImageClose}
-        size="2xl"
-        motionPreset="scale"
-      >
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Document Image</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            {imageSrc && imageSrc.length > 0 ? (
-              <VStack spacing={4}>
-                {imageSrc.map((src, index) => (
-                  <Image
-                    key={`${src}-${index}`}
-                    src={src}
-                    alt="Document Image"
-                    width="100%"
-                    objectFit="contain"
-                    style={{
-                      imageRendering: "auto",
-                      border: "2px solid #ccc", // Add a border
-                      borderRadius: "8px", // Optional: Add rounded corners
-                      padding: "4px", // Optional: Add padding inside the border
-                    }}
-                  />
-                ))}
-              </VStack>
-            ) : (
-              <Text>No images available.</Text>
             )}
           </ModalBody>
         </ModalContent>
