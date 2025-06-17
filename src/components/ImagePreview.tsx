@@ -22,7 +22,7 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({ imageSrc, docType, isOpen, 
     <Lightbox
       open={isOpen}
       close={onClose}
-      slides={imageSrc.map((src) => ({ src, title: docType || "Image" }))}
+      slides={imageSrc.map((src) => ({ src, title: docType ?? "Image" }))}
       plugins={[Zoom, Counter, Captions]}
       counter={{ container: { style: { top: "unset", bottom: 0 } } }}
       zoom={{

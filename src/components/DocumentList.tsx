@@ -72,7 +72,9 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
   const [selectedImageSrc, setSelectedImageSrc] = useState<string[] | null>(
     null
   );
-  const [selectedImageTitle, setSelectedImageTitle] = useState<string | null>(null);
+  const [selectedImageTitle, setSelectedImageTitle] = useState<string | null>(
+    null
+  );
   const {
     isOpen: isZoomOpen,
     onOpen: onZoomOpen,
@@ -213,11 +215,11 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
           docType={selectedImageTitle}
           onClose={() => {
             setSelectedImageSrc(null);
+            setSelectedImageTitle(null);
             onZoomClose();
           }}
         />
       )}
-
 
       <Table variant="simple" width="100%">
         <Thead>
