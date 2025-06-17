@@ -30,7 +30,6 @@ import {
 import PreviewTable from "./common/previewTable/previewTable";
 import {
   decodeBase64ToJson,
-  isBase64,
   isDateString,
   formatDate,
   convertKeysToTitleCase,
@@ -156,37 +155,42 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
     onPreviewOpen();
   };
 
-  const handleImagePreview = (doc: Document) => {
-    const decodedData = decodeBase64ToJson(doc.fileContent);
-    console.log("Decoded Document for Image:", decodedData);
+  const handleImagePreview = (_doc: Document) => {
+    try {
+      const decodedData = decodeBase64ToJson(_doc.fileContent);
+      const credentialSubject = decodedData?.credentialSubject;
 
-    const images: string[] = []; // Explicitly define the type as string[]
-    const possibleKeys = [
-      "originalvc",
-      "original_vc",
-      "originalvc1",
-      "original_vc1",
-    ];
+      const images: string[] = [];
 
-    possibleKeys.forEach((key) => {
-      const content = decodedData?.credentialSubject?.[key]?.content;
-      const mimeType =
-        decodedData?.credentialSubject?.[key]?.mimetype ?? "image/png";
-
-      if (content && isBase64(content)) {
-        images.push(`data:${mimeType};base64,${content}`);
+      if (credentialSubject && typeof credentialSubject === "object") {
+        Object.values(credentialSubject).forEach((entry) => {
+          if (
+            typeof entry === "object" &&
+            entry !== null &&
+            "url" in entry &&
+            typeof (entry as { url: unknown }).url === "string"
+          ) {
+            images.push((entry as { url: string }).url);
+          }
+        });
       }
-    });
 
-    if (images.length > 0) {
-      setImageSrc(images);
-      onImageOpen();
-    } else {
+      if (images.length > 0) {
+        setImageSrc(images);
+        onImageOpen();
+      } else {
+        toast({
+          title: "No images found in uploaded document",
+          status: "info",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } catch {
       toast({
-        title: "Unable to Preview Images",
-        description: "The image content is either missing or invalid.",
+        title: "Invalid JSON in document data",
         status: "error",
-        duration: 5000,
+        duration: 3000,
         isClosable: true,
       });
     }
@@ -302,7 +306,8 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
           <ModalHeader>Document Data</ModalHeader>
           <ModalCloseButton />
           <ModalBody overflowY="auto">
-            {selectedDocument?.content && Object.keys(selectedDocument.content).length > 0 ? (
+            {selectedDocument?.content &&
+            Object.keys(selectedDocument.content).length > 0 ? (
               <PreviewTable
                 rowKeyField="name"
                 data={Object.entries(selectedDocument.content).map(
@@ -353,9 +358,9 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
           <ModalBody>
             {imageSrc && imageSrc.length > 0 ? (
               <VStack spacing={4}>
-                {imageSrc.map((src) => (
+                {imageSrc.map((src, index) => (
                   <Image
-                    key={src}
+                    key={`${src}-${index}`}
                     src={src}
                     alt="Document Image"
                     width="100%"
@@ -390,23 +395,25 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
             {errorModalDoc?.verificationErrors &&
             errorModalDoc.verificationErrors.length > 0 ? (
               <VStack align="start" spacing={4}>
-                {errorModalDoc.verificationErrors.map((err: { raw: string; error: string }) => (
-                  <VStack
-                    key={err.raw}
-                    align="start"
-                    spacing={1}
-                    p={3}
-                    borderBottom="1px solid #eee"
-                    w="100%"
-                  >
-                    <Text fontWeight="bold" color="red.600" fontSize="md">
-                      {err.raw}
-                    </Text>
-                    <Text color="gray.800" fontSize="sm">
-                      {err.error}
-                    </Text>
-                  </VStack>
-                ))}
+                {errorModalDoc.verificationErrors.map(
+                  (err: { raw: string; error: string }) => (
+                    <VStack
+                      key={err.raw}
+                      align="start"
+                      spacing={1}
+                      p={3}
+                      borderBottom="1px solid #eee"
+                      w="100%"
+                    >
+                      <Text fontWeight="bold" color="red.600" fontSize="md">
+                        {err.raw}
+                      </Text>
+                      <Text color="gray.800" fontSize="sm">
+                        {err.error}
+                      </Text>
+                    </VStack>
+                  )
+                )}
               </VStack>
             ) : (
               <Text>No errors found.</Text>
