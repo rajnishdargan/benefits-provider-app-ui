@@ -3,8 +3,17 @@ import "ka-table/style.css";
 import { Table } from "ka-table";
 import { memo } from "react";
 
-const App = (props: any) => {
-  return <Table rowKeyField={"name"} {...props} />;
+// Define minimal required props based on DocumentList usage
+interface TableWrapperProps {
+  rowKeyField: string;
+  data: any[];
+  columns: any[];
+  childComponents?: any;
+  [key: string]: any; // Allow additional props
+}
+
+const TableWrapper = (props: TableWrapperProps) => {
+  return <Table {...props} />;
 };
 
-export default memo(App);
+export default memo(TableWrapper);

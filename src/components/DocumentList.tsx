@@ -2,12 +2,6 @@ import React, { useEffect, useState } from "react";
 import {
   VStack,
   HStack,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
   Tooltip,
   Modal,
   ModalOverlay,
@@ -26,6 +20,8 @@ import {
   InfoOutlineIcon,
   ViewIcon,
 } from "@chakra-ui/icons";
+import Table from "./common/table/Table"; // Adjust path as needed
+import { DataType } from "ka-table";
 import PreviewTable from "./common/previewTable/previewTable";
 import {
   decodeBase64ToJson,
@@ -45,11 +41,25 @@ export interface Document {
   status: string;
   verificationErrors: { raw: string; error: string }[];
   fileContent: string;
-  newTitle?: string; // Added newTitle property
+  newTitle?: string;
 }
-
+interface CellProps {
+  column: { key: string; [key: string]: any };
+  rowData: TableRowData;
+}
 interface DocumentListProps {
   documents: Document[];
+}
+
+// Define the table row data type
+interface TableRowData {
+  id: number;
+  serialNumber: number;
+  documentName: string;
+  documentDetails: Document;
+  originalDocument: Document;
+  verificationStatus: string;
+  doc: Document;
 }
 
 const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
@@ -80,6 +90,20 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
     onOpen: onZoomOpen,
     onClose: onZoomClose,
   } = useDisclosure();
+  // Extract cell renderers into separate functions
+  const renderDocumentDetailsCell = (
+    rowData: TableRowData,
+    handlePreview: (doc: Document) => void
+  ) => (
+    <Button
+      leftIcon={<ViewIcon />}
+      aria-label="Preview Details"
+      size="sm"
+      onClick={() => handlePreview(rowData.doc)}
+    >
+      View Data
+    </Button>
+  );
 
   useEffect(() => {
     if (documents && documents.length > 0) {
@@ -205,8 +229,135 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
     }
   };
 
-  return (
+  // Prepare data for ka-table
+  const tableData: TableRowData[] = docList.map((doc, index) => ({
+    id: doc.id,
+    serialNumber: index + 1,
+    documentName: `${doc.newTitle} (${formatTitle(doc.title)})`,
+    documentDetails: doc,
+    originalDocument: doc,
+    verificationStatus: doc.status,
+    doc: doc, // Keep reference to original doc for actions
+  }));
 
+  // Define columns for ka-table with proper typing
+  const columns = [
+    {
+      key: "serialNumber",
+      title: "Id",
+      dataType: DataType.Number,
+      style: { width: "80px", textAlign: "center" as const },
+    },
+    {
+      key: "documentName",
+      title: "Document Name",
+      dataType: DataType.String,
+      style: { width: "300px" },
+    },
+    {
+      key: "documentDetails",
+      title: "Document Details",
+      dataType: DataType.Object,
+      style: { width: "150px", textAlign: "center" as const },
+    },
+    {
+      key: "originalDocument",
+      title: "Original Document",
+      dataType: DataType.Object,
+      style: { width: "180px", textAlign: "center" as const },
+    },
+    {
+      key: "verificationStatus",
+      title: "Verification Status",
+      dataType: DataType.String,
+      style: { width: "200px" },
+    },
+  ];
+  const renderOriginalDocumentCell = (
+    rowData: TableRowData,
+    handleImagePreview: (doc: Document) => void
+  ) => (
+    <Button
+      leftIcon={<ViewIcon />}
+      aria-label="Preview Original Document"
+      size="sm"
+      onClick={() => handleImagePreview(rowData.doc)}
+    >
+      View Original Document
+    </Button>
+  );
+
+  const renderVerificationStatusCell = (
+    rowData: TableRowData,
+    setErrorModalDoc: (doc: Document) => void
+  ) => {
+    const doc = rowData.doc;
+    console.log("Rendering verification status for document:", doc);
+
+    if (doc.status === "Verified") {
+      return (
+        <HStack align="center" spacing={2}>
+          <Tooltip
+            label="Document is verified"
+            hasArrow
+            bg="green.500"
+            color="white"
+          >
+            <CheckIcon color="green.500" />
+          </Tooltip>
+          <Text color="green.500" fontWeight="bold">
+            Verified
+          </Text>
+        </HStack>
+      );
+    }
+
+    if (doc.status === "Unverified") {
+      return (
+        <HStack align="center" spacing={2}>
+          <Tooltip
+            label="Click to view verification errors"
+            hasArrow
+            bg="red.500"
+            color="white"
+          >
+            <Button
+              leftIcon={<CloseIcon color="red.500" />}
+              size="sm"
+              variant="ghost"
+              color="red.500"
+              onClick={() => setErrorModalDoc(doc)}
+            >
+              Unverified
+            </Button>
+          </Tooltip>
+        </HStack>
+      );
+    }
+    return (
+      <HStack align="center" spacing={2}>
+        <Tooltip
+          label="Document is not verified"
+          hasArrow
+          bg="yellow.500"
+          color="white"
+        >
+          <InfoOutlineIcon color="yellow.500" />
+        </Tooltip>
+        <Text color="yellow.500" fontWeight="bold">
+          Pending
+        </Text>
+      </HStack>
+    );
+  };
+
+  const renderDocumentNameCell = (rowData: TableRowData) => (
+    <Text maxW="400px" whiteSpace="normal" wordBreak="break-word">
+      {rowData.documentName}
+    </Text>
+  );
+
+  return (
     <VStack spacing={6} align="center" p="20px" width="full">
       {selectedImageSrc && selectedImageTitle && (
         <ImagePreview
@@ -221,101 +372,74 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
         />
       )}
 
-      <Table variant="simple" width="100%">
-        <Thead>
-          <Tr>
-            <Th>Id</Th>
-            <Th>Document Name</Th>
-            <Th>Document Details</Th>
-            <Th>Original Document</Th>
-            <Th>Verification Status</Th>
-          </Tr>
-        </Thead>
-        <Tbody>
-          {docList.map((doc, index) => (
-            <Tr key={doc.id}>
-              <Td>{index + 1}</Td>
-              <Td maxW="400px">
-                <Text maxW="400px" whiteSpace="normal" wordBreak="break-word">
-                  {doc.newTitle} ({formatTitle(doc.title)})
-                </Text>
-              </Td>
-              <Td>
-                <Button
-                  leftIcon={<ViewIcon />}
-                  aria-label="Preview Details"
-                  size="sm"
-                  onClick={() => handlePreview(doc)}
-                >
-                  View Data
-                </Button>
-              </Td>
-              <Td>
-                <Button
-                  leftIcon={<ViewIcon />}
-                  aria-label="Preview Original Document"
-                  size="sm"
-                  onClick={() => handleImagePreview(doc)}
-                >
-                  View Original Document
-                </Button>
-              </Td>
-              <Td>
-                {doc.status === "Verified" && (
-                  <HStack align="center" spacing={2}>
-                    <Tooltip
-                      label="Document is verified"
-                      hasArrow
-                      bg="green.500"
-                      color="white"
-                    >
-                      <CheckIcon color="green.500" />
-                    </Tooltip>
-                    <Text color="green.500" fontWeight="bold">
-                      Verified
-                    </Text>
-                  </HStack>
-                )}
-                {doc.status === "Unverified" && (
-                  <HStack align="center" spacing={2}>
-                    <Tooltip
-                      label="Click to view verification errors"
-                      hasArrow
-                      bg="red.500"
-                      color="white"
-                    >
-                      <Button
-                        leftIcon={<CloseIcon color="red.500" />}
-                        size="sm"
-                        variant="ghost"
-                        color="red.500"
-                        onClick={() => setErrorModalDoc(doc)}
-                      >
-                        Unverified
-                      </Button>
-                    </Tooltip>
-                  </HStack>
-                )}
-                {(doc.status === "Pending" || !doc.status) && (
-                  <HStack align="center" spacing={2}>
-                    <Tooltip
-                      label="Document is not verified"
-                      hasArrow
-                      bg="yellow.500"
-                      color="white"
-                    >
-                      <InfoOutlineIcon color="yellow.500" />
-                    </Tooltip>
-                    <Text color="yellow.500" fontWeight="bold">
-                      Pending
-                    </Text>
-                  </HStack>
-                )}
-              </Td>
-            </Tr>
-          ))}
-        </Tbody>
-      </Table>
+      <div style={{ width: "100%" }}>
+        <Table
+          rowKeyField="id"
+          data={tableData}
+          columns={columns}
+          childComponents={{
+            table: {
+              elementAttributes: () => ({
+                style: {
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  border: "1px solid #e2e8f0",
+                },
+              }),
+            },
+            cellText: {
+              content: (props: CellProps) => {
+                const { column, rowData } = props;
+
+                switch (column.key) {
+                  case "documentDetails":
+                    return renderDocumentDetailsCell(rowData, handlePreview);
+                  case "originalDocument":
+                    return renderOriginalDocumentCell(
+                      rowData,
+                      handleImagePreview
+                    );
+                  case "verificationStatus":
+                    return renderVerificationStatusCell(
+                      rowData,
+                      setErrorModalDoc
+                    );
+                  case "documentName":
+                    return renderDocumentNameCell(rowData);
+                  default:
+                    return rowData[column.key as keyof TableRowData];
+                }
+              },
+            },
+          }}
+        />
+
+        {/* Custom styles for ka-table */}
+        <style>
+          {`
+            .ka-thead-cell {
+              font-weight: bold !important;
+              background-color: #f7fafc !important;
+              text-align: left !important;
+              padding: 12px 8px !important;
+              border: 1px solid #e2e8f0 !important;
+              color: #2d3748 !important;
+            }
+            .ka-cell {
+              padding: 12px 8px !important;
+              text-align: left !important;
+              border: 1px solid #e2e8f0 !important;
+              vertical-align: middle !important;
+            }
+            .ka-row:hover {
+              background-color: #f7fafc !important;
+            }
+            .ka-table {
+              font-family: inherit !important;
+            }
+          `}
+        </style>
+      </div>
 
       {/* JSON Preview Modal */}
       <Modal
