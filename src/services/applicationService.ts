@@ -2,9 +2,7 @@ import apiClient from "../utils/apiClient";
 
 export const getApplicationDetails = async (applicationId: string) => {
   try {
-    const response = await apiClient.get(
-      `/applications/${applicationId}`
-    );
+    const response = await apiClient.get(`/applications/${applicationId}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching application details:", error);
@@ -36,6 +34,25 @@ export const verifySelectedDocuments = async (
     return response.data;
   } catch (error) {
     console.error("Error verifying selected documents:", error);
+    throw error;
+  }
+};
+export const checkEligibility = async (
+  applicationId: string | number,
+  strictCheck: boolean = true
+) => {
+  try {
+    const response = await apiClient.get(
+      `/applications/check-eligibility/${applicationId}`,
+      {
+        params: {
+          strictCheck,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error checking eligibility:", error);
     throw error;
   }
 };

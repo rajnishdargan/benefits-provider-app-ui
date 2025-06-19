@@ -16,6 +16,12 @@ import {
   useDisclosure,
   Textarea,
   useToast,
+  Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
+  Badge,
 } from "@chakra-ui/react";
 import { CheckIcon, CloseIcon, ArrowBackIcon } from "@chakra-ui/icons";
 import Layout from "../../../components/layout/Layout";
@@ -25,11 +31,38 @@ import Table from "../../../components/common/table/Table";
 import ApplicationInfo from "../../../components/ApplicationInfo";
 import DocumentList from "../../../components/DocumentList";
 import {
+  checkEligibility,
   getApplicationDetails,
   verifyAllDocuments,
   verifySelectedDocuments,
 } from "../../../services/applicationService";
-import { updateApplicationStatus, getBenefitById } from "../../../services/benefits";
+import {
+  updateApplicationStatus,
+  getBenefitById,
+} from "../../../services/benefits";
+import EligibilityTable from "../../../components/EligibilityTable";
+
+const tabStyles = {
+  fontWeight: "500",
+  fontSize: "16px",
+  lineHeight: "24px",
+  letterSpacing: "0.15px",
+  color: "#4D4639",
+  _selected: {
+    color: "#1F1B13",
+    borderBottom: "2px solid",
+    borderBottomColor: "#06164B",
+  },
+  _hover: {
+    color: "#1F1B13",
+  },
+  _focus: {
+    boxShadow: "none",
+    outline: "none",
+  },
+  pb: 3,
+  ml: 4,
+};
 // Types
 interface ApplicantData {
   id: number;
@@ -63,11 +96,16 @@ const ApplicationDetails: React.FC = () => {
   const [isVerifyLoading, setIsVerifyLoading] = useState(false);
   const [isReverifyButtonVisible, setIsReverifyButtonVisible] = useState(false);
   const [isReverifyLoading, setIsReverifyLoading] = useState(false);
-  const [amountDetail, setAmountDetail] = useState<Record<string, any> | null>(null);
+  const [amountDetail, setAmountDetail] = useState<Record<string, any> | null>(
+    null
+  );
   const [applicationForm, setApplicationForm] = useState<any>(null);
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [selectedStatus, setSelectedStatus] = useState<"approved" | "rejected">();
+  const [selectedStatus, setSelectedStatus] = useState<
+    "approved" | "rejected"
+  >();
+  const [criteriaResults, setCriteriaResults] = useState<any[]>([]);
 
   const openConfirmationModal = (status: "approved" | "rejected") => {
     setSelectedStatus(status);
@@ -178,7 +216,10 @@ const ApplicationDetails: React.FC = () => {
       });
     } else {
       toast({
-        title: context === "verify" ? "Verification Completed" : "Re-verification Completed",
+        title:
+          context === "verify"
+            ? "Verification Completed"
+            : "Re-verification Completed",
         description:
           context === "verify"
             ? "All documents verification have been completed."
@@ -263,7 +304,7 @@ const ApplicationDetails: React.FC = () => {
         fetchApplicationData();
       }
     } catch (error) {
-      console.log('Error occured during re-verification', error);
+      console.log("Error occured during re-verification", error);
       toast({
         title: "Re-verification Failed",
         description: "An error occurred while re-verifying the documents.",
@@ -281,27 +322,33 @@ const ApplicationDetails: React.FC = () => {
 
     try {
       setLoading(true);
+
       const applicationData = await getApplicationDetails(id);
+
+      // Set benefit name
       if (applicationData?.benefitDetails?.title) {
-        setBenefitName(applicationData?.benefitDetails?.title);
+        setBenefitName(applicationData.benefitDetails.title);
       }
-      const applicantDetails = applicationData.applicationData;
+
+      // Set calculated amount
       if (applicationData?.calculatedAmount) {
         const { ["totalPayout"]: totalPayout, ...rest } =
           applicationData.calculatedAmount;
-
         const reorderedAmount =
           totalPayout !== undefined
             ? { ...rest, "Total Payout": totalPayout }
             : { ...rest };
-
         setAmountDetail(reorderedAmount);
       }
 
+      // Set applicant data
+      const applicantDetails = applicationData.applicationData;
       setApplicant(applicantDetails);
+
       if (applicationData.status !== "pending") {
         setShowActionButtons(false);
       }
+
       setApplicantData([
         {
           id: 1,
@@ -314,6 +361,7 @@ const ApplicationDetails: React.FC = () => {
         },
       ]);
 
+      // Set document data
       const documents = applicationData.applicationFiles.map((file: any) => ({
         id: file.id,
         type: "Document",
@@ -329,17 +377,41 @@ const ApplicationDetails: React.FC = () => {
       setDocuments(documents);
 
       // Button visibility logic
-      const allDocsUnverified = documents.length > 0 && documents.every((doc: any) => doc.status == null);
-      const anyDocFailed = documents.length > 0 && documents.some((doc: any) => doc.status === "Unverified");
+      const allDocsUnverified =
+        documents.length > 0 &&
+        documents.every((doc: any) => doc.status == null);
+      const anyDocFailed =
+        documents.length > 0 &&
+        documents.some((doc: any) => doc.status === "Unverified");
 
       setIsVerifyButtonVisible(allDocsUnverified);
       setIsReverifyButtonVisible(!allDocsUnverified && anyDocFailed);
 
-      // Fetch applicationForm using benefitId
+      // Fetch benefit form
       if (applicationData?.benefitId) {
         const benefitResponse = await getBenefitById(applicationData.benefitId);
-        // You may need to adjust this depending on the API response structure
         setApplicationForm(benefitResponse?.data?.applicationForm ?? []);
+      }
+
+      // Call checkEligibility API
+      const eligibilityResponse = await checkEligibility(id, true);
+
+      // Handle eligibility data
+      if (
+        eligibilityResponse?.ineligibleUsers?.length &&
+        eligibilityResponse.ineligibleUsers[0]?.details
+      ) {
+        const ineligibleDetails =
+          eligibilityResponse.ineligibleUsers[0].details;
+
+        setCriteriaResults(ineligibleDetails.criteriaResults);
+      } else if (
+        eligibilityResponse?.eligibleUsers?.length &&
+        eligibilityResponse.eligibleUsers[0]?.details
+      ) {
+        const eligibleDetails = eligibilityResponse.eligibleUsers[0].details;
+
+        setCriteriaResults(eligibleDetails.criteriaResults);
       }
     } catch (err) {
       console.error("Error fetching application data:", err);
@@ -347,6 +419,7 @@ const ApplicationDetails: React.FC = () => {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     fetchApplicationData();
   }, [id]);
@@ -395,8 +468,32 @@ const ApplicationDetails: React.FC = () => {
     }
   };
 
+  // Helper function to get document status count
+  const getDocumentStatusCount = () => {
+    const verified = documents.filter(
+      (doc) => doc.status === "Verified"
+    ).length;
+    const unverified = documents.filter(
+      (doc) => doc.status === "Unverified"
+    ).length;
+    const pending = documents.filter((doc) => !doc.status).length;
+
+    return { verified, unverified, pending, total: documents.length };
+  };
+
+  // Helper function to get eligibility status
+
   if (loading) return <Loading />;
 
+  const docStatus = getDocumentStatusCount();
+  const applicationStatus = applicantData[0]?.applicationStatus;
+
+  const statusColor =
+    applicationStatus === "approved"
+      ? "green.600"
+      : applicationStatus === "rejected"
+      ? "red.600"
+      : "orange.600";
   return (
     <Layout
       _titleBar={{
@@ -419,18 +516,10 @@ const ApplicationDetails: React.FC = () => {
       showLanguage={false}
     >
       <Center p="20px">
-        <VStack spacing="50px" align="stretch" width="full" maxWidth="1200px">
-          <Text
-            fontSize="2xl"
-            fontWeight="bold"
-            color="gray.700"
-            textAlign="left"
-          >
-            Application Details
-          </Text>
-
-          {applicantData.length > 0 ? (
-            <>
+        <VStack spacing="30px" align="stretch" width="full" maxWidth="1400px">
+          {/* Application Status Header */}
+          {applicantData.length > 0 && (
+            <Box>
               <Table
                 columns={applicantColumns}
                 data={applicantData}
@@ -443,51 +532,62 @@ const ApplicationDetails: React.FC = () => {
                 rowStyle={{ textAlign: "center" }}
                 columnStyle={{ textAlign: "center" }}
               />
+            </Box>
+          )}
 
-              <Text
-                fontSize="2xl"
-                fontWeight="bold"
-                color="gray.700"
-                textAlign="left"
-                mb={0}
-              >
-                Applicant Info
-              </Text>
+          {/* Tabs Section */}
+          <Tabs variant="unstyled" colorScheme="blue" size="lg">
+            <TabList borderBottom="1px solid" borderColor="gray.200">
+              <Tab {...tabStyles}>Applicant Details</Tab>
+              <Tab {...tabStyles}>Supporting Documents</Tab>
+              <Tab {...tabStyles}>Eligibility Criteria</Tab>
+              <Tab {...tabStyles}>Amount Breakdown</Tab>
+            </TabList>
 
-              <HStack
-                align="flex-start"
-                spacing={8}
-                wrap="wrap"
-                justify="space-between"
-                width="full"
-              >
-                {applicant && (
-                  <Box flex="1 1 100%" mb={0}>
-                    <ApplicationInfo data={applicant} mapping={applicationForm} columnsLayout="two" />
-                  </Box>
-                )}
-
-                <Box flex="1 1 100%">
-                  <Text
-                    fontSize="2xl"
-                    fontWeight="bold"
-                    color="gray.700"
-                    textAlign="left"
-                    mt={8}
-                    mb={4}
-                  >
-                    Supporting Documents
-                  </Text>
-                  <Box flex="1 1 100%">
-                    <DocumentList
-                      documents={documents.map((doc) => ({
-                        ...doc,
-                        verificationErrors: doc?.verificationErrors || [],
-                      }))}
+            <TabPanels>
+              {/* Tab 1: Applicant Details */}
+              <TabPanel>
+                <VStack spacing={6} align="stretch">
+                  {applicant ? (
+                    <ApplicationInfo
+                      data={applicant}
+                      mapping={applicationForm}
+                      columnsLayout="two"
                     />
-                  </Box>
+                  ) : (
+                    <Text fontSize="lg" textAlign="center" color="gray.500">
+                      No applicant data available
+                    </Text>
+                  )}
+                </VStack>
+              </TabPanel>
+
+              {/* Tab 2: Supporting Documents */}
+              <TabPanel>
+                <VStack spacing={6} align="stretch">
+                  <HStack justify="flex-end" width="100%">
+                    <HStack spacing={2}>
+                      <Badge colorScheme="green">
+                        Verified: {docStatus.verified}
+                      </Badge>
+                      <Badge colorScheme="red">
+                        Unverified: {docStatus.unverified}
+                      </Badge>
+                      <Badge colorScheme="yellow">
+                        Pending: {docStatus.pending}
+                      </Badge>
+                    </HStack>
+                  </HStack>
+
+                  <DocumentList
+                    documents={documents.map((doc) => ({
+                      ...doc,
+                      verificationErrors: doc?.verificationErrors || [],
+                    }))}
+                  />
+
                   {showActionButtons && (
-                    <HStack justify="center" spacing={4} mt={4}>
+                    <HStack justify="center" spacing={4} mt={6}>
                       {isVerifyButtonVisible && (
                         <Button
                           bg="teal.500"
@@ -544,61 +644,73 @@ const ApplicationDetails: React.FC = () => {
                       )}
                     </HStack>
                   )}
-                </Box>
-                {amountDetail && (
-                  <Box flex="1 1 100%" mb={0}>
-                    <Text
-                      fontSize="2xl"
-                      fontWeight="bold"
-                      color="gray.700"
-                      textAlign="left"
-                      mt={8}
-                      mb={4}
+                </VStack>
+              </TabPanel>
+
+              {/* Tab 3: Eligibility Criteria */}
+              <TabPanel>
+                <EligibilityTable
+                  criteriaResults={criteriaResults}
+                  applicantData={applicant}
+                  documents={documents}
+                />
+              </TabPanel>
+
+              {/* Tab 4: Amount Breakdown */}
+              <TabPanel>
+                <VStack spacing={6} align="stretch">
+                  {amountDetail ? (
+                    <Box
+                      p={6}
+                      borderRadius="lg"
+                      border="1px solid"
+                      borderColor="gray.200"
+                      bg="gray.50"
                     >
-                      Amount
-                    </Text>
-                    <ApplicationInfo data={amountDetail} columnsLayout="one" />
-                  </Box>
-                )}
-              </HStack>
-            </>
-          ) : (
-            <Text fontSize="lg" textAlign="center" color="gray.500">
-              No applicant data available
-            </Text>
+                      <ApplicationInfo
+                        data={amountDetail}
+                        columnsLayout="two"
+                      />
+                    </Box>
+                  ) : (
+                    <Box
+                      p={8}
+                      textAlign="center"
+                      border="2px dashed"
+                      borderColor="gray.300"
+                      borderRadius="lg"
+                      bg="gray.50"
+                    >
+                      <Text fontSize="lg" color="gray.500">
+                        No amount breakdown available
+                      </Text>
+                    </Box>
+                  )}
+                </VStack>
+              </TabPanel>
+            </TabPanels>
+          </Tabs>
+
+          {/* Status Message for Non-Pending Applications */}
+          {!showActionButtons && applicantData.length > 0 && (
+            <Box textAlign="center" p={4} bg="gray.100" borderRadius="lg">
+              <Text fontSize="lg" fontWeight="bold" color={statusColor}>
+                Application Status:{" "}
+                {applicantData[0]?.applicationStatus.toUpperCase()}
+              </Text>
+            </Box>
           )}
 
-          {!showActionButtons && (() => {
-            let statusColor = "gray.500";
-            if (applicantData[0]?.applicationStatus === "pending") {
-              statusColor = "orange.500";
-            } else if (applicantData[0]?.applicationStatus === "rejected") {
-              statusColor = "red.500";
-            } else if (applicantData[0]?.applicationStatus === "approved") {
-              statusColor = "green.500";
-            }
-            return (
-              <Text
-                fontSize="s"
-                fontWeight="bold"
-                color={statusColor}
-                textAlign="center"
-              >
-                Application is {applicantData[0]?.applicationStatus}!
-              </Text>
-            );
-          })()}
-
+          {/* Action Buttons for Pending Applications */}
           {showActionButtons && (
-            <HStack justify="center" spacing={4}>
+            <HStack justify="space-between" spacing={6} pt={4} width="100%">
               <Button
                 colorScheme="red"
                 variant="outline"
-                leftIcon={<CloseIcon color="red.500" />}
-                color="red.500"
-                borderColor="red.500"
+                leftIcon={<CloseIcon />}
                 borderRadius="50px"
                 width="200px"
+                size="lg"
                 onClick={() => openConfirmationModal("rejected")}
               >
                 Reject
@@ -608,10 +720,12 @@ const ApplicationDetails: React.FC = () => {
                 bg="#3C5FDD"
                 color="white"
                 width="200px"
+                size="lg"
                 onClick={() => openConfirmationModal("approved")}
                 borderRadius="50px"
+                leftIcon={<CheckIcon />}
                 _hover={{
-                  bg: "#3C5FDD",
+                  bg: "#2A4BC7",
                   transform: "none",
                   boxShadow: "none",
                 }}
@@ -623,28 +737,42 @@ const ApplicationDetails: React.FC = () => {
         </VStack>
       </Center>
 
-      <Modal isOpen={isOpen} onClose={onClose} isCentered>
+      {/* Confirmation Modal */}
+      <Modal isOpen={isOpen} onClose={onClose} isCentered size="md">
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Confirm</ModalHeader>
+          <ModalHeader>
+            Confirm {selectedStatus === "approved" ? "Approval" : "Rejection"}
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            You want to procees with changing status for this application?
-            <Text mt={3}>Please provide a comment:</Text>
+            <Text mb={4}>
+              Are you sure you want to{" "}
+              {selectedStatus === "approved" ? "approve" : "reject"} this
+              application?
+            </Text>
+            <Text mb={3} fontWeight="medium">
+              Please provide a comment:
+            </Text>
             <Textarea
-              placeholder="Enter Comment for Status Change: "
+              placeholder={`Enter reason for ${
+                selectedStatus === "approved" ? "approval" : "rejection"
+              }...`}
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              mt={3}
-              size="sm"
+              size="md"
+              rows={4}
             />
           </ModalBody>
           <ModalFooter>
             <Button variant="ghost" mr={3} onClick={onClose}>
-              No
+              Cancel
             </Button>
-            <Button colorScheme="blue" onClick={confirmStatusChange}>
-              Yes
+            <Button
+              colorScheme={selectedStatus === "approved" ? "blue" : "red"}
+              onClick={confirmStatusChange}
+            >
+              Confirm {selectedStatus === "approved" ? "Approval" : "Rejection"}
             </Button>
           </ModalFooter>
         </ModalContent>
