@@ -660,16 +660,10 @@ const ApplicationDetails: React.FC = () => {
               <TabPanel>
                 <VStack spacing={6} align="stretch">
                   {amountDetail ? (
-                    <Box
-                      p={6}
-                      borderRadius="lg"
-                      border="1px solid"
-                      borderColor="gray.200"
-                      bg="gray.50"
-                    >
+                    <Box p={6}>
                       <ApplicationInfo
                         data={amountDetail}
-                        columnsLayout="two"
+                        columnsLayout="one"
                       />
                     </Box>
                   ) : (
