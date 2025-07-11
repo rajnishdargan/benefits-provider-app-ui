@@ -68,8 +68,7 @@ interface ApplicantData {
   id: number;
   name: string;
   applicationStatus: string;
-  studentId: string;
-  disabilityStatus: string;
+  disabilityStatus?: string;
 }
 
 interface Document {
@@ -100,6 +99,7 @@ const ApplicationDetails: React.FC = () => {
     null
   );
   const [applicationForm, setApplicationForm] = useState<any>(null);
+  const [showDisabilityStatus, setShowDisabilityStatus] = useState(false);
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedStatus, setSelectedStatus] = useState<
@@ -350,17 +350,23 @@ const ApplicationDetails: React.FC = () => {
         setShowActionButtons(false);
       }
 
-      setApplicantData([
-        {
-          id: 1,
-          name: `${applicantDetails.firstName ?? ""} ${
-            applicantDetails.middleName ? applicantDetails.middleName + " " : ""
-          }${applicantDetails.lastName ?? ""}`.trim(),
-          applicationStatus: applicationData.status,
-          studentId: applicantDetails.studentId,
-          disabilityStatus: applicantDetails.disabilityType ? "Yes" : "No",
-        },
-      ]);
+      // Check if disability type field exists in the data structure
+      const hasDisabilityType = 'disabilityType' in applicantDetails;
+      setShowDisabilityStatus(hasDisabilityType);
+
+      const applicantRecord: ApplicantData = {
+        id: 1,
+        name: `${applicantDetails.firstName ?? ""} ${
+          applicantDetails.middleName ? applicantDetails.middleName + " " : ""
+        }${applicantDetails.lastName ?? ""}`.trim(),
+        applicationStatus: applicationData.status,
+      };
+
+      if (hasDisabilityType) {
+        applicantRecord.disabilityStatus = applicantDetails.disabilityType ? "Yes" : "No";
+      }
+
+      setApplicantData([applicantRecord]);
 
       // Set document data
       const documents = applicationData.applicationFiles.map((file: any) => ({
@@ -432,8 +438,9 @@ const ApplicationDetails: React.FC = () => {
       title: "Application Status",
       dataType: "string",
     },
-    { key: "studentId", title: "Student ID", dataType: "string" },
-    { key: "disabilityStatus", title: "Disability Status", dataType: "string" },
+    ...(showDisabilityStatus
+      ? [{ key: "disabilityStatus", title: "Disability Status", dataType: "string" }]
+      : []),
   ];
 
   const customCellText = (props: any) => {
