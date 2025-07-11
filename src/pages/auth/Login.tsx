@@ -16,9 +16,11 @@ import LeftSideBar from "../../components/common/login/LeftSideBar";
 import { LoginProvider } from "../../services/auth";
 import Loading from "../../components/common/Loading";
 import AlertMessage from "../../components/common/modal/AlertMessage";
+import { useAuth } from "../../context/AuthContext";
 export default function Login() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { setUserRole } = useAuth();
   const [userName, setUserName] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<{
@@ -55,27 +57,28 @@ export default function Login() {
       if (loginResponse?.token) {
         localStorage.setItem("token", loginResponse?.token);
         if (loginResponse?.user?.s_roles?.[0]) {
-          localStorage.setItem("userRole", loginResponse.user.s_roles[0]);
+          const userRole = loginResponse.user.s_roles[0];
+          localStorage.setItem("userRole", userRole);
+          setUserRole(userRole);
         }
         setIsLoading(false);
         setMessage("Login successfully!");
-        navigate(0);
+        // Notify App component that token has been set
+        window.dispatchEvent(new Event("tokenChanged"));
+        navigate("/", { replace: true });
       } else {
         setIsLoading(false);
         setMessage(loginResponse?.response?.data?.error_description);
         setShowAlert(true);
-        navigate(0);
       }
     } catch (err) {
       setIsLoading(false);
       setMessage(err as string);
       setShowAlert(true);
-      navigate(0);
     }
   };
   const handleCloseAlertModal = () => {
     setShowAlert(false);
-    navigate(0);
   };
 
   return (

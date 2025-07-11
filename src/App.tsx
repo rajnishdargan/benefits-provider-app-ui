@@ -35,13 +35,29 @@ function AppRoutes() {
   >([]);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      setRoutes(authRoutes);
-    } else {
-      setRoutes(guestRoutes);
-    }
-    setLoading(false);
+    const checkAuthAndSetRoutes = () => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        setRoutes(authRoutes);
+      } else {
+        setRoutes(guestRoutes);
+      }
+      setLoading(false);
+    };
+
+    // Check auth on initial load
+    checkAuthAndSetRoutes();
+
+    // Listen for token changes
+    const handleTokenChange = () => {
+      checkAuthAndSetRoutes();
+    };
+
+    window.addEventListener("tokenChanged", handleTokenChange);
+
+    return () => {
+      window.removeEventListener("tokenChanged", handleTokenChange);
+    };
   }, []);
 
   if (loading) {
