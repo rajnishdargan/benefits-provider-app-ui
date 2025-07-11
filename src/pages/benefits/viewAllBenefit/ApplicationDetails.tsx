@@ -350,8 +350,8 @@ const ApplicationDetails: React.FC = () => {
         setShowActionButtons(false);
       }
 
-      // Check if disability type is present
-      const hasDisabilityType = applicantDetails.disabilityType;
+      // Check if disability type field exists in the data structure
+      const hasDisabilityType = 'disabilityType' in applicantDetails;
       setShowDisabilityStatus(hasDisabilityType);
 
       const applicantRecord: ApplicantData = {
