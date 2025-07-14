@@ -318,6 +318,104 @@ const ApplicationDetails: React.FC = () => {
     }
   };
 
+  // Helper: Set benefit name
+  const setBenefitNameFromData = (applicationData: any) => {
+    if (applicationData?.benefitDetails?.title) {
+      setBenefitName(applicationData.benefitDetails.title);
+    }
+  };
+
+  // Helper: Set calculated amount
+  const setAmountDetailFromData = (applicationData: any) => {
+    if (applicationData?.calculatedAmount) {
+      const { ["totalPayout"]: totalPayout, ...rest } =
+        applicationData.calculatedAmount;
+      const reorderedAmount =
+        totalPayout !== undefined
+          ? { ...rest, "Total Payout": totalPayout }
+          : { ...rest };
+      setAmountDetail(reorderedAmount);
+    }
+  };
+
+  // Helper: Set applicant data
+  const setApplicantDataFromDetails = (applicationData: any) => {
+    const applicantDetails = applicationData.applicationData;
+    setApplicant(applicantDetails);
+
+    if (applicationData.status !== "pending") {
+      setShowActionButtons(false);
+    }
+
+    const hasDisabilityType = 'disabilityType' in applicantDetails;
+    setShowDisabilityStatus(hasDisabilityType);
+
+    const applicantRecord: ApplicantData = {
+      id: 1,
+      name: `${applicantDetails.firstName ?? ""} ${
+        applicantDetails.middleName ? applicantDetails.middleName + " " : ""
+      }${applicantDetails.lastName ?? ""}`.trim(),
+      applicationStatus: applicationData.status,
+    };
+
+    if (hasDisabilityType) {
+      applicantRecord.disabilityStatus = applicantDetails.disabilityType ? "Yes" : "No";
+    }
+
+    setApplicantData([applicantRecord]);
+  };
+
+  // Helper: Set document data and button visibility
+  const setDocumentsAndButtonVisibility = (applicationData: any) => {
+    const docs = applicationData.applicationFiles.map((file: any) => ({
+      id: file.id,
+      type: "Document",
+      title: file.filePath.split("/").pop(),
+      content: file,
+      fileContent: file.fileContent,
+      status: file?.verificationStatus?.status,
+      verificationErrors: file?.verificationStatus?.verificationErrors ?? [
+        "Some error occurred in verification",
+      ],
+    }));
+
+    setDocuments(docs);
+
+    const allDocsUnverified =
+      docs.length > 0 && docs.every((doc: any) => doc.status == null);
+    const anyDocFailed =
+      docs.length > 0 && docs.some((doc: any) => doc.status === "Unverified");
+
+    setIsVerifyButtonVisible(allDocsUnverified);
+    setIsReverifyButtonVisible(!allDocsUnverified && anyDocFailed);
+  };
+
+  // Helper: Set application form
+  const setApplicationFormFromBenefitId = async (applicationData: any) => {
+    if (applicationData?.benefitId) {
+      const benefitResponse = await getBenefitById(applicationData.benefitId);
+      setApplicationForm(benefitResponse?.data?.applicationForm ?? []);
+    }
+  };
+
+  // Helper: Set eligibility criteria results
+  const setCriteriaResultsFromEligibility = (eligibilityResponse: any) => {
+    if (
+      eligibilityResponse?.ineligibleUsers?.length &&
+      eligibilityResponse.ineligibleUsers[0]?.details
+    ) {
+      const ineligibleDetails =
+        eligibilityResponse.ineligibleUsers[0].details;
+      setCriteriaResults(ineligibleDetails.criteriaResults);
+    } else if (
+      eligibilityResponse?.eligibleUsers?.length &&
+      eligibilityResponse.eligibleUsers[0]?.details
+    ) {
+      const eligibleDetails = eligibilityResponse.eligibleUsers[0].details;
+      setCriteriaResults(eligibleDetails.criteriaResults);
+    }
+  };
+
   const fetchApplicationData = async () => {
     if (!id) return;
 
@@ -326,100 +424,14 @@ const ApplicationDetails: React.FC = () => {
 
       const applicationData = await getApplicationDetails(id);
 
-      // Set benefit name
-      if (applicationData?.benefitDetails?.title) {
-        setBenefitName(applicationData.benefitDetails.title);
-      }
+      setBenefitNameFromData(applicationData);
+      setAmountDetailFromData(applicationData);
+      setApplicantDataFromDetails(applicationData);
+      setDocumentsAndButtonVisibility(applicationData);
+      await setApplicationFormFromBenefitId(applicationData);
 
-      // Set calculated amount
-      if (applicationData?.calculatedAmount) {
-        const { ["totalPayout"]: totalPayout, ...rest } =
-          applicationData.calculatedAmount;
-        const reorderedAmount =
-          totalPayout !== undefined
-            ? { ...rest, "Total Payout": totalPayout }
-            : { ...rest };
-        setAmountDetail(reorderedAmount);
-      }
-
-      // Set applicant data
-      const applicantDetails = applicationData.applicationData;
-      setApplicant(applicantDetails);
-
-      if (applicationData.status !== "pending") {
-        setShowActionButtons(false);
-      }
-
-      // Check if disability type field exists in the data structure
-      const hasDisabilityType = 'disabilityType' in applicantDetails;
-      setShowDisabilityStatus(hasDisabilityType);
-
-      const applicantRecord: ApplicantData = {
-        id: 1,
-        name: `${applicantDetails.firstName ?? ""} ${
-          applicantDetails.middleName ? applicantDetails.middleName + " " : ""
-        }${applicantDetails.lastName ?? ""}`.trim(),
-        applicationStatus: applicationData.status,
-      };
-
-      if (hasDisabilityType) {
-        applicantRecord.disabilityStatus = applicantDetails.disabilityType ? "Yes" : "No";
-      }
-
-      setApplicantData([applicantRecord]);
-
-      // Set document data
-      const documents = applicationData.applicationFiles.map((file: any) => ({
-        id: file.id,
-        type: "Document",
-        title: file.filePath.split("/").pop(),
-        content: file,
-        fileContent: file.fileContent,
-        status: file?.verificationStatus?.status,
-        verificationErrors: file?.verificationStatus?.verificationErrors ?? [
-          "Some error occurred in verification",
-        ],
-      }));
-
-      setDocuments(documents);
-
-      // Button visibility logic
-      const allDocsUnverified =
-        documents.length > 0 &&
-        documents.every((doc: any) => doc.status == null);
-      const anyDocFailed =
-        documents.length > 0 &&
-        documents.some((doc: any) => doc.status === "Unverified");
-
-      setIsVerifyButtonVisible(allDocsUnverified);
-      setIsReverifyButtonVisible(!allDocsUnverified && anyDocFailed);
-
-      // Fetch benefit form
-      if (applicationData?.benefitId) {
-        const benefitResponse = await getBenefitById(applicationData.benefitId);
-        setApplicationForm(benefitResponse?.data?.applicationForm ?? []);
-      }
-
-      // Call checkEligibility API
       const eligibilityResponse = await checkEligibility(id, true);
-
-      // Handle eligibility data
-      if (
-        eligibilityResponse?.ineligibleUsers?.length &&
-        eligibilityResponse.ineligibleUsers[0]?.details
-      ) {
-        const ineligibleDetails =
-          eligibilityResponse.ineligibleUsers[0].details;
-
-        setCriteriaResults(ineligibleDetails.criteriaResults);
-      } else if (
-        eligibilityResponse?.eligibleUsers?.length &&
-        eligibilityResponse.eligibleUsers[0]?.details
-      ) {
-        const eligibleDetails = eligibilityResponse.eligibleUsers[0].details;
-
-        setCriteriaResults(eligibleDetails.criteriaResults);
-      }
+      setCriteriaResultsFromEligibility(eligibilityResponse);
     } catch (err) {
       console.error("Error fetching application data:", err);
     } finally {
