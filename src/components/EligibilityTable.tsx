@@ -79,6 +79,100 @@ const formatParameterName = (ruleKey: string): string => {
     .trim();
 };
 
+// Custom cell content component extracted to prevent re-renders
+const CellContent: React.FC<{
+  column: { key: string };
+  rowKeyValue: number;
+  value: any;
+  tableData: TableRowData[];
+}> = ({ column, rowKeyValue, value, tableData }) => {
+  // Custom rendering for status column
+  if (column.key === "status") {
+    const rowData = tableData.find((row) => row.id === rowKeyValue);
+    if (rowData?.status) {
+      return (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: "8px",
+          }}
+        >
+          <HStack justify="center" spacing={2}>
+            <Text
+              color="green.500"
+              fontWeight="semibold"
+              fontSize="sm"
+            >
+              Matched
+            </Text>
+            <CheckIcon color="green.500" boxSize={3} />
+          </HStack>
+        </div>
+      );
+    } else {
+      return (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: "8px",
+          }}
+        >
+          <Tooltip
+            label={rowData?.reasons}
+            bg="#1B2122"
+            color="#E2E2E9"
+            fontSize="sm"
+            borderRadius="md"
+            p={3}
+            maxW="300px"
+            placement="top"
+            hasArrow
+          >
+            <HStack
+              justify="center"
+              spacing={2}
+              cursor="pointer"
+            >
+              <Text
+                color="red.500"
+                fontWeight="semibold"
+                fontSize="sm"
+              >
+                Unmatched
+              </Text>
+              <WarningIcon color="red.500" boxSize={3} />
+            </HStack>
+          </Tooltip>
+        </div>
+      );
+    }
+  }
+  // Default text rendering for other columns
+  return (
+    <Text
+      fontSize="sm"
+      whiteSpace="normal"
+      wordBreak="break-word"
+    >
+      {value}
+    </Text>
+  );
+};
+
+// Custom cell content renderer function
+const createCellContentRenderer = (tableData: TableRowData[]) => (props: any) => (
+  <CellContent
+    column={props.column}
+    rowKeyValue={props.rowKeyValue}
+    value={props.value}
+    tableData={tableData}
+  />
+);
+
 const EligibilityTable: React.FC<EligibilityTableProps> = ({
   criteriaResults = [],
   applicantData = null,
@@ -185,85 +279,7 @@ const EligibilityTable: React.FC<EligibilityTableProps> = ({
                   }),
                 },
                 cellText: {
-                  content: (props) => {
-                    // Custom rendering for status column
-                    if (props.column.key === "status") {
-                      const rowData = tableData.find(
-                        (row) => row.id === props.rowKeyValue
-                      );
-                      if (rowData?.status) {
-                        return (
-                          <div
-                            style={{
-                              display: "flex",
-                              justifyContent: "center",
-                              alignItems: "center",
-                              gap: "8px",
-                            }}
-                          >
-                            <HStack justify="center" spacing={2}>
-                              <Text
-                                color="green.500"
-                                fontWeight="semibold"
-                                fontSize="sm"
-                              >
-                                Matched
-                              </Text>
-                              <CheckIcon color="green.500" boxSize={3} />
-                            </HStack>
-                          </div>
-                        );
-                      } else {
-                        return (
-                          <div
-                            style={{
-                              display: "flex",
-                              justifyContent: "center",
-                              alignItems: "center",
-                              gap: "8px",
-                            }}
-                          >
-                            <Tooltip
-                              label={rowData?.reasons}
-                              bg="#1B2122"
-                              color="#E2E2E9"
-                              fontSize="sm"
-                              borderRadius="md"
-                              p={3}
-                              maxW="300px"
-                              placement="top"
-                              hasArrow
-                            >
-                              <HStack
-                                justify="center"
-                                spacing={2}
-                                cursor="pointer"
-                              >
-                                <Text
-                                  color="red.500"
-                                  fontWeight="semibold"
-                                  fontSize="sm"
-                                >
-                                  Unmatched
-                                </Text>
-                                <WarningIcon color="red.500" boxSize={3} />
-                              </HStack>
-                            </Tooltip>
-                          </div>
-                        );
-                      }
-                    }
-                    // Default text rendering for other columns
-                    return (
-                      <Text
-                        fontSize="sm"
-                        whiteSpace="normal"
-                        wordBreak="break-word"
-                      >
-                        {props.value}
-                      </Text>
-                    );
-                  },
+                  content: createCellContentRenderer(tableData),
                 },
               }}
             />
