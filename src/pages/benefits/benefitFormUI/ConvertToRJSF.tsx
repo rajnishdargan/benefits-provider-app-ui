@@ -384,7 +384,7 @@ export const extractUserDataForSchema = (
   const result: Record<string, string> = {};
 
   for (const key of Object.keys(properties)) {
-    if (key in formData) {
+    if (Object.hasOwn(formData, key)) {
       result[key] = String(formData[key]);
     }
   }
