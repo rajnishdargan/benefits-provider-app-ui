@@ -318,6 +318,86 @@ const ApplicationDetails: React.FC = () => {
     }
   };
 
+  const setBenefitAndAmount = (applicationData: any) => {
+    if (applicationData?.benefitDetails?.title) {
+      setBenefitName(applicationData.benefitDetails.title);
+    }
+    if (applicationData?.calculatedAmount) {
+      const { ["totalPayout"]: totalPayout, ...rest } = applicationData.calculatedAmount;
+      const reorderedAmount =
+        totalPayout !== undefined
+          ? { ...rest, "Total Payout": totalPayout }
+          : { ...rest };
+      setAmountDetail(reorderedAmount);
+    }
+  };
+
+  const setApplicantInfo = (applicationData: any) => {
+    const applicantDetails = applicationData.applicationData;
+    setApplicant(applicantDetails);
+
+    if (applicationData.status !== "pending") {
+      setShowActionButtons(false);
+    }
+
+    const hasDisabilityType = 'disabilityType' in applicantDetails;
+    setShowDisabilityStatus(hasDisabilityType);
+
+    const applicantRecord: ApplicantData = {
+      id: 1,
+      name: `${applicantDetails.firstName ?? ""} ${
+        applicantDetails.middleName ? applicantDetails.middleName + " " : ""
+      }${applicantDetails.lastName ?? ""}`.trim(),
+      applicationStatus: applicationData.status,
+    };
+
+    if (hasDisabilityType) {
+      applicantRecord.disabilityStatus = applicantDetails.disabilityType ? "Yes" : "No";
+    }
+
+    setApplicantData([applicantRecord]);
+  };
+
+  const setDocumentsAndButtons = (applicationFiles: any[]) => {
+    const docs = applicationFiles.map((file: any) => ({
+      id: file.id,
+      type: "Document",
+      title: file.filePath.split("/").pop(),
+      content: file,
+      fileContent: file.fileContent,
+      status: file?.verificationStatus?.status,
+      verificationErrors: file?.verificationStatus?.verificationErrors ?? [
+        "Some error occurred in verification",
+      ],
+    }));
+
+    setDocuments(docs);
+
+    const allDocsUnverified =
+      docs.length > 0 && docs.every((doc: any) => doc.status == null);
+    const anyDocFailed =
+      docs.length > 0 && docs.some((doc: any) => doc.status === "Unverified");
+
+    setIsVerifyButtonVisible(allDocsUnverified);
+    setIsReverifyButtonVisible(!allDocsUnverified && anyDocFailed);
+  };
+
+  const setEligibilityResults = (eligibilityResponse: any) => {
+    if (
+      eligibilityResponse?.ineligibleUsers?.length &&
+      eligibilityResponse.ineligibleUsers[0]?.details
+    ) {
+      const ineligibleDetails = eligibilityResponse.ineligibleUsers[0].details;
+      setCriteriaResults(ineligibleDetails.criteriaResults);
+    } else if (
+      eligibilityResponse?.eligibleUsers?.length &&
+      eligibilityResponse.eligibleUsers[0]?.details
+    ) {
+      const eligibleDetails = eligibilityResponse.eligibleUsers[0].details;
+      setCriteriaResults(eligibleDetails.criteriaResults);
+    }
+  };
+
   const fetchApplicationData = async () => {
     if (!id) return;
 
@@ -325,101 +405,17 @@ const ApplicationDetails: React.FC = () => {
       setLoading(true);
 
       const applicationData = await getApplicationDetails(id);
+      setBenefitAndAmount(applicationData);
+      setApplicantInfo(applicationData);
+      setDocumentsAndButtons(applicationData.applicationFiles);
 
-      // Set benefit name
-      if (applicationData?.benefitDetails?.title) {
-        setBenefitName(applicationData.benefitDetails.title);
-      }
-
-      // Set calculated amount
-      if (applicationData?.calculatedAmount) {
-        const { ["totalPayout"]: totalPayout, ...rest } =
-          applicationData.calculatedAmount;
-        const reorderedAmount =
-          totalPayout !== undefined
-            ? { ...rest, "Total Payout": totalPayout }
-            : { ...rest };
-        setAmountDetail(reorderedAmount);
-      }
-
-      // Set applicant data
-      const applicantDetails = applicationData.applicationData;
-      setApplicant(applicantDetails);
-
-      if (applicationData.status !== "pending") {
-        setShowActionButtons(false);
-      }
-
-      // Check if disability type field exists in the data structure
-      const hasDisabilityType = 'disabilityType' in applicantDetails;
-      setShowDisabilityStatus(hasDisabilityType);
-
-      const applicantRecord: ApplicantData = {
-        id: 1,
-        name: `${applicantDetails.firstName ?? ""} ${
-          applicantDetails.middleName ? applicantDetails.middleName + " " : ""
-        }${applicantDetails.lastName ?? ""}`.trim(),
-        applicationStatus: applicationData.status,
-      };
-
-      if (hasDisabilityType) {
-        applicantRecord.disabilityStatus = applicantDetails.disabilityType ? "Yes" : "No";
-      }
-
-      setApplicantData([applicantRecord]);
-
-      // Set document data
-      const documents = applicationData.applicationFiles.map((file: any) => ({
-        id: file.id,
-        type: "Document",
-        title: file.filePath.split("/").pop(),
-        content: file,
-        fileContent: file.fileContent,
-        status: file?.verificationStatus?.status,
-        verificationErrors: file?.verificationStatus?.verificationErrors ?? [
-          "Some error occurred in verification",
-        ],
-      }));
-
-      setDocuments(documents);
-
-      // Button visibility logic
-      const allDocsUnverified =
-        documents.length > 0 &&
-        documents.every((doc: any) => doc.status == null);
-      const anyDocFailed =
-        documents.length > 0 &&
-        documents.some((doc: any) => doc.status === "Unverified");
-
-      setIsVerifyButtonVisible(allDocsUnverified);
-      setIsReverifyButtonVisible(!allDocsUnverified && anyDocFailed);
-
-      // Fetch benefit form
       if (applicationData?.benefitId) {
         const benefitResponse = await getBenefitById(applicationData.benefitId);
         setApplicationForm(benefitResponse?.data?.applicationForm ?? []);
       }
 
-      // Call checkEligibility API
       const eligibilityResponse = await checkEligibility(id, true);
-
-      // Handle eligibility data
-      if (
-        eligibilityResponse?.ineligibleUsers?.length &&
-        eligibilityResponse.ineligibleUsers[0]?.details
-      ) {
-        const ineligibleDetails =
-          eligibilityResponse.ineligibleUsers[0].details;
-
-        setCriteriaResults(ineligibleDetails.criteriaResults);
-      } else if (
-        eligibilityResponse?.eligibleUsers?.length &&
-        eligibilityResponse.eligibleUsers[0]?.details
-      ) {
-        const eligibleDetails = eligibilityResponse.eligibleUsers[0].details;
-
-        setCriteriaResults(eligibleDetails.criteriaResults);
-      }
+      setEligibilityResults(eligibilityResponse);
     } catch (err) {
       console.error("Error fetching application data:", err);
     } finally {
@@ -496,12 +492,12 @@ const ApplicationDetails: React.FC = () => {
   const docStatus = getDocumentStatusCount();
   const applicationStatus = applicantData[0]?.applicationStatus;
 
-  const statusColor =
-    applicationStatus === "approved"
-      ? "green.600"
-      : applicationStatus === "rejected"
-      ? "red.600"
-      : "orange.600";
+  let statusColor = "orange.600";
+  if (applicationStatus === "approved") {
+    statusColor = "green.600";
+  } else if (applicationStatus === "rejected") {
+    statusColor = "red.600";
+  }
 
   const getModalTitle = () => {
     if (selectedStatus === "approved") return "Confirm Approval";

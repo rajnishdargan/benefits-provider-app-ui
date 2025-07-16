@@ -36,6 +36,67 @@ interface TableRowData {
   reasons: string;
 }
 
+// Define proper types for the props
+interface CellContentProps {
+  column: { key: string };
+  rowKeyValue: number;
+  value: string | number | boolean;
+  tableData: TableRowData[];
+}
+
+// Status cell component to avoid TypeScript inference issues
+const StatusCell = ({ rowData }: { rowData: TableRowData | undefined }) => {
+  if (rowData?.status) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: "8px",
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "8px" }}>
+          <span style={{ color: "#22C55E", fontWeight: "600", fontSize: "14px" }}>
+            Matched
+          </span>
+          <CheckIcon color="green.500" boxSize={3} />
+        </div>
+      </div>
+    );
+  } else {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: "8px",
+        }}
+      >
+        <Tooltip
+          label={rowData?.reasons}
+          bg="#1B2122"
+          color="#E2E2E9"
+          fontSize="sm"
+          borderRadius="md"
+          p={3}
+          maxW="300px"
+          placement="top"
+          hasArrow
+        >
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+            <span style={{ color: "#EF4444", fontWeight: "600", fontSize: "14px" }}>
+              Unmatched
+            </span>
+            <WarningIcon color="red.500" boxSize={3} />
+          </div>
+        </Tooltip>
+      </div>
+    );
+  }
+};
+
 // Helper function to get profile value dynamically from applicant data
 const formatLabel = (value: unknown): string => {
   if (typeof value !== "string") return value?.toString?.() ?? "Not provided";
@@ -78,6 +139,50 @@ const formatParameterName = (ruleKey: string): string => {
     .replace(/^./, (str) => str.toUpperCase())
     .trim();
 };
+
+// Custom cell content component extracted to prevent re-renders
+const CellContent = ({ column, rowKeyValue, value, tableData }: CellContentProps) => {
+  // Custom rendering for status column
+  if (column.key === "status") {
+    const rowData = tableData.find((row) => row.id === rowKeyValue);
+    return <StatusCell rowData={rowData} />;
+  }
+  // Default text rendering for other columns
+  let displayValue: string;
+  if (typeof value === 'string') {
+    displayValue = value;
+  } else if (typeof value === 'number') {
+    displayValue = value.toString();
+  } else if (typeof value === 'boolean') {
+    displayValue = value.toString();
+  } else {
+    displayValue = 'N/A';
+  }
+
+  return (
+    <Text
+      fontSize="sm"
+      whiteSpace="normal"
+      wordBreak="break-word"
+    >
+      {displayValue}
+    </Text>
+  );
+};
+
+// Custom cell content renderer function
+const createCellContentRenderer = (tableData: TableRowData[]) => (props: {
+  column: { key: string };
+  rowKeyValue: number;
+  value: string | number | boolean;
+}) => (
+  <CellContent
+    column={props.column}
+    rowKeyValue={props.rowKeyValue}
+    value={props.value}
+    tableData={tableData}
+  />
+);
 
 const EligibilityTable: React.FC<EligibilityTableProps> = ({
   criteriaResults = [],
@@ -185,85 +290,7 @@ const EligibilityTable: React.FC<EligibilityTableProps> = ({
                   }),
                 },
                 cellText: {
-                  content: (props) => {
-                    // Custom rendering for status column
-                    if (props.column.key === "status") {
-                      const rowData = tableData.find(
-                        (row) => row.id === props.rowKeyValue
-                      );
-                      if (rowData?.status) {
-                        return (
-                          <div
-                            style={{
-                              display: "flex",
-                              justifyContent: "center",
-                              alignItems: "center",
-                              gap: "8px",
-                            }}
-                          >
-                            <HStack justify="center" spacing={2}>
-                              <Text
-                                color="green.500"
-                                fontWeight="semibold"
-                                fontSize="sm"
-                              >
-                                Matched
-                              </Text>
-                              <CheckIcon color="green.500" boxSize={3} />
-                            </HStack>
-                          </div>
-                        );
-                      } else {
-                        return (
-                          <div
-                            style={{
-                              display: "flex",
-                              justifyContent: "center",
-                              alignItems: "center",
-                              gap: "8px",
-                            }}
-                          >
-                            <Tooltip
-                              label={rowData?.reasons}
-                              bg="#1B2122"
-                              color="#E2E2E9"
-                              fontSize="sm"
-                              borderRadius="md"
-                              p={3}
-                              maxW="300px"
-                              placement="top"
-                              hasArrow
-                            >
-                              <HStack
-                                justify="center"
-                                spacing={2}
-                                cursor="pointer"
-                              >
-                                <Text
-                                  color="red.500"
-                                  fontWeight="semibold"
-                                  fontSize="sm"
-                                >
-                                  Unmatched
-                                </Text>
-                                <WarningIcon color="red.500" boxSize={3} />
-                              </HStack>
-                            </Tooltip>
-                          </div>
-                        );
-                      }
-                    }
-                    // Default text rendering for other columns
-                    return (
-                      <Text
-                        fontSize="sm"
-                        whiteSpace="normal"
-                        wordBreak="break-word"
-                      >
-                        {props.value}
-                      </Text>
-                    );
-                  },
+                  content: createCellContentRenderer(tableData),
                 },
               }}
             />

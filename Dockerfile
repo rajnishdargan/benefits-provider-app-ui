@@ -1,4 +1,4 @@
-FROM nginx:latest
+FROM nginx:1.25.3
 WORKDIR /usr/share/nginx/html/
 #RUN mkdir -p uba-ui
 COPY nginx.conf /etc/nginx/conf.d/default.conf
