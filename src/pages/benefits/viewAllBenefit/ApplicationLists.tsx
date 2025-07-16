@@ -187,41 +187,53 @@ const ApplicationLists: React.FC = () => {
       showLanguage={false}
     >
       <VStack spacing="50px" p={"20px"} align="stretch">
-        <HStack spacing={4}>
-          <InputGroup maxWidth="300px" rounded={"full"} size="lg">
-            <Input
-              placeholder="Search by name.."
-              rounded={"full"}
-              bg="#E9E7EF"
-              value={searchTerm}
-              onChange={handleSearchChange}
-            />
-            <InputRightElement>
-              <SearchIcon color="gray.500" />
-            </InputRightElement>
-          </InputGroup>
+        {/* Search and Sort Controls - Only show when applications are available */}
+        {sortedData?.length > 0 && (
+          <HStack spacing={4}>
+            <InputGroup maxWidth="300px" rounded={"full"} size="lg">
+              <Input
+                placeholder="Search by name.."
+                rounded={"full"}
+                bg="#E9E7EF"
+                value={searchTerm}
+                onChange={handleSearchChange}
+              />
+              <InputRightElement>
+                <SearchIcon color="gray.500" />
+              </InputRightElement>
+            </InputGroup>
 
-          <Select
-            placeholder="Sort Order"
-            onChange={handleSortOrderChange}
-            value={sortOrder}
-            maxWidth="150px"
-          >
-            <option value="asc">Ascending</option>
-            <option value="desc">Descending</option>
-          </Select>
-          {id && <DownloadCSV benefitId={id} benefitName={benefitName} />}
-        </HStack>
-        <Table
-          columns={columns}
-          data={paginatedData}
-          rowKeyField={"applicationId"}
-          childComponents={{
-            cellText: {
-              content: (props: ICellTextProps) => CellTextContent(props),
-            },
-          }}
-        />
+            <Select
+              placeholder="Sort Order"
+              onChange={handleSortOrderChange}
+              value={sortOrder}
+              maxWidth="150px"
+            >
+              <option value="asc">Ascending</option>
+              <option value="desc">Descending</option>
+            </Select>
+            {id && <DownloadCSV benefitId={id} benefitName={benefitName} />}
+          </HStack>
+        )}
+
+        {/* Table and Pagination */}
+        {sortedData?.length > 0 ? (
+          <Table
+            columns={columns}
+            data={paginatedData}
+            rowKeyField={"applicationId"}
+            childComponents={{
+              cellText: {
+                content: (props: ICellTextProps) => CellTextContent(props),
+              },
+            }}
+          />
+        ) : (
+          <Text fontSize="lg" textAlign="center" color="gray.500">
+            No applications available
+          </Text>
+        )}
+
         <PaginationList
           total={sortedData.length}
           pageSize={pageSize}
