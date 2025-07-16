@@ -100,6 +100,7 @@ const ApplicationDetails: React.FC = () => {
   );
   const [applicationForm, setApplicationForm] = useState<any>(null);
   const [showDisabilityStatus, setShowDisabilityStatus] = useState(false);
+  const [activeTabIndex, setActiveTabIndex] = useState(0);
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedStatus, setSelectedStatus] = useState<
@@ -251,7 +252,7 @@ const ApplicationDetails: React.FC = () => {
       if (response?.response) {
         setIsVerifyButtonVisible(false);
         showVerificationToast(toast, response.response.status, "verify");
-        fetchApplicationData();
+        fetchApplicationData(true);
       }
     } catch (error) {
       console.error("Error verifying documents:", error);
@@ -302,7 +303,7 @@ const ApplicationDetails: React.FC = () => {
       if (response?.response) {
         setIsReverifyButtonVisible(false);
         showVerificationToast(toast, response.response.status, "reverify");
-        fetchApplicationData();
+        fetchApplicationData(true);
       }
     } catch (error) {
       console.log("Error occured during re-verification", error);
@@ -398,11 +399,13 @@ const ApplicationDetails: React.FC = () => {
     }
   };
 
-  const fetchApplicationData = async () => {
+  const fetchApplicationData = async (skipLoadingState = false) => {
     if (!id) return;
 
     try {
-      setLoading(true);
+      if (!skipLoadingState) {
+        setLoading(true);
+      }
 
       const applicationData = await getApplicationDetails(id);
       setBenefitAndAmount(applicationData);
@@ -419,7 +422,9 @@ const ApplicationDetails: React.FC = () => {
     } catch (err) {
       console.error("Error fetching application data:", err);
     } finally {
-      setLoading(false);
+      if (!skipLoadingState) {
+        setLoading(false);
+      }
     }
   };
 
@@ -572,7 +577,13 @@ const ApplicationDetails: React.FC = () => {
           )}
 
           {/* Tabs Section */}
-          <Tabs variant="unstyled" colorScheme="blue" size="lg">
+          <Tabs
+            variant="unstyled"
+            colorScheme="blue"
+            size="lg"
+            index={activeTabIndex}
+            onChange={(index) => setActiveTabIndex(index)}
+          >
             <TabList borderBottom="1px solid" borderColor="gray.200">
               <Tab {...tabStyles}>Applicant Details</Tab>
               <Tab {...tabStyles}>Supporting Documents</Tab>
