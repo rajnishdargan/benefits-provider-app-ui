@@ -17,4 +17,4 @@ externalApiClient.interceptors.response.use(
   }
 );
 
-export default externalApiClient; 
+export default externalApiClient;
