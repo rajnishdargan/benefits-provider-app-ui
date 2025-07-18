@@ -383,6 +383,11 @@ export const extractUserDataForSchema = (
 ): Record<string, string> => {
   const result: Record<string, string> = {};
 
+  // Handle null/undefined formData or properties
+  if (!formData || !properties) {
+    return result;
+  }
+
   for (const key of Object.keys(properties)) {
     if (Object.hasOwn(formData, key)) {
       result[key] = String(formData[key]);

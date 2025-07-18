@@ -19,6 +19,9 @@ const ViewAllBenefits = lazy(
 const AddProvider = lazy(() => import("../pages/admin/AddProvider"));
 const AddProviderUser = lazy(() => import("../pages/admin/AddProviderUser"));
 
+const BenefitApplicationForm = lazy(() =>
+  import("../pages/benefits/benefitFormUI/BenefitApplicationForm"));
+
 //lazy loading
 const routes = [
   {
@@ -29,6 +32,10 @@ const routes = [
   {
     path: "/benefits/create/{id}",
     component: BenefitsForm,
+  },
+  {
+    path: "/benefit/apply/:id",
+    component: BenefitApplicationForm,
   },
   {
     path: "/",
