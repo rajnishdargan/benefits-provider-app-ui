@@ -1,4 +1,4 @@
-import { Box } from "@chakra-ui/react";
+import { Box, Text } from "@chakra-ui/react";
 import { Theme as ChakraTheme } from "@rjsf/chakra-ui";
 import { withTheme } from "@rjsf/core";
 import { SubmitButtonProps, getSubmitButtonOptions } from "@rjsf/utils";
@@ -45,6 +45,7 @@ const BenefitApplicationForm: React.FC = () => {
   const [extraErrors, setExtraErrors] = useState<any>(null);
   const [disableSubmit, setDisableSubmit] = useState(false);
   const [uiSchema, setUiSchema] = useState({});
+  const [reviewerComment, setReviewerComment] = useState<string | null>(null);
 
   useEffect(() => {
     // Fetch and process schema data when id changes
@@ -107,6 +108,9 @@ const BenefitApplicationForm: React.FC = () => {
         // Use window.name for pre-filled data if available
         const useData = window.name ? JSON.parse(window.name) : null;
 
+        if (useData?.remark) {
+          setReviewerComment(useData.remark);
+        }
         getApplicationSchemaData(
           useData,
           parsedValues,
@@ -237,10 +241,54 @@ const BenefitApplicationForm: React.FC = () => {
   if (!formSchema) {
     return <Loading />;
   }
+  const getMarginTop = () => {
+    return reviewerComment?.trim() ? "25%" : "0";
+  };
 
   // Render the form
   return (
-    <Box p={4}>
+    <Box p={4} mt={getMarginTop()}>
+      {reviewerComment?.trim() && (
+        <>
+          {/* Backdrop to hide background content */}
+          <Box
+            position="fixed"
+            top={0}
+            left={0}
+            right={0}
+            bottom={0}
+            bgColor="rgba(255, 255, 255, 0.6)" // semi-transparent white
+            backdropFilter="blur(10px)" // apply blur to what's behind
+            zIndex={9}
+            height={"18%"}
+            mb={"18%"}
+          />
+
+          {/* Fixed Reviewer Comment Box */}
+          <Box
+            position="fixed"
+            top={0}
+            left={0}
+            right={0}
+            zIndex={10}
+            bg="orange.50"
+            border="1px"
+            borderColor="orange.300"
+            p={4}
+            borderRadius="md"
+            mx={4}
+            mt={4}
+          >
+            <Text fontWeight="bold" color="orange.800">
+              Reviewer Comment:
+            </Text>
+            <Text mt={2} color="orange.700">
+              {reviewerComment}
+            </Text>
+          </Box>
+        </>
+      )}
+
       <Form
         ref={formRef}
         showErrorList={false}
