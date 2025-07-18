@@ -15,6 +15,8 @@ const routes = [
     component: UserRegister,
   },
   {
+    // Duplicate route intentionally - needed for guest users
+    // when form is embedded in iframe from external applications
     path: "/benefit/apply/:id",
     component: BenefitApplicationForm,
   },

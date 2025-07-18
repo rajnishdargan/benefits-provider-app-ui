@@ -34,6 +34,8 @@ const routes = [
     component: BenefitsForm,
   },
   {
+    // Duplicate route intentionally - needed for authenticated users
+    // when form is embedded in iframe from external applications
     path: "/benefit/apply/:id",
     component: BenefitApplicationForm,
   },
